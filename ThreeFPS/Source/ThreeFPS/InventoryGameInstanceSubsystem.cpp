@@ -5,5 +5,5 @@
 
 void UInventoryGameInstanceSubsystem::test()
 {
-	UE_LOG(LogTemp, Display, TEXT("InventoryGameInstanceSubsystem::asasdasd"));
+	UE_LOG(LogTemp, Display, TEXT("InventoryGameInstanceSubsystem::lkwjerlkwjerkl"));
 }
