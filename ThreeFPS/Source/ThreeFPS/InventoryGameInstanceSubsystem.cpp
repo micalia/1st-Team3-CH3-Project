@@ -3,3 +3,7 @@
 
 #include "InventoryGameInstanceSubsystem.h"
 
+void UInventoryGameInstanceSubsystem::test()
+{
+	UE_LOG(LogTemp, Display, TEXT("InventoryGameInstanceSubsystem::test"));
+}
