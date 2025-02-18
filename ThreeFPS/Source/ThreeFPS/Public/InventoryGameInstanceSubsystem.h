@@ -13,5 +13,5 @@ UCLASS()
 class THREEFPS_API UInventoryGameInstanceSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
-	void test();
+	
 };
