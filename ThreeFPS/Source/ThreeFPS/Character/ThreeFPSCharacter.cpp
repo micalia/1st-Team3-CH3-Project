@@ -2,6 +2,8 @@
 
 #include "ThreeFPSCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Game/ThreeFPSPlayerController.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "ThreeFPS/Game/ThreeFPSProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -44,44 +46,59 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	SpringArm->SetupAttachment(GetMesh());
 	SpringArm->TargetArmLength = 300.f;
 	SpringArm->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
-
+	SpringArm->SetRelativeRotation(FRotator(0, -90.f, 0));
+	SpringArm->bUsePawnControlRotation = true;
+	
 	ThirdPersonCameraComponent=CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
 	ThirdPersonCameraComponent->SetupAttachment(SpringArm);
 	ThirdPersonCameraComponent->SetActive(true);
+	ThirdPersonCameraComponent->bUsePawnControlRotation = false;
+	
 	//3인칭 시점 메쉬 설정
-	static ConstructorHelpers::FObjectFinder<UCameraComponent> MashAsset(TEXT("Game/ParagonTwinblast/Characters/Heroes/TwinBlast/Meshes/TwinBlast.TwinBlast"));
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MeshAsset(TEXT("/Game/ParagonTwinblast/Characters/Heroes/TwinBlast/Meshes/TwinBlast"));
+	if (MeshAsset.Succeeded())
+	{
+ 		GetMesh()->SetSkeletalMesh(MeshAsset.Object);
+	}
+	GetMesh()->SetRelativeRotation(FRotator(0, -90.f, 0.f));
+	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
+	
+	//앉기 활성화
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	//달리기 변수 초기화.
+	OriginSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	SprintRate = 1.5f;
+	SprintSpeed = OriginSpeed * SprintRate;
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
-
-void AThreeFPSCharacter::NotifyControllerChanged()
-{
-	Super::NotifyControllerChanged();
-
-	// Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
-	}
-}
-
 void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{	
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
-		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AThreeFPSCharacter::Move);
-
-		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AThreeFPSCharacter::Look);
+		if (AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetController()))
+		{
+			if (PlayerController->MoveAction){EnhancedInputComponent->BindAction(PlayerController->MoveAction,ETriggerEvent::Triggered,this, &AThreeFPSCharacter::Move);}
+			if (PlayerController->LookAction){EnhancedInputComponent->BindAction(PlayerController->LookAction,ETriggerEvent::Triggered,this, &AThreeFPSCharacter::Look);}
+			if (PlayerController->JumpAction)
+			{
+				EnhancedInputComponent->BindAction(PlayerController->JumpAction,ETriggerEvent::Started,this, &AThreeFPSCharacter::StartJump);
+				EnhancedInputComponent->BindAction(PlayerController->JumpAction,ETriggerEvent::Completed,this, &AThreeFPSCharacter::StopJump);
+			}
+			if (PlayerController->CrouchAction)
+			{
+				EnhancedInputComponent->BindAction(PlayerController->CrouchAction,ETriggerEvent::Started,this, &AThreeFPSCharacter::StartCrouch);
+				EnhancedInputComponent->BindAction(PlayerController->CrouchAction,ETriggerEvent::Completed,this, &AThreeFPSCharacter::StopCrouch);
+			}
+			if (PlayerController->SprintAction)
+			{
+				EnhancedInputComponent->BindAction(PlayerController->SprintAction,ETriggerEvent::Started,this, &AThreeFPSCharacter::StartSprint);
+				EnhancedInputComponent->BindAction(PlayerController->SprintAction,ETriggerEvent::Completed,this, &AThreeFPSCharacter::StopSprint);
+			}
+			
+		}
 	}
 	else
 	{
@@ -89,7 +106,9 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	}
 }
 
-
+//------------------------//
+//        입력 함수        //
+//-----------------------//
 void AThreeFPSCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
@@ -114,4 +133,30 @@ void AThreeFPSCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+void AThreeFPSCharacter::StartJump()
+{
+	Jump();
+}
+
+void AThreeFPSCharacter::StopJump()
+{
+	StopJumping();
+}
+
+void AThreeFPSCharacter::StartSprint()
+{
+	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+}
+void AThreeFPSCharacter::StopSprint()
+{
+	GetCharacterMovement()->MaxWalkSpeed = OriginSpeed;
+}
+void AThreeFPSCharacter::StartCrouch()
+{
+	Crouch();
+}
+void AThreeFPSCharacter::StopCrouch()
+{
+	UnCrouch();
 }
