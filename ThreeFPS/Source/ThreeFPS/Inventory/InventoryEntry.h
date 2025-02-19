@@ -7,6 +7,7 @@
 
 class UTextBlock;
 class UButton;
+class UImage;
 
 UCLASS()
 class THREEFPS_API UInventoryEntry : public UUserWidget, public IUserObjectListEntry
@@ -18,10 +19,22 @@ public:
 
 private:
 	UPROPERTY(meta = (BindWidget))
+	UImage* IconImage;
+
+	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ItemName;
+
+	UPROPERTY(meta = (Bindwidget))
+	UTextBlock* ItemDescription;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* UseButton;
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* DropButton;
+
+	UFUNCTION()
+	void UseItem();
 
 	UFUNCTION()
 	void DropItem();
