@@ -1,11 +1,11 @@
-#include "Inventory/TestCharacter.h"
+#include "TestCharacter.h"
 #include "InputActionValue.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "Item/ItemBase.h"
+#include "ThreeFPS/Item/ItemBase.h"
 #include "Blueprint/UserWidget.h"
-#include "Inventory/InventoryWidget.h"
-#include "Item/ItemDatabase.h"
+#include "InventoryWidget.h"
+#include "ThreeFPS/Item/ItemDatabase.h"
 
 ATestCharacter::ATestCharacter()
 {
