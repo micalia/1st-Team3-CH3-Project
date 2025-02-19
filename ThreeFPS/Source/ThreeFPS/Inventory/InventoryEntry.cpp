@@ -32,6 +32,10 @@ void UInventoryEntry::UseItem()
 	ATestCharacter* PlayerCharacter = Cast<ATestCharacter>(GetOwningPlayer()->GetPawn());
 	FItemData ItemData = GetListItem<UItemUIObject>()->ItemData;
 	if (!ItemData.IsUsable) return;
+	if (AItemBase* ItemBase = Cast<AItemBase>(ItemData.Class->ClassDefaultObject))
+	{
+		ItemBase->Use();
+	}
 	PlayerCharacter->Inventory.RemoveSingle(ItemData);
 	PlayerCharacter->InventoryWidget->RefreshInventory(PlayerCharacter->Inventory);
 }
