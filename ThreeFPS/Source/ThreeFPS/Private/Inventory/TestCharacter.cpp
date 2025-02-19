@@ -4,6 +4,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "Item/ItemBase.h"
 #include "Blueprint/UserWidget.h"
+#include "Inventory/InventoryWidget.h"
+#include "Item/ItemDatabase.h"
 
 ATestCharacter::ATestCharacter()
 {
@@ -14,8 +16,11 @@ void ATestCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	InventoryWidget = CreateWidget<UInventoryWidget>(Cast<APlayerController>(GetController()), InventoryWidgetClass);
 	InteractWidget = CreateWidget(Cast<APlayerController>(GetController()), InteractWidgetClass);
+	InventoryWidget->AddToViewport(0);
 	InteractWidget->AddToViewport(0);
+	InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
 	InteractWidget->SetVisibility(ESlateVisibility::Collapsed);
 }
 
@@ -62,6 +67,10 @@ void ATestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		{
 			EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ATestCharacter::Interact);
 		}
+		if (InventoryAction)
+		{
+			EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &ATestCharacter::ToggleInventory);
+		}
 	}
 }
 
@@ -91,10 +100,10 @@ void ATestCharacter::InteractCheck()
 {
 	Cast<APlayerController>(GetController())->GetPlayerViewPoint(ViewVector, ViewRotation);
 	FVector VecDirection = ViewRotation.Vector() * 1000.f;
-	FVector InteractEnd = ViewVector + VecDirection;
+	InteractVectorEnd = ViewVector + VecDirection;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
-	GetWorld()->LineTraceSingleByChannel(InteractHitResult, ViewVector, InteractEnd, ECollisionChannel::ECC_GameTraceChannel2, QueryParams);
+	GetWorld()->LineTraceSingleByChannel(InteractHitResult, ViewVector, InteractVectorEnd, ECollisionChannel::ECC_GameTraceChannel2, QueryParams);
 	if (Cast<AItemBase>(InteractHitResult.GetActor()))
 	{
 		InteractWidget->SetVisibility(ESlateVisibility::Visible);
@@ -110,6 +119,32 @@ void ATestCharacter::Interact()
 {
 	if (Cast<AItemBase>(InteractHitResult.GetActor()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("123"));
+		FItemData* Data = ItemDatabase->Items.FindByPredicate([&](const FItemData& ItemData) 
+		{
+			return ItemData.Class == InteractHitResult.GetActor()->GetClass();
+		});
+		Inventory.Emplace(*Data);
+		InteractHitResult.GetActor()->Destroy();
+	}
+}
+
+void ATestCharacter::ToggleInventory()
+{
+	if (!InventoryWidget->IsVisible())
+	{
+		InventoryWidget->SetVisibility(ESlateVisibility::Visible);
+		InventoryWidget->RefreshInventory(Inventory);
+
+		Cast<APlayerController>(GetController())->SetInputMode(FInputModeGameAndUI());
+		Cast<APlayerController>(GetController())->SetCinematicMode(true, true, true);
+		Cast<APlayerController>(GetController())->bShowMouseCursor = true;
+	}
+	else
+	{
+		InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+		Cast<APlayerController>(GetController())->SetInputMode(FInputModeGameOnly());
+		Cast<APlayerController>(GetController())->SetCinematicMode(false, true, true);
+		Cast<APlayerController>(GetController())->bShowMouseCursor = false;
 	}
 }

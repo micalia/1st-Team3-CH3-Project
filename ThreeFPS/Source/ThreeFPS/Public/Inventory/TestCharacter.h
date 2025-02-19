@@ -2,11 +2,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Item/ItemDatabase.h"
 #include "TestCharacter.generated.h"
 
 class UInputComponent;
 class UInputAction;
 class UInputMappingContext;
+class UInventoryWidget;
+class UItemDatabase;
 struct FInputActionValue;
 
 UCLASS()
@@ -14,6 +17,7 @@ class THREEFPS_API ATestCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+public:
 	UPROPERTY(EditDefaultsOnly)
 	UInputMappingContext* InputMappingContext;
 	
@@ -30,26 +34,38 @@ class THREEFPS_API ATestCharacter : public ACharacter
 	UInputAction* InteractAction;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UUserWidget> InteractWidgetClass;
+	UInputAction* InventoryAction;
 
 	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> InventoryWidgetClass;
+	UPROPERTY()
+	UInventoryWidget* InventoryWidget;
+	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> InteractWidgetClass;
+	UPROPERTY()
 	UUserWidget* InteractWidget;
 
+	UPROPERTY(EditDefaultsOnly)
+	UItemDatabase* ItemDatabase;
 
-public:
+	TArray<FItemData> Inventory;
+
 	ATestCharacter();
 
-protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	
 	void Interact();
 	void InteractCheck();
+	void ToggleInventory();
 
-	FHitResult InteractHitResult;
 	FVector ViewVector;
 	FRotator ViewRotation;
+	FVector InteractVectorEnd;
+	FHitResult InteractHitResult;
 
+protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void NotifyControllerChanged() override;
