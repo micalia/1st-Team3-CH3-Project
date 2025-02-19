@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ThreeFPSCharacter.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "ThreeFPSProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -10,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
+#include "ViewportToolbar/UnrealEdViewportToolbar.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -26,6 +28,7 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
 	FirstPersonCameraComponent->SetRelativeLocation(FVector(-10.f, 0.f, 60.f)); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+	FirstPersonCameraComponent->SetActive(false);
 
 	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
 	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
@@ -34,7 +37,19 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	Mesh1P->bCastDynamicShadow = false;
 	Mesh1P->CastShadow = false;
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
+	Mesh1P->SetVisibility(false);
 
+	//3인칭 카메라 설정
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+	SpringArm->SetupAttachment(GetMesh());
+	SpringArm->TargetArmLength = 300.f;
+	SpringArm->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+
+	ThirdPersonCameraComponent=CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
+	ThirdPersonCameraComponent->SetupAttachment(SpringArm);
+	ThirdPersonCameraComponent->SetActive(true);
+	//3인칭 시점 메쉬 설정
+	static ConstructorHelpers::FObjectFinder<UCameraComponent> MashAsset(TEXT("Game/ParagonTwinblast/Characters/Heroes/TwinBlast/Meshes/TwinBlast.TwinBlast"));
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
