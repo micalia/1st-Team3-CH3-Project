@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
-#include "ThreeFPSCharacter.h"
+#include "ThreeFPS/Character/ThreeFPSCharacter.h"
 #include "ThreeFPSPickUpComponent.generated.h"
 
 // Declaration of the delegate that will be called when someone picks this up

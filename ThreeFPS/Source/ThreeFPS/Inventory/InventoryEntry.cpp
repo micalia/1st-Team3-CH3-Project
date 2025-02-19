@@ -1,10 +1,10 @@
-﻿#include "Inventory/InventoryEntry.h"
-#include "Item/ItemDatabase.h"
+﻿#include "InventoryEntry.h"
+#include "ThreeFPS/Item/ItemDatabase.h"
 #include "Components/TextBlock.h"
-#include "Inventory/TestCharacter.h"
+#include "TestCharacter.h"
 #include "Components/Button.h"
-#include "Inventory/InventoryWidget.h"
-#include "Item/ItemBase.h"
+#include "InventoryWidget.h"
+#include "ThreeFPS/Item/ItemBase.h"
 
 void UInventoryEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
 {

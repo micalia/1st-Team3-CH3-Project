@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ThreeFPSGameMode.h"
-#include "ThreeFPSCharacter.h"
+#include "ThreeFPS/Character/ThreeFPSCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
 AThreeFPSGameMode::AThreeFPSGameMode()

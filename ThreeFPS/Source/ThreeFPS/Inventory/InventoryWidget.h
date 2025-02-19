@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Item/ItemDatabase.h"
+#include "ThreeFPS/Item/ItemDatabase.h"
 #include "InventoryWidget.generated.h"
 
 class UListView;
