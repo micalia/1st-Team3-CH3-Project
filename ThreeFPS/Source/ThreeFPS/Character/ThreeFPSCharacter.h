@@ -36,22 +36,6 @@ class AThreeFPSCharacter : public ACharacter
 	//스프링 암
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* SpringArm;
-	
-	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext* DefaultMappingContext;
-
-	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	UInputAction* JumpAction;
-
-	/** Move Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	UInputAction* MoveAction;
-
-	/** Look Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* LookAction;
 
 protected:
 	/** Called for movement input */
@@ -59,11 +43,24 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	//달리기 인풋
+	void StartSprint();
+	void StopSprint();
+
+	//점프 인풋
+	void StartJump();
+	void StopJump();
+
+	//앉기 인풋
+	void StartCrouch();
+	void StopCrouch();
 	
-	// APawn interface
-	virtual void NotifyControllerChanged() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
+
+	
+	
 
 public:
 	AThreeFPSCharacter();
@@ -72,6 +69,14 @@ public:
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+	
+	//움직임 변수
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float OriginSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float SprintSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float SprintRate;
 
 };
 
