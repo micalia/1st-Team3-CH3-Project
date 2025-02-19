@@ -2,7 +2,7 @@
 
 #include "ThreeFPSCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "ThreeFPSProjectile.h"
+#include "ThreeFPS/Game/ThreeFPSProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"

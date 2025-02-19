@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Item/ItemDatabase.h"
+#include "ThreeFPS/Item/ItemDatabase.h"
 #include "TestCharacter.generated.h"
 
 class UInputComponent;

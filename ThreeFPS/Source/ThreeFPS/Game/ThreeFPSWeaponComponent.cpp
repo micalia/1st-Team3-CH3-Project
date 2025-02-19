@@ -2,7 +2,7 @@
 
 
 #include "ThreeFPSWeaponComponent.h"
-#include "ThreeFPSCharacter.h"
+#include "ThreeFPS/Character/ThreeFPSCharacter.h"
 #include "ThreeFPSProjectile.h"
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
