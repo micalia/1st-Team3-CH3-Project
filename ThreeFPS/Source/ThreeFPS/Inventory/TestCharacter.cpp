@@ -28,6 +28,7 @@ void ATestCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (InventoryWidget->IsVisible()) return; 
 	InteractCheck();
 }
 

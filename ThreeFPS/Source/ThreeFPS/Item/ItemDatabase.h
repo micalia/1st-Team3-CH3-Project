@@ -18,6 +18,12 @@ struct FItemData
 
 	UPROPERTY(EditDefaultsOnly)
 	FName ItemName;
+	UPROPERTY(EditDefaultsOnly)
+	FString ItemDescription;
+	UPROPERTY(EditDefaultsOnly)
+	UTexture2D* ItemIcon;
+	UPROPERTY(EditDefaultsOnly)
+	bool IsUsable;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AItemBase> Class;
