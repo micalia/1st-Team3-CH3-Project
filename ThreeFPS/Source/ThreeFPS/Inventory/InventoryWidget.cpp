@@ -1,4 +1,4 @@
-#include "Inventory/InventoryWidget.h"
+#include "InventoryWidget.h"
 #include "Components/ListView.h"
 
 void UInventoryWidget::RefreshInventory(const TArray<FItemData>& Inventory)
