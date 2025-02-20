@@ -1,5 +1,6 @@
 #include "Intro/IntroHUD.h"
 #include "Components/Button.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 void UIntroHUD::NativeConstruct()
 {
@@ -34,5 +35,5 @@ void UIntroHUD::Setting()
 
 void UIntroHUD::GameExit()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Click Exit!!!"));
+	UKismetSystemLibrary::QuitGame(this, 0, EQuitPreference::Quit, false);
 }
