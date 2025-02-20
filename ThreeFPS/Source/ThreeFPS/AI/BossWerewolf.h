@@ -24,8 +24,9 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    
     float ElapsedTime = 0;
-    /** 제어점 */
+    
     UPROPERTY(EditAnywhere, Category = "Bezier")
     FVector P0 = FVector(0, 0, 0);
 
@@ -35,7 +36,7 @@ public:
     UPROPERTY(EditAnywhere, Category = "Bezier")
     FVector P2 = FVector(200, 0, 100);
 
-    /** 샘플링 개수 */
+    
     UPROPERTY(EditAnywhere, Category = "Bezier")
     int32 NumSegments = 20;
 

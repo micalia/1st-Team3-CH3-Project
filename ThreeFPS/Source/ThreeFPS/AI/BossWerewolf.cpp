@@ -44,7 +44,6 @@ void ABossWerewolf::Tick(float DeltaTime)
 
         SetActorLocation(NewLocation);
 
-        // 디버그용: 베지어 곡선을 따라 점을 찍음
         for (float t = 0.0f; t <= 1.0f; t += 0.05f)
         {
             FVector Point =
