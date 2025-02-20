@@ -4,14 +4,16 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Game/ThreeFPSPlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "ThreeFPS/Game/ThreeFPSProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "HUDWidget.h"
 #include "InputActionValue.h"
+#include "HUDWidget.h"
+#include "Blueprint/UserWidget.h"
 #include "Engine/LocalPlayer.h"
 #include "ViewportToolbar/UnrealEdViewportToolbar.h"
 
@@ -65,13 +67,28 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	
 	//앉기 활성화
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	
 	//달리기 변수 초기화.
 	OriginSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	SprintRate = 1.5f;
 	SprintSpeed = OriginSpeed * SprintRate;
+	bIsSprinting = false;
+	
+	//체력 스태미너
+	MaxHealth = 100.f;
+	CurrentHealth = MaxHealth;
+	MaxStamina = 100.f;
+	CurrentStamina = MaxStamina;
+	bIsStaminaEmpty = false;
+	StaminaConsumeRate = 5.0f;
+	StaminaRegenRate = 3.0f;
+
+	//HUD
+	HUDClass =nullptr;
+	HUDInstance = nullptr;
 }
 
-//////////////////////////////////////////////////////////////////////////// Input
+// Input
 void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -84,8 +101,8 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			if (PlayerController->LookAction){EnhancedInputComponent->BindAction(PlayerController->LookAction,ETriggerEvent::Triggered,this, &AThreeFPSCharacter::Look);}
 			if (PlayerController->JumpAction)
 			{
-				EnhancedInputComponent->BindAction(PlayerController->JumpAction,ETriggerEvent::Started,this, &AThreeFPSCharacter::StartJump);
-				EnhancedInputComponent->BindAction(PlayerController->JumpAction,ETriggerEvent::Completed,this, &AThreeFPSCharacter::StopJump);
+				EnhancedInputComponent->BindAction(PlayerController->JumpAction,ETriggerEvent::Started,this, &ACharacter::Jump);
+				EnhancedInputComponent->BindAction(PlayerController->JumpAction,ETriggerEvent::Completed,this, &ACharacter::StopJumping);
 			}
 			if (PlayerController->CrouchAction)
 			{
@@ -94,7 +111,7 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			}
 			if (PlayerController->SprintAction)
 			{
-				EnhancedInputComponent->BindAction(PlayerController->SprintAction,ETriggerEvent::Started,this, &AThreeFPSCharacter::StartSprint);
+				EnhancedInputComponent->BindAction(PlayerController->SprintAction,ETriggerEvent::Triggered,this, &AThreeFPSCharacter::StartSprint);
 				EnhancedInputComponent->BindAction(PlayerController->SprintAction,ETriggerEvent::Completed,this, &AThreeFPSCharacter::StopSprint);
 			}
 			
@@ -104,6 +121,37 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
+}
+
+void AThreeFPSCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	if (HUDClass)
+	{
+		AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetController());
+		HUDInstance = CreateWidget<UHUDWidget>(PlayerController, HUDClass);
+		HUDInstance->AddToViewport();
+	}
+	//스테미너 업데이트 타이머
+	GetWorldTimerManager().SetTimer(UpdateStaminaTimer, this, &AThreeFPSCharacter::UpdateStamina, 0.1f, true);
+}
+
+//------------------------//
+//        업데이트 함수     //
+//-----------------------//
+void AThreeFPSCharacter::UpdateStamina()
+{
+	if (bIsSprinting)
+	{
+		CurrentStamina = FMath::Clamp(CurrentStamina - StaminaConsumeRate, 0.0f, MaxStamina);
+		if (CurrentStamina <= 0.0f)
+		{
+			bIsStaminaEmpty = true;
+		}
+		else bIsStaminaEmpty = false;
+	}
+	else CurrentStamina = FMath::Clamp(CurrentStamina + StaminaRegenRate, 0.0f, MaxStamina);
+	HUDInstance->SetStaminaBar(CurrentStamina, MaxStamina);
 }
 
 //------------------------//
@@ -134,23 +182,22 @@ void AThreeFPSCharacter::Look(const FInputActionValue& Value)
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
 }
-void AThreeFPSCharacter::StartJump()
-{
-	Jump();
-}
-
-void AThreeFPSCharacter::StopJump()
-{
-	StopJumping();
-}
 
 void AThreeFPSCharacter::StartSprint()
 {
-	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+	
+	if (!bIsSprinting && !GetCharacterMovement()->IsFalling())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+		bIsSprinting = true;
+	}
+	else GetCharacterMovement()->MaxWalkSpeed = OriginSpeed;
+	
 }
 void AThreeFPSCharacter::StopSprint()
 {
 	GetCharacterMovement()->MaxWalkSpeed = OriginSpeed;
+	bIsSprinting = false;
 }
 void AThreeFPSCharacter::StartCrouch()
 {

@@ -13,6 +13,7 @@ class USkeletalMeshComponent;
 class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
+class UHUDWidget;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -29,54 +30,73 @@ class AThreeFPSCharacter : public ACharacter
 	/** camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
-	
+	//3인칭 카메라
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* ThirdPersonCameraComponent;
-	
 	//스프링 암
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* SpringArm;
 
+	//속도 변수
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float OriginSpeed;
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float SprintSpeed;
+	UPROPERTY(EditAnywhere,Category = "Movement")
+	float SprintRate;
+	UPROPERTY(EditAnywhere,Category = "Movement")
+	bool bIsSprinting;
+
+	//체력, 스태미너 변수
+	UPROPERTY(EditAnywhere,Category = "Status")
+	float MaxHealth;
+	UPROPERTY(EditAnywhere,Category = "Status")
+	float CurrentHealth;
+	UPROPERTY(EditAnywhere,Category = "Status")
+	float MaxStamina;
+	UPROPERTY(EditAnywhere,Category = "Status")
+	float CurrentStamina;
+	UPROPERTY(EditAnywhere,Category = "Status")
+	float StaminaConsumeRate;
+	UPROPERTY(EditAnywhere,Category = "Status")
+	float StaminaRegenRate;
+	UPROPERTY(EditAnywhere,Category = "Status")
+	bool bIsStaminaEmpty;
+
+	//HUD
+	UPROPERTY(EditAnywhere,Category = "HUD")
+	TSubclassOf<UHUDWidget> HUDClass;
+	UPROPERTY()
+	UHUDWidget* HUDInstance;
+	
+	//타이머 핸들 변수
+	FTimerHandle UpdateStaminaTimer;
+	
 protected:
-	/** Called for movement input */
-	void Move(const FInputActionValue& Value);
-
-	/** Called for looking input */
-	void Look(const FInputActionValue& Value);
-
-	//달리기 인풋
-	void StartSprint();
-	void StopSprint();
-
-	//점프 인풋
-	void StartJump();
-	void StopJump();
-
-	//앉기 인풋
-	void StartCrouch();
-	void StopCrouch();
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-	// End of APawn interface
+	virtual void BeginPlay() override;
+	
 
-	
-	
+	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
+	//달리기 함수
+	void StartSprint();
+	void StopSprint();
+	//앉기 함수
+	void StartCrouch();
+	void StopCrouch();
 
 public:
 	AThreeFPSCharacter();
-		
-	/** Returns Mesh1P subobject **/
-	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
-	/** Returns FirstPersonCameraComponent subobject **/
-	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 	
-	//움직임 변수
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
-	float OriginSpeed;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
-	float SprintSpeed;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
-	float SprintRate;
+	void UpdateStamina();
 
+	//Getter 함수
+	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+	FORCEINLINE UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
+	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
+	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
 };
 
