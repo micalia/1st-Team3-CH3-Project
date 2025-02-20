@@ -1,5 +1,6 @@
 #include "Intro/IntroHUD.h"
 #include "Components/Button.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 void UIntroHUD::NativeConstruct()
 {
@@ -9,11 +10,6 @@ void UIntroHUD::NativeConstruct()
 	{
 		StartButton->OnClicked.Clear();
 		StartButton->OnClicked.AddDynamic(this, &UIntroHUD::GameStart);
-	}
-	if (SettingButton)
-	{
-		SettingButton->OnClicked.Clear();
-		SettingButton->OnClicked.AddDynamic(this, &UIntroHUD::Setting);
 	}
 	if (ExitButton)
 	{
@@ -27,12 +23,7 @@ void UIntroHUD::GameStart()
 	UE_LOG(LogTemp, Warning, TEXT("Click GameStart!!!"));
 }
 
-void UIntroHUD::Setting()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Click Setting!!!"));
-}
-
 void UIntroHUD::GameExit()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Click Exit!!!"));
+	UKismetSystemLibrary::QuitGame(this, 0, EQuitPreference::Quit, false);
 }
