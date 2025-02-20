@@ -13,6 +13,14 @@ class AThreeFPSGameMode : public AGameModeBase
 
 public:
 	AThreeFPSGameMode();
+	
+	virtual void BeginPlay() override;
+
+private:
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> IntroHUDWidgetClass;
+	UPROPERTY()
+	UUserWidget* IntroHUDWidget;
 };
 
 
