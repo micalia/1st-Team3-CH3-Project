@@ -28,8 +28,5 @@ private:
 	void GameStart();
 
 	UFUNCTION()
-	void Setting();
-
-	UFUNCTION()
 	void GameExit();
 };
