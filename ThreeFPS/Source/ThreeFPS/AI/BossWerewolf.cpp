@@ -3,7 +3,7 @@
 
 #include "BossWerewolf.h"
 #include "Components/CapsuleComponent.h"
-#include "AI/BossWerewolfAIController.h"
+
 // Sets default values
 ABossWerewolf::ABossWerewolf()
 {
@@ -18,16 +18,13 @@ ABossWerewolf::ABossWerewolf()
 	GetMesh()->SetSimulatePhysics(false);
 	GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
 
-	AIControllerClass = ABossWerewolfAIController::StaticClass();
-	// 배치된 NPC나 SpawnActor를 통해서 스폰시킨 NPC 둘다 AI Controller에 의해 통제하도록 설정
-	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned; 
 }
 
 // Called when the game starts or when spawned
 void ABossWerewolf::BeginPlay()
 {
 	Super::BeginPlay();
-	
+ //   DrawBezierCurve();
 }
 
 // Called every frame
@@ -35,12 +32,38 @@ void ABossWerewolf::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+    if (bIsMoving)
+    {
+        ElapsedTime += DeltaTime;
+        float Alpha = FMath::Clamp(ElapsedTime / 3, 0.0f, 1.0f);
+
+        FVector NewLocation =
+            FMath::Lerp(FMath::Lerp(P0, P1, Alpha),
+                FMath::Lerp(P1, P2, Alpha),
+                Alpha);
+
+        SetActorLocation(NewLocation);
+
+        for (float t = 0.0f; t <= 1.0f; t += 0.05f)
+        {
+            FVector Point =
+                FMath::Lerp(FMath::Lerp(P0, P1, t),
+                    FMath::Lerp(P1, P2, t),
+                    t);
+
+            DrawDebugSphere(GetWorld(), Point, 5.0f, 8, FColor::Yellow, false, 999.f);
+        }
+
+        if (Alpha >= 1.0f)
+        {
+            bIsMoving = false;
+        }
+    }
 }
 
 // Called to bind functionality to input
 void ABossWerewolf::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
+	
 }
-
