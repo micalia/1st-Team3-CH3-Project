@@ -1,10 +1,10 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #include "ThreeFPSGameMode.h"
-
 #include "ThreeFPSPlayerController.h"
 #include "ThreeFPS/Character/ThreeFPSCharacter.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Blueprint/UserWidget.h"
+#include "Intro/IntroHUD.h"
+#include "Kismet/GameplayStatics.h"
 
 AThreeFPSGameMode::AThreeFPSGameMode()
 	: Super()
@@ -17,5 +17,28 @@ AThreeFPSGameMode::AThreeFPSGameMode()
 	if (PlayerControllerFinder.Succeeded())
 	{
 		PlayerControllerClass = PlayerControllerFinder.Class;
+	}
+}
+
+void AThreeFPSGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	UE_LOG(LogTemp, Warning, TEXT("Start"));
+
+	if (IsValid(IntroHUDWidgetClass))
+	{
+		IntroHUDWidget = Cast<UIntroHUD>(CreateWidget(GetWorld(), IntroHUDWidgetClass));
+		if (IntroHUDWidget)
+		{
+			IntroHUDWidget->AddToViewport(0);
+			IntroHUDWidget->SetVisibility(ESlateVisibility::Visible);
+
+			if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+			{
+				PlayerController->bShowMouseCursor = true;
+				PlayerController->SetInputMode(FInputModeUIOnly());
+			}
+		}
 	}
 }
