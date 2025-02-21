@@ -3,6 +3,7 @@
 
 #include "BossWerewolf.h"
 #include "Components/CapsuleComponent.h"
+#include "BossWerewolfAIController.h"
 
 // Sets default values
 ABossWerewolf::ABossWerewolf()
@@ -18,6 +19,8 @@ ABossWerewolf::ABossWerewolf()
 	GetMesh()->SetSimulatePhysics(false);
 	GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
 
+    AIControllerClass = ABossWerewolfAIController::StaticClass();
+    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 // Called when the game starts or when spawned
@@ -32,7 +35,7 @@ void ABossWerewolf::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-    if (bIsMoving)
+    /*if (bIsMoving)
     {
         ElapsedTime += DeltaTime;
         float Alpha = FMath::Clamp(ElapsedTime / 3, 0.0f, 1.0f);
@@ -58,7 +61,7 @@ void ABossWerewolf::Tick(float DeltaTime)
         {
             bIsMoving = false;
         }
-    }
+    }*/
 }
 
 // Called to bind functionality to input
