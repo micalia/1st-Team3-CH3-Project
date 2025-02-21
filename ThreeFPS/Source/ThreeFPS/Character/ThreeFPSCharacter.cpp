@@ -151,7 +151,11 @@ void AThreeFPSCharacter::UpdateStamina()
 		else bIsStaminaEmpty = false;
 	}
 	else CurrentStamina = FMath::Clamp(CurrentStamina + StaminaRegenRate, 0.0f, MaxStamina);
-	HUDInstance->SetStaminaBar(CurrentStamina, MaxStamina);
+	/* 설빈 - 임시로 추가*/
+	if (HUDInstance) {
+		HUDInstance->SetStaminaBar(CurrentStamina, MaxStamina);
+	}
+	/***/
 }
 
 //------------------------//
