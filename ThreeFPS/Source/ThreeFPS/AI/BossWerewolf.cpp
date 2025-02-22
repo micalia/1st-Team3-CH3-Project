@@ -19,8 +19,12 @@ ABossWerewolf::ABossWerewolf()
 	GetMesh()->SetSimulatePhysics(false);
 	GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
 
-    AIControllerClass = ABossWerewolfAIController::StaticClass();
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+    static ConstructorHelpers::FClassFinder<UBossWerewolfAnim> tempAnim(TEXT("/Game/SB/Blueprint/AB_BossWerewolf.AB_BossWerewolf_C"));
+    if (tempAnim.Succeeded()) {
+        GetMesh()->SetAnimClass(tempAnim.Class);
+    }
 }
 
 // Called when the game starts or when spawned

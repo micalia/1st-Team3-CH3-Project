@@ -6,6 +6,7 @@
 #include "BehaviorTree/BlackboardData.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BossAI.h"
+#include "BossWerewolf.h"
 
 ABossWerewolfAIController::ABossWerewolfAIController()
 {
@@ -45,5 +46,8 @@ void ABossWerewolfAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
+	if (ABossWerewolf* Wolf = Cast<ABossWerewolf>(InPawn)) {
+		BossAnim = Cast<UBossWerewolfAnim>(Wolf->GetMesh()->GetAnimInstance());
+	}
 	RunAI();
 }
