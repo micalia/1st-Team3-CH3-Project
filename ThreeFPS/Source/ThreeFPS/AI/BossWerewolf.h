@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "BossWerewolf.generated.h"
 
+class UAnimMontage;
+
 UCLASS()
 class THREEFPS_API ABossWerewolf : public ACharacter
 {
@@ -25,6 +27,10 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     
+public:
+    UAnimMontage* UppercutMontage;
+
+public:
     float ElapsedTime = 0;
     
     UPROPERTY(EditAnywhere, Category = "Bezier")

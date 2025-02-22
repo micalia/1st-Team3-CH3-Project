@@ -46,6 +46,7 @@ void ABossWerewolf::BeginPlay()
 {
 	Super::BeginPlay();
 
+    PlayAnimMontage(UppercutMontage, 1);
  //   DrawBezierCurve();
 }
 
