@@ -7,6 +7,7 @@
 #include "BossWerewolf.generated.h"
 
 class UAnimMontage;
+class AThreeFPSCharacter;
 
 UCLASS()
 class THREEFPS_API ABossWerewolf : public ACharacter
@@ -26,6 +27,9 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    
+    void CalculateDistance();
+	TObjectPtr<AThreeFPSCharacter> GetTarget(); 
     
 public:
     UAnimMontage* UppercutMontage;
@@ -47,4 +51,11 @@ public:
     int32 NumSegments = 20;
 
     bool bIsMoving = true;
+
+    UPROPERTY(BlueprintReadOnly)
+	float DistanceToTarget = 0;
+private:
+	UPROPERTY()
+	TObjectPtr<AThreeFPSCharacter> TargetPtr;
+
 };

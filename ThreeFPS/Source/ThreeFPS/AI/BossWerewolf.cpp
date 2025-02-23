@@ -4,6 +4,8 @@
 #include "BossWerewolf.h"
 #include "Components/CapsuleComponent.h"
 #include "BossWerewolfAIController.h"
+#include "Character/ThreeFPSCharacter.h"
+#include "EngineUtils.h"
 
 // Sets default values
 ABossWerewolf::ABossWerewolf()
@@ -54,6 +56,7 @@ void ABossWerewolf::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+    CalculateDistance();
     /*if (bIsMoving)
     {
         ElapsedTime += DeltaTime;
@@ -88,4 +91,27 @@ void ABossWerewolf::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	
+}
+
+void ABossWerewolf::CalculateDistance()
+{
+    if (auto Target = GetTarget()) {
+        DistanceToTarget = (GetActorLocation() - Target->GetActorLocation()).Length();
+    }
+}
+
+TObjectPtr<AThreeFPSCharacter> ABossWerewolf::GetTarget()
+{
+    if (TargetPtr->IsValidLowLevel()) {
+        return TargetPtr;
+    }
+    else {
+        for (TActorIterator<AThreeFPSCharacter> it(GetWorld()); it; ++it) {
+            TargetPtr = *it;
+        }
+        if (TargetPtr->IsValidLowLevel()) {
+            return TargetPtr;
+        }
+    }
+    return nullptr;
 }

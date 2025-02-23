@@ -51,3 +51,8 @@ void ABossWerewolfAIController::OnPossess(APawn* InPawn)
 	}
 	RunAI();
 }
+
+void ABossWerewolfAIController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
