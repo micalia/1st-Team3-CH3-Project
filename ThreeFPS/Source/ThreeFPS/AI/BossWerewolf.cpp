@@ -6,6 +6,7 @@
 #include "BossWerewolfAIController.h"
 #include "Character/ThreeFPSCharacter.h"
 #include "EngineUtils.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 ABossWerewolf::ABossWerewolf()
@@ -13,7 +14,7 @@ ABossWerewolf::ABossWerewolf()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	ConstructorHelpers::FObjectFinder<USkeletalMesh> tempSK(TEXT("/Game/SB/Model/Werebear/Mesh/SK_Werebear_red.SK_Werebear_red"));
+    static ConstructorHelpers::FObjectFinder<USkeletalMesh> tempSK(TEXT("/Game/SB/Model/Werebear/Mesh/SK_Werebear_red.SK_Werebear_red"));
 	if (tempSK.Succeeded()) {
 		GetMesh()->SetSkeletalMesh(tempSK.Object);
 	}
@@ -24,23 +25,21 @@ ABossWerewolf::ABossWerewolf()
 
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
-     ConstructorHelpers::FClassFinder<UBossWerewolfAnim> tempAnim(TEXT("/Game/SB/Blueprint/AB_BossWerewolf.AB_BossWerewolf_C"));
+     static ConstructorHelpers::FClassFinder<UBossWerewolfAnim> tempAnim(TEXT("/Game/SB/Blueprint/AB_BossWerewolf.AB_BossWerewolf_C"));
     if (tempAnim.Succeeded()) {
         GetMesh()->SetAnimClass(tempAnim.Class);
     }
     GetCapsuleComponent()->SetCapsuleHalfHeight(77);
     GetCapsuleComponent()->SetCapsuleRadius(71);
 
-    ConstructorHelpers::FClassFinder<ABossWerewolfAIController> tempAiCon(TEXT("/Game/SB/Blueprint/BP_BossWerewolfAIController.BP_BossWerewolfAIController_C"));
+    static ConstructorHelpers::FClassFinder<ABossWerewolfAIController> tempAiCon(TEXT("/Game/SB/Blueprint/BP_BossWerewolfAIController.BP_BossWerewolfAIController_C"));
     if (tempAiCon.Succeeded()) {
         AIControllerClass = tempAiCon.Class;
     }
-
-    ConstructorHelpers::FObjectFinder<UAnimMontage> tempUppercutMontage(TEXT("/Game/SB/Animation/BossWearAnim/Use/AM_Uppercut.AM_Uppercut"));
-    if (tempUppercutMontage.Succeeded()) {
-        UppercutMontage = tempUppercutMontage.Object;
-    }
     
+    bUseControllerRotationYaw = false;
+    GetCharacterMovement()->bUseControllerDesiredRotation = true;
+    //GetCharacterMovement()->bUseControllerDesiredRotation = true;
 }
 
 // Called when the game starts or when spawned

@@ -15,24 +15,16 @@ class THREEFPS_API ABossWerewolf : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	ABossWerewolf();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-    
+
     void CalculateDistance();
 	TObjectPtr<AThreeFPSCharacter> GetTarget(); 
-    
-public:
-    UAnimMontage* UppercutMontage;
 
 public:
     float ElapsedTime = 0;
@@ -54,6 +46,7 @@ public:
 
     UPROPERTY(BlueprintReadOnly)
 	float DistanceToTarget = 0;
+
 private:
 	UPROPERTY()
 	TObjectPtr<AThreeFPSCharacter> TargetPtr;
