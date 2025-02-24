@@ -13,6 +13,7 @@
 #include "HUDWidget.h"
 #include "InputActionValue.h"
 #include "HUDWidget.h"
+#include "MovieSceneTracksComponentTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "Engine/LocalPlayer.h"
 #include "ViewportToolbar/UnrealEdViewportToolbar.h"
@@ -26,23 +27,7 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
-		
-	// Create a CameraComponent	
-	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
-	FirstPersonCameraComponent->SetRelativeLocation(FVector(-10.f, 0.f, 60.f)); // Position the camera
-	FirstPersonCameraComponent->bUsePawnControlRotation = true;
-	FirstPersonCameraComponent->SetActive(false);
-
-	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
-	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
-	Mesh1P->SetOnlyOwnerSee(true);
-	Mesh1P->SetupAttachment(FirstPersonCameraComponent);
-	Mesh1P->bCastDynamicShadow = false;
-	Mesh1P->CastShadow = false;
-	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
-	Mesh1P->SetVisibility(false);
-
+	
 	//3인칭 카메라 설정
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(GetMesh());
@@ -64,6 +49,21 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	}
 	GetMesh()->SetRelativeRotation(FRotator(0, -90.f, 0.f));
 	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
+
+	//무기 메쉬 초기화
+	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
+	WeaponMesh->SetupAttachment(GetMesh());
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> WeaponMeshAsset(TEXT("/Game/SHyeon/M4A1/Meshes/SK_M4A1"));
+	if (WeaponMeshAsset.Succeeded())
+	{
+		WeaponMesh->SetSkeletalMesh(WeaponMeshAsset.Object);
+	}
+	
+	// if (WeaponMesh && !GetMesh())
+	// {
+	// 	FAttachmentTransformRules attachmentRules(EAttachmentRule::SnapToTarget, true);
+	// 	WeaponMesh-> AttachToComponent(GetMesh(), attachmentRules, FName("hr_weapon"));
+	// }
 	
 	//앉기 활성화
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
@@ -114,6 +114,11 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 				EnhancedInputComponent->BindAction(PlayerController->SprintAction,ETriggerEvent::Triggered,this, &AThreeFPSCharacter::StartSprint);
 				EnhancedInputComponent->BindAction(PlayerController->SprintAction,ETriggerEvent::Completed,this, &AThreeFPSCharacter::StopSprint);
 			}
+			if (PlayerController->AimAction)
+			{
+				EnhancedInputComponent->BindAction(PlayerController->AimAction,ETriggerEvent::Started, this, &AThreeFPSCharacter::StartAim);
+				EnhancedInputComponent->BindAction(PlayerController->AimAction,ETriggerEvent::Completed, this, &AThreeFPSCharacter::StopAim);
+			}
 			
 		}
 	}
@@ -132,8 +137,15 @@ void AThreeFPSCharacter::BeginPlay()
 		HUDInstance = CreateWidget<UHUDWidget>(PlayerController, HUDClass);
 		HUDInstance->AddToViewport();
 	}
+	
 	//스테미너 업데이트 타이머
 	GetWorldTimerManager().SetTimer(UpdateStaminaTimer, this, &AThreeFPSCharacter::UpdateStamina, 0.1f, true);
+	
+	if (WeaponMesh && GetMesh())
+	{
+		FAttachmentTransformRules attachmentRules(EAttachmentRule::SnapToTarget, true);
+		WeaponMesh->AttachToComponent(GetMesh(), attachmentRules, FName("hr_weapon"));
+	}
 }
 
 //------------------------//
@@ -151,7 +163,11 @@ void AThreeFPSCharacter::UpdateStamina()
 		else bIsStaminaEmpty = false;
 	}
 	else CurrentStamina = FMath::Clamp(CurrentStamina + StaminaRegenRate, 0.0f, MaxStamina);
-	HUDInstance->SetStaminaBar(CurrentStamina, MaxStamina);
+	/* 설빈 - 임시로 추가*/
+	if (HUDInstance) {
+		HUDInstance->SetStaminaBar(CurrentStamina, MaxStamina);
+	}
+	/***/
 }
 
 //------------------------//
@@ -185,7 +201,6 @@ void AThreeFPSCharacter::Look(const FInputActionValue& Value)
 
 void AThreeFPSCharacter::StartSprint()
 {
-	
 	if (!bIsSprinting && !GetCharacterMovement()->IsFalling())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
@@ -206,4 +221,14 @@ void AThreeFPSCharacter::StartCrouch()
 void AThreeFPSCharacter::StopCrouch()
 {
 	UnCrouch();
+}
+void AThreeFPSCharacter::StartAim()
+{
+	bIsAiming = true;
+	GetCharacterMovement()->bOrientRotationToMovement=false;
+	GetCharacterMovement()->bUseControllerDesiredRotation=true;
+}
+void AThreeFPSCharacter::StopAim()
+{
+	bIsAiming = false;
 }
