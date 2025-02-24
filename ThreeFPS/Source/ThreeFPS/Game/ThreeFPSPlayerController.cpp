@@ -5,7 +5,7 @@
 #include "EnhancedInput/Public/EnhancedInputSubsystems.h"
 
 AThreeFPSPlayerController::AThreeFPSPlayerController() : MappingContext(nullptr), MoveAction(nullptr), LookAction(nullptr), CrouchAction(nullptr),
-														JumpAction(nullptr),FireAction(nullptr),SprintAction(nullptr)	{}
+														JumpAction(nullptr),FireAction(nullptr),SprintAction(nullptr), AimAction(nullptr)	{}
 
 
 void AThreeFPSPlayerController::BeginPlay()

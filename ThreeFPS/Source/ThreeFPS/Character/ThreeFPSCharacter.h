@@ -24,17 +24,21 @@ class AThreeFPSCharacter : public ACharacter
 	GENERATED_BODY()
 
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Mesh, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Mesh", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* Mesh1P;
 
+	// 무기 메쉬
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Mesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* WeaponMesh;
+	
 	/** camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 	//3인칭 카메라
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* ThirdPersonCameraComponent;
 	//스프링 암
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* SpringArm;
 
 	//속도 변수
@@ -63,6 +67,14 @@ class AThreeFPSCharacter : public ACharacter
 	UPROPERTY(EditAnywhere,Category = "Status")
 	bool bIsStaminaEmpty;
 
+	//조준, 발사
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
+	bool bIsAiming;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
+	float OriginSpringArmLength;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
+	float AimedSpringArmLength;
+
 	//HUD
 	UPROPERTY(EditAnywhere,Category = "HUD")
 	TSubclassOf<UHUDWidget> HUDClass;
@@ -86,6 +98,9 @@ protected:
 	//앉기 함수
 	void StartCrouch();
 	void StopCrouch();
+	//조준 함수
+	void StartAim();
+	void StopAim();
 
 public:
 	AThreeFPSCharacter();
@@ -93,8 +108,6 @@ public:
 	void UpdateStamina();
 
 	//Getter 함수
-	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
-	FORCEINLINE UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
 	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }

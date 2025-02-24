@@ -4,6 +4,9 @@
 #include "BossWerewolf.h"
 #include "Components/CapsuleComponent.h"
 #include "BossWerewolfAIController.h"
+#include "Character/ThreeFPSCharacter.h"
+#include "EngineUtils.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 ABossWerewolf::ABossWerewolf()
@@ -11,22 +14,39 @@ ABossWerewolf::ABossWerewolf()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> tempSK(TEXT("/Game/SB/Model/Werebear/Mesh/SK_Werebear_red.SK_Werebear_red"));
+    static ConstructorHelpers::FObjectFinder<USkeletalMesh> tempSK(TEXT("/Game/SB/Model/Werebear/Mesh/SK_Werebear_red.SK_Werebear_red"));
 	if (tempSK.Succeeded()) {
 		GetMesh()->SetSkeletalMesh(tempSK.Object);
 	}
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetSimulatePhysics(false);
 	GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
+	GetMesh()->SetRelativeLocation(FVector(0, 0, -76));
 
-    AIControllerClass = ABossWerewolfAIController::StaticClass();
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+     static ConstructorHelpers::FClassFinder<UBossWerewolfAnim> tempAnim(TEXT("/Game/SB/Blueprint/AB_BossWerewolf.AB_BossWerewolf_C"));
+    if (tempAnim.Succeeded()) {
+        GetMesh()->SetAnimClass(tempAnim.Class);
+    }
+    GetCapsuleComponent()->SetCapsuleHalfHeight(77);
+    GetCapsuleComponent()->SetCapsuleRadius(71);
+
+    static ConstructorHelpers::FClassFinder<ABossWerewolfAIController> tempAiCon(TEXT("/Game/SB/Blueprint/BP_BossWerewolfAIController.BP_BossWerewolfAIController_C"));
+    if (tempAiCon.Succeeded()) {
+        AIControllerClass = tempAiCon.Class;
+    }
+    
+    bUseControllerRotationYaw = false;
+    GetCharacterMovement()->bUseControllerDesiredRotation = true;
+    //GetCharacterMovement()->bUseControllerDesiredRotation = true;
 }
 
 // Called when the game starts or when spawned
 void ABossWerewolf::BeginPlay()
 {
 	Super::BeginPlay();
+
  //   DrawBezierCurve();
 }
 
@@ -35,6 +55,7 @@ void ABossWerewolf::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+    CalculateDistance();
     /*if (bIsMoving)
     {
         ElapsedTime += DeltaTime;
@@ -69,4 +90,27 @@ void ABossWerewolf::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	
+}
+
+void ABossWerewolf::CalculateDistance()
+{
+    if (auto Target = GetTarget()) {
+        DistanceToTarget = (GetActorLocation() - Target->GetActorLocation()).Length();
+    }
+}
+
+TObjectPtr<AThreeFPSCharacter> ABossWerewolf::GetTarget()
+{
+    if (TargetPtr->IsValidLowLevel()) {
+        return TargetPtr;
+    }
+    else {
+        for (TActorIterator<AThreeFPSCharacter> it(GetWorld()); it; ++it) {
+            TargetPtr = *it;
+        }
+        if (TargetPtr->IsValidLowLevel()) {
+            return TargetPtr;
+        }
+    }
+    return nullptr;
 }
