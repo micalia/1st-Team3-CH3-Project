@@ -23,24 +23,4 @@ void ABaseMonster::ApplyRagdoll(FVector HitDirection)
 {
 }
 
-// Called when the game starts or when spawned
-//void ABaseMonster::BeginPlay()
-//{
-//	Super::BeginPlay();
-//	
-//}
-//
-//// Called every frame
-//void ABaseMonster::Tick(float DeltaTime)
-//{
-//	Super::Tick(DeltaTime);
-//
-//}
-//
-//// Called to bind functionality to input
-//void ABaseMonster::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-//{
-//	Super::SetupPlayerInputComponent(PlayerInputComponent);
-//
-//}
 

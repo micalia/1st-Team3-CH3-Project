@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -24,8 +22,7 @@ class THREEFPS_API AZombie : public ABaseMonster
 public:
 	AZombie();
 
-	//UPROPERTY(EditInstanceOnly,BluprintReadWrite,Category = "AI")
-	//TArray<AActor> PatrolPoints;
+	void SetClothingMeshs(USkeletalMesh* Pants, USkeletalMesh* Shirt, USkeletalMesh* Hair, UStaticMesh* HairStatic);
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
@@ -33,20 +30,20 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "State")
 	bool bPlayerDetected;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State" )
-	TArray<USkeletalMesh*> PantsArr;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
-	TArray<USkeletalMesh*> ShirtsArr;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
-	TArray<USkeletalMesh*> Hairs;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "State")
 	TArray<float> AttackPowerArr;
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Costume")
+	USkeletalMeshComponent* PantsMeshComp;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Costume")
+	USkeletalMeshComponent* ShirtMeshComp;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Costume")
+	USkeletalMeshComponent* HairMeshComp;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Costume")
+	UStaticMeshComponent* HairStaticMeshComp;
 
 	FTimerHandle GameStateHandle;
+
 
 	virtual void OnCapsuleOverlap(UPrimitiveComponent* OverlappedComp,/*자신*/
 		AActor* OtherActor,/*충돌한 액터*/
@@ -65,4 +62,6 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	virtual void ApplyRagdoll(FVector HitDirection) override;
+
+	void VariousJombie();
 };
