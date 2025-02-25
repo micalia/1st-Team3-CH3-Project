@@ -17,7 +17,11 @@ class THREEFPS_API AMonsterAIController : public AAIController
 public:
 	virtual void OnPossess(APawn* pawn) override;
 	virtual void BeginPlay() override;
+
+	/*
 	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
+	*/
+
 	void TempOnMoveCompleted();
 
 protected:

@@ -51,7 +51,7 @@ void AMonsterAIController::MoveToCurrentPatrolPoint()
 }
 */
 
-
+/*
 void AMonsterAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
     Super::OnMoveCompleted(RequestID, Result);
@@ -135,7 +135,7 @@ void AMonsterAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFo
     return;
 
 }
-
+*/
 void AMonsterAIController::TempOnMoveCompleted()
 {
     /*
