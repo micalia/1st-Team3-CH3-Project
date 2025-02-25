@@ -30,7 +30,7 @@ public:
     UPROPERTY(EditAnywhere)
 	float AttackRange = 1500;
 	UPROPERTY(EditAnywhere)
-	float TurnSpeed = 2.0f;
+	float TurnSpeed = 10.0f;
 
     float ElapsedTime = 0;
     
