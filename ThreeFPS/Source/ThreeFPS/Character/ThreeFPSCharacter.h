@@ -104,7 +104,7 @@ protected:
 
 public:
 	AThreeFPSCharacter();
-	
+	void GameStart();
 	void UpdateStamina();
 
 	//Getter 함수

@@ -128,24 +128,31 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	}
 }
 
-void AThreeFPSCharacter::BeginPlay()
+void AThreeFPSCharacter::GameStart()
 {
-	Super::BeginPlay();
 	if (HUDClass)
 	{
 		AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetController());
 		HUDInstance = CreateWidget<UHUDWidget>(PlayerController, HUDClass);
 		HUDInstance->AddToViewport();
 	}
-	
+
 	//스테미너 업데이트 타이머
 	GetWorldTimerManager().SetTimer(UpdateStaminaTimer, this, &AThreeFPSCharacter::UpdateStamina, 0.1f, true);
-	
+
 	if (WeaponMesh && GetMesh())
 	{
 		FAttachmentTransformRules attachmentRules(EAttachmentRule::SnapToTarget, true);
 		WeaponMesh->AttachToComponent(GetMesh(), attachmentRules, FName("hr_weapon"));
 	}
+}
+
+void AThreeFPSCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	// 해당 내용 게임모드에서 관리하기 위해 GameStart로 옮겼습니다.
+	// 추후 먼저 로딩 필요한 부분은 다시 옮겨주셔도 괜찮을것 같아요!
+	// 작업자 손은수
 }
 
 //------------------------//
