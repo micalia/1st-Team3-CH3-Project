@@ -29,9 +29,9 @@ public:
 	UBossWerewolfAnim();
 
 	UFUNCTION(BlueprintCallable)
-	FORCEINLINE void SetAnimState(EBossWerewolfState InNewState){ CurrAnimState = InNewState; };
+	void SetAnimState(EBossWerewolfState InNewState);
 	UFUNCTION(BlueprintPure, meta = (BlueprintThreadSafe))
-	FORCEINLINE EBossWerewolfState GetAnimState(){ return CurrAnimState; };
+	EBossWerewolfState GetAnimState();
 
 	UFUNCTION(BlueprintCallable)
 	void PlayUppercutAtk();
@@ -57,6 +57,7 @@ public:
 	virtual void SetAIAttackDelegate(const FAIBossAttackFinished& InOnAttackFinished) override;
 
 	FAIBossAttackFinished OnAttackFinished;
+	
 private:
 	EBossWerewolfState CurrAnimState = EBossWerewolfState::Idle;
 };

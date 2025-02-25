@@ -24,6 +24,16 @@ UBossWerewolfAnim::UBossWerewolfAnim()
 	}
 }
 
+void UBossWerewolfAnim::SetAnimState(EBossWerewolfState InNewState)
+{
+	CurrAnimState = InNewState;
+}
+
+EBossWerewolfState UBossWerewolfAnim::GetAnimState()
+{
+	return CurrAnimState;
+}
+
 void UBossWerewolfAnim::PlayUppercutAtk()
 {
 	if (AActor* Owner = TryGetPawnOwner()) {

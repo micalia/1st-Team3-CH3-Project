@@ -96,6 +96,7 @@ void ABossWerewolf::CalculateDistance()
 {
     if (auto Target = GetTarget()) {
         DistanceToTarget = (GetActorLocation() - Target->GetActorLocation()).Length();
+        //GEngine->AddOnScreenDebugMessage(-1, 999, FColor::Purple, FString::Printf(TEXT("%s >> Dis: %f"), *FDateTime::UtcNow().ToString(TEXT("%H:%M:%S")), DistanceToTarget), true, FVector2D(1.5f, 1.5f));
     }
 }
 

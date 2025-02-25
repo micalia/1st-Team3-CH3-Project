@@ -27,6 +27,11 @@ public:
 	TObjectPtr<AThreeFPSCharacter> GetTarget(); 
 
 public:
+    UPROPERTY(EditAnywhere)
+	float AttackRange = 1500;
+	UPROPERTY(EditAnywhere)
+	float TurnSpeed = 2.0f;
+
     float ElapsedTime = 0;
     
     UPROPERTY(EditAnywhere, Category = "Bezier")
