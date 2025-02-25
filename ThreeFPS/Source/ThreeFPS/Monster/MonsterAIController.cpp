@@ -5,10 +5,13 @@
 #include "BaseMonster.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "NavigationSystem.h"
+#include "BehaviorTree/BlackboardComponent.h"
+
 void AMonsterAIController::OnPossess(APawn* pawn)
 {
+    PatrolType = static_cast<EPATROLTYPE>(FMath::RandRange(0, 3));
     Super::OnPossess(pawn);
-    bFound = false;
+    //bFound = false;
 }
 
 void AMonsterAIController::BeginPlay()
@@ -17,6 +20,13 @@ void AMonsterAIController::BeginPlay()
     //	MoveToCurrentPatrolPoint();
 }
 
+void AMonsterAIController::UpdatePatrolState(EPATROLTYPE type)
+{
+    PatrolType = type;
+    GetBlackboardComponent()->SetValueAsEnum(TEXT("PatrolState"), static_cast<uint8>(PatrolType));
+}
+
+#pragma region //당장쓰이지 않는 함수 주석
 /*
 void AMonsterAIController::MoveToCurrentPatrolPoint()
 {
@@ -228,3 +238,4 @@ void AMonsterAIController::TempOnMoveCompleted()
     }
     */
 }
+#pragma endregion

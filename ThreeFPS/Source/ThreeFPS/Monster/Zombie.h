@@ -5,7 +5,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "Zombie.generated.h"
 
-UENUM(BlueprintType)enum class EZONBIE_ST : uint8
+UENUM(BlueprintType)
+enum class EZONBIE_ST : uint8
 {
 	DELAY,
 	IDLE,
@@ -15,6 +16,7 @@ UENUM(BlueprintType)enum class EZONBIE_ST : uint8
 	ATTACK,
 	DIE
 };
+
 UCLASS()
 class THREEFPS_API AZombie : public ABaseMonster
 {
@@ -35,15 +37,23 @@ protected:
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Costume")
 	USkeletalMeshComponent* PantsMeshComp;
+
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Costume")
 	USkeletalMeshComponent* ShirtMeshComp;
+
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Costume")
 	USkeletalMeshComponent* HairMeshComp;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Costume")
 	UStaticMeshComponent* HairStaticMeshComp;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Costume")
+	
+
 	FTimerHandle GameStateHandle;
 
+
+	
 
 	virtual void OnCapsuleOverlap(UPrimitiveComponent* OverlappedComp,/*자신*/
 		AActor* OtherActor,/*충돌한 액터*/

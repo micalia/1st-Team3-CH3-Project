@@ -52,6 +52,7 @@ AZombie::AZombie()
     HairStaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HairStaticMesh"));
     HairStaticMeshComp->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("head"));
     HairStaticMeshComp->SetRelativeLocationAndRotation(FVector(-164.7f, 0.f, 0.f), FRotator(0.f, -90.f, 0.f));
+
 }
 
 void AZombie::SetClothingMeshs(USkeletalMesh* Pants, USkeletalMesh* Shirt, USkeletalMesh* Hair , UStaticMesh* HairStatic )
@@ -104,6 +105,22 @@ void AZombie::BeginPlay()
 }
 void AZombie::VariousJombie()
 {
+    TMap<FString, FString> CostumeMap =  // Shirt 4개, Pants 2개 , hair 5개,
+    {
+        {TEXT("Shirt0"), TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/male/Clothing/Singlet/SK_Clth_Singlet_M02.SK_Clth_Singlet_M02'")},
+        {TEXT("Shirt1"), TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/male/Clothing/Tshirt/SK_Clth_Tshirt_M02.SK_Clth_Tshirt_M02'")},
+        {TEXT("Shirt2"), TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/Clothing/OutfitCheerleader/SK_Clth_Singlet_Cheerleader_F02.SK_Clth_Singlet_Cheerleader_F02'")},
+        {TEXT("Shirt3"), TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/Clothing/OutfitLingerie/SK_Clth_Bra_Lingerie_F02.SK_Clth_Bra_Lingerie_F02'")},
+
+        {TEXT("Pants0"),TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/male/Clothing/LongJeans/SK_Clth_LongPants_M02.SK_Clth_LongPants_M02'")},
+        {TEXT("Pants1"),TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/Clothing/OutfitCheerleader/SK_Clth_Skirt_Cheerleader_F02.SK_Clth_Skirt_Cheerleader_F02'")},
+        {TEXT("Hair0"), TEXT("StaticMesh'/Game/KSW/Resouces/zombie/mesh/male/Hair/SM_Hair_M02.SM_Hair_M02'")},
+        {TEXT("Hair1"), TEXT("StaticMesh'/Game/KSW/Resouces/zombie/mesh/male/Hair/SM_HairCap_M02.SM_HairCap_M02'")},
+        {TEXT("Hair2"), TEXT("StaticMesh'/Game/KSW/Resouces/zombie/mesh/male/Hair/SM_HairCombined_M02.SM_HairCombined_M02'")},
+        {TEXT("Hair3"), TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/Hair/SK_Hair_F02.SK_Hair_F02'")},
+        {TEXT("Hair4"), TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/Hair/SK_HairCap_F02.SK_HairCap_F02'")},
+    };
+
     bool bSelectFeMale = FMath::RandRange(0, 1) == 0 ? true : false;
     FString BodyMeshFilePath = "";
     if (bSelectFeMale)
@@ -124,27 +141,34 @@ void AZombie::VariousJombie()
     if (bNude)
     {
         USkeletalMesh* BraMesh = nullptr;
-        if (bSelectFeMale)//여성이면 브라만 입힘.
-            BraMesh =  LoadObject<USkeletalMesh>(nullptr,TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/Clothing/OutfitLingerie/SK_Clth_Bra_Lingerie_F02.SK_Clth_Bra_Lingerie_F02'"));
-        SetClothingMeshs(nullptr, BraMesh, nullptr, nullptr);
+        USkeletalMesh* FhairMesh = nullptr;
+        UStaticMesh* MhairMesh = nullptr;
+        FString HairKey = "";
+        FString Mhair = "";
+        int randHairType = FMath::RandRange(0, 2);
+        if (bSelectFeMale)//여성이면 브라자 입힘.
+        {
+           BraMesh = LoadObject<USkeletalMesh>(nullptr, *CostumeMap["Shirt3"]);
+           if (randHairType != 0)
+           {
+               HairKey = "Hair" + FString::FromInt(FMath::RandRange(3, 4));
+               FhairMesh = LoadObject<USkeletalMesh>(nullptr, *CostumeMap[HairKey]);
+           }
+        }
+        else 
+        {
+            if (randHairType != 0)
+            {
+                HairKey = "Hair" + FString::FromInt(FMath::RandRange(0, 2));
+                MhairMesh = LoadObject<UStaticMesh>(nullptr, *CostumeMap[HairKey]);
+            }
+        }
+        
+        SetClothingMeshs(nullptr, BraMesh, FhairMesh, MhairMesh);
         return;
     }
 
-    TMap<FString, FString> CostumeMap =  // Shirt 4개, Pants 2개 , hair 5개,
-    {
-        {TEXT("Shirt0"), TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/male/Clothing/Singlet/SK_Clth_Singlet_M02.SK_Clth_Singlet_M02'")},
-        {TEXT("Shirt1"), TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/male/Clothing/Tshirt/SK_Clth_Tshirt_M02.SK_Clth_Tshirt_M02'")},
-        {TEXT("Shirt2"), TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/Clothing/OutfitCheerleader/SK_Clth_Singlet_Cheerleader_F02.SK_Clth_Singlet_Cheerleader_F02'")},
-        {TEXT("Shirt3"), TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/Clothing/OutfitLingerie/SK_Clth_Bra_Lingerie_F02.SK_Clth_Bra_Lingerie_F02'")},
 
-        {TEXT("Pants0"),TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/male/Clothing/LongJeans/SK_Clth_LongPants_M02.SK_Clth_LongPants_M02'")},
-        {TEXT("Pants1"),TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/Clothing/OutfitCheerleader/SK_Clth_Skirt_Cheerleader_F02.SK_Clth_Skirt_Cheerleader_F02'")},
-        {TEXT("Hair0"), TEXT("StaticMesh'/Game/KSW/Resouces/zombie/mesh/male/Hair/SM_Hair_M02.SM_Hair_M02'")},
-        {TEXT("Hair1"), TEXT("StaticMesh'/Game/KSW/Resouces/zombie/mesh/male/Hair/SM_HairCap_M02.SM_HairCap_M02'")},
-        {TEXT("Hair2"), TEXT("StaticMesh'/Game/KSW/Resouces/zombie/mesh/male/Hair/SM_HairCombined_M02.SM_HairCombined_M02'")},
-        {TEXT("Hair3"), TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/Hair/SK_Hair_F02.SK_Hair_F02'")},
-        {TEXT("Hair4"), TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/Hair/SK_HairCap_F02.SK_HairCap_F02'")},
-    };
 
     int32 HairIdx = -1;
     int32 ShirtIdx = -1;

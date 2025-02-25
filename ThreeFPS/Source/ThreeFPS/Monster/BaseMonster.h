@@ -7,6 +7,7 @@
 
 class USphereComponent;
 
+
 UCLASS()
 class THREEFPS_API ABaseMonster : public ACharacter, public IMonsterInterface
 {
@@ -36,5 +37,4 @@ protected:
 		int32 OtherBodyIndex) override;
 
 	virtual void ApplyRagdoll(FVector HitDirection) override;
-
 };
