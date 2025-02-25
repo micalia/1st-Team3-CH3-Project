@@ -120,6 +120,16 @@ void AZombie::VariousJombie()
         return;
     }
 
+    bool bNude = FMath::RandRange(0, 1) == 0 ? true : false;  //누드 바디면 기본 바디로만 진행(속웃상태) 
+    if (bNude)
+    {
+        USkeletalMesh* BraMesh = nullptr;
+        if (bSelectFeMale)//여성이면 브라만 입힘.
+            BraMesh =  LoadObject<USkeletalMesh>(nullptr,TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/Clothing/OutfitLingerie/SK_Clth_Bra_Lingerie_F02.SK_Clth_Bra_Lingerie_F02'"));
+        SetClothingMeshs(nullptr, BraMesh, nullptr, nullptr);
+        return;
+    }
+
     TMap<FString, FString> CostumeMap =  // Shirt 4개, Pants 2개 , hair 5개,
     {
         {TEXT("Shirt0"), TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/male/Clothing/Singlet/SK_Clth_Singlet_M02.SK_Clth_Singlet_M02'")},
