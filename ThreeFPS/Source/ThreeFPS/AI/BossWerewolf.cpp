@@ -8,13 +8,11 @@
 #include "EngineUtils.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-// Sets default values
 ABossWerewolf::ABossWerewolf()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-    static ConstructorHelpers::FObjectFinder<USkeletalMesh> tempSK(TEXT("/Game/SB/Model/Werebear/Mesh/SK_Werebear_red.SK_Werebear_red"));
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> tempSK(TEXT("/Game/SB/Model/Werebear/Mesh/SK_Werebear_red.SK_Werebear_red"));
 	if (tempSK.Succeeded()) {
 		GetMesh()->SetSkeletalMesh(tempSK.Object);
 	}
@@ -23,95 +21,167 @@ ABossWerewolf::ABossWerewolf()
 	GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
 	GetMesh()->SetRelativeLocation(FVector(0, 0, -76));
 
-    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
-     static ConstructorHelpers::FClassFinder<UBossWerewolfAnim> tempAnim(TEXT("/Game/SB/Blueprint/AB_BossWerewolf.AB_BossWerewolf_C"));
-    if (tempAnim.Succeeded()) {
-        GetMesh()->SetAnimClass(tempAnim.Class);
-    }
-    GetCapsuleComponent()->SetCapsuleHalfHeight(77);
-    GetCapsuleComponent()->SetCapsuleRadius(71);
+	static ConstructorHelpers::FClassFinder<UBossWerewolfAnim> tempAnim(TEXT("/Game/SB/Blueprint/AB_BossWerewolf.AB_BossWerewolf_C"));
+	if (tempAnim.Succeeded()) {
+		GetMesh()->SetAnimClass(tempAnim.Class);
+	}
+	GetCapsuleComponent()->SetCapsuleHalfHeight(77);
+	GetCapsuleComponent()->SetCapsuleRadius(71);
 
-    static ConstructorHelpers::FClassFinder<ABossWerewolfAIController> tempAiCon(TEXT("/Game/SB/Blueprint/BP_BossWerewolfAIController.BP_BossWerewolfAIController_C"));
-    if (tempAiCon.Succeeded()) {
-        AIControllerClass = tempAiCon.Class;
-    }
-    
-    bUseControllerRotationYaw = false;
-    GetCharacterMovement()->bUseControllerDesiredRotation = true;
-    //GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	static ConstructorHelpers::FClassFinder<ABossWerewolfAIController> tempAiCon(TEXT("/Game/SB/Blueprint/BP_BossWerewolfAIController.BP_BossWerewolfAIController_C"));
+	if (tempAiCon.Succeeded()) {
+		AIControllerClass = tempAiCon.Class;
+	}
+
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 }
 
-// Called when the game starts or when spawned
 void ABossWerewolf::BeginPlay()
 {
 	Super::BeginPlay();
-
- //   DrawBezierCurve();
 }
 
-// Called every frame
 void ABossWerewolf::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-    CalculateDistance();
-    /*if (bIsMoving)
-    {
-        ElapsedTime += DeltaTime;
-        float Alpha = FMath::Clamp(ElapsedTime / 3, 0.0f, 1.0f);
+	CalculateDistance();
 
-        FVector NewLocation =
-            FMath::Lerp(FMath::Lerp(P0, P1, Alpha),
-                FMath::Lerp(P1, P2, Alpha),
-                Alpha);
-
-        SetActorLocation(NewLocation);
-
-        for (float t = 0.0f; t <= 1.0f; t += 0.05f)
-        {
-            FVector Point =
-                FMath::Lerp(FMath::Lerp(P0, P1, t),
-                    FMath::Lerp(P1, P2, t),
-                    t);
-
-            DrawDebugSphere(GetWorld(), Point, 5.0f, 8, FColor::Yellow, false, 999.f);
-        }
-
-        if (Alpha >= 1.0f)
-        {
-            bIsMoving = false;
-        }
-    }*/
+	if (jumpAttackOn == true) JumpAttackState();
+	if (bTurnComplete == false) return;
+	LookAtPlayerToAttack();
 }
 
-// Called to bind functionality to input
 void ABossWerewolf::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	
+
 }
 
 void ABossWerewolf::CalculateDistance()
 {
-    if (auto Target = GetTarget()) {
-        DistanceToTarget = (GetActorLocation() - Target->GetActorLocation()).Length();
-        //GEngine->AddOnScreenDebugMessage(-1, 999, FColor::Purple, FString::Printf(TEXT("%s >> Dis: %f"), *FDateTime::UtcNow().ToString(TEXT("%H:%M:%S")), DistanceToTarget), true, FVector2D(1.5f, 1.5f));
-    }
+	if (auto Target = GetTarget()) {
+		DistanceToTarget = (GetActorLocation() - Target->GetActorLocation()).Length();
+	}
 }
 
 TObjectPtr<AThreeFPSCharacter> ABossWerewolf::GetTarget()
 {
-    if (TargetPtr->IsValidLowLevel()) {
-        return TargetPtr;
-    }
-    else {
-        for (TActorIterator<AThreeFPSCharacter> it(GetWorld()); it; ++it) {
-            TargetPtr = *it;
-        }
-        if (TargetPtr->IsValidLowLevel()) {
-            return TargetPtr;
-        }
-    }
-    return nullptr;
+	if (TargetPtr->IsValidLowLevel()) {
+		return TargetPtr;
+	}
+	else {
+		for (TActorIterator<AThreeFPSCharacter> it(GetWorld()); it; ++it) {
+			TargetPtr = *it;
+		}
+		if (TargetPtr->IsValidLowLevel()) {
+			return TargetPtr;
+		}
+	}
+	return nullptr;
+}
+
+FVector ABossWerewolf::CalculateBezier(float ratio, FVector P0, FVector P1, FVector P2)
+{
+	FVector M0 = FMath::Lerp<FVector, float>(P0, P1, ratio);
+	FVector M1 = FMath::Lerp<FVector, float>(P1, P2, ratio);
+	FVector B = FMath::Lerp<FVector, float>(M0, M1, ratio);
+	return B;
+}
+
+void ABossWerewolf::JumpAttackPath(FVector InStartPos, FVector InBetweenPos, FVector InEndPos)
+{
+	LineLoc.Empty();
+	float ratio = 1 / CurvePointCount;
+	for (int32 i = 0; i <= (int32)CurvePointCount; i++)
+	{
+		FVector B = CalculateBezier(ratio * i, InStartPos, InBetweenPos, InEndPos);
+		LineLoc.Add(B);
+	}
+}
+
+void ABossWerewolf::MakeJumpAttackTrajectory()
+{
+	if (IsValid(TargetPtr)) {
+		if (auto BossAnim = Cast<UBossWerewolfAnim>(GetMesh()->GetAnimInstance())) {
+			JumpMovingTime = BossAnim->JumpAttackEndTime - BossAnim->JumpAttackStartTime;
+			StartPos = GetActorLocation();
+			FVector CapsuleCenter = TargetPtr->GetCapsuleComponent()->GetComponentLocation();
+			float CapsuleHalfHeight = TargetPtr->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
+			FVector BottomLocation = CapsuleCenter - FVector(0, 0, CapsuleHalfHeight);
+			OriginEndPos = BottomLocation;
+
+			FVector BetweenPos = FMath::Lerp(StartPos, OriginEndPos, 0.5);
+			BetweenPos.Z += BetweenHeight;
+
+			JumpAttackPath(StartPos, BetweenPos, OriginEndPos);
+			jumpAttackOn = true;
+		}
+	}
+}
+
+void ABossWerewolf::JumpAttackState()
+{
+	PtoPCurrTime += GetWorld()->DeltaTimeSeconds;
+	float PointToPointMoveTime = JumpMovingTime / CurvePointCount;
+
+	if (PtoPCurrTime < PointToPointMoveTime) {
+		float alpha = PtoPCurrTime / PointToPointMoveTime;
+		SetActorLocation(FMath::Lerp(LineLoc[jumpAttackIdx], LineLoc[jumpAttackIdx + 1], alpha));
+	}
+	else {
+		PtoPCurrTime = 0;
+		jumpAttackIdx++;
+		if (jumpAttackIdx + 1 == LineLoc.Num())
+		{
+			jumpAttackIdx = 0;
+			jumpAttackOn = false;
+			GetCharacterMovement()->GravityScale = 1;
+		}
+	}
+}
+
+void ABossWerewolf::SetNewGoalDirection()
+{
+	if (IsValid(TargetPtr)) {
+		bTurnComplete = true;
+		PlayerPosition = TargetPtr->GetActorLocation();
+		PrevTurnAngle = GetActorRotation().Yaw;
+
+		FVector Dir = PlayerPosition - GetActorLocation();
+		ToPlayerDir = Dir.GetSafeNormal();
+		float Dot = FVector::DotProduct(GetActorForwardVector(), ToPlayerDir);
+		float Radian = FMath::Acos(Dot);
+		float AngleToPlayer = Radian * 180 / 3.141592f;
+		FVector Cross = FVector::CrossProduct(GetActorForwardVector(), ToPlayerDir);
+		if (Cross.Z >= 0)
+		{
+			NextTurnAngle = AngleToPlayer;
+		}
+		else if (Cross.Z < 0)
+		{
+			NextTurnAngle = -AngleToPlayer;
+		}
+	}
+}
+
+void ABossWerewolf::LookAtPlayerToAttack()
+{
+	CurrentRotationTime += GetWorld()->GetDeltaSeconds();
+	float alpha = CurrentRotationTime / RotationTime;
+	if (alpha < 1)
+	{
+		float angle = PrevTurnAngle;
+		angle += FMath::Lerp<float, float>(0, NextTurnAngle, alpha);
+		SetActorRotation(FRotator(0.0f, angle, 0.0f).Quaternion());
+	}
+	else
+	{
+		SetActorRotation(FRotator(0.0f, PrevTurnAngle + NextTurnAngle, 0.0f).Quaternion());
+		CurrentRotationTime = 0;
+		bTurnComplete = false;
+	}
 }

@@ -38,11 +38,12 @@ void UBossWerewolfAnim::PlayUppercutAtk()
 {
 	if (AActor* Owner = TryGetPawnOwner()) {
 		if (ABossWerewolf* Boss = Cast<ABossWerewolf>(Owner)) {
-			if (UppercutMontage)
+			if (UppercutMontage) {
 				Montage_Play(UppercutMontage);
-			FOnMontageEnded MontageEndedDel;
-			MontageEndedDel.BindUObject(this, &UBossWerewolfAnim::AttackEnd);
-			Montage_SetEndDelegate(MontageEndedDel, UppercutMontage);
+				FOnMontageEnded MontageEndedDel;
+				MontageEndedDel.BindUObject(this, &UBossWerewolfAnim::AttackEnd);
+				Montage_SetEndDelegate(MontageEndedDel, UppercutMontage);
+			}
 		}
 	}
 }
@@ -51,11 +52,13 @@ void UBossWerewolfAnim::PlayJumpAtk()
 {
 	if (AActor* Owner = TryGetPawnOwner()) {
 		if (ABossWerewolf* Boss = Cast<ABossWerewolf>(Owner)) {
-			if (JumpAtkMontage)
+			if (JumpAtkMontage) {
+				JumpAtkMontage->GetSectionStartAndEndTime(1, JumpAttackStartTime, JumpAttackEndTime);
 				Montage_Play(JumpAtkMontage);
-			FOnMontageEnded MontageEndedDel;
-			MontageEndedDel.BindUObject(this, &UBossWerewolfAnim::AttackEnd);
-			Montage_SetEndDelegate(MontageEndedDel, JumpAtkMontage);
+				FOnMontageEnded MontageEndedDel;
+				MontageEndedDel.BindUObject(this, &UBossWerewolfAnim::AttackEnd);
+				Montage_SetEndDelegate(MontageEndedDel, JumpAtkMontage);
+			}
 		}
 	}
 }
@@ -64,11 +67,12 @@ void UBossWerewolfAnim::PlayStoneUpAtk()
 {
 	if (AActor* Owner = TryGetPawnOwner()) {
 		if (ABossWerewolf* Boss = Cast<ABossWerewolf>(Owner)) {
-			if (StoneUpMontage)
+			if (StoneUpMontage) {
 				Montage_Play(StoneUpMontage);
-			FOnMontageEnded MontageEndedDel;
-			MontageEndedDel.BindUObject(this, &UBossWerewolfAnim::AttackEnd);
-			Montage_SetEndDelegate(MontageEndedDel, StoneUpMontage);
+				FOnMontageEnded MontageEndedDel;
+				MontageEndedDel.BindUObject(this, &UBossWerewolfAnim::AttackEnd);
+				Montage_SetEndDelegate(MontageEndedDel, StoneUpMontage);
+			}
 		}
 	}
 }
@@ -77,11 +81,12 @@ void UBossWerewolfAnim::PlaySpreadWaveAtk()
 {
 	if (AActor* Owner = TryGetPawnOwner()) {
 		if (ABossWerewolf* Boss = Cast<ABossWerewolf>(Owner)) {
-			if (SpreadWaveMontage)
+			if (SpreadWaveMontage) {
 				Montage_Play(SpreadWaveMontage);
-			FOnMontageEnded MontageEndedDel;
-			MontageEndedDel.BindUObject(this, &UBossWerewolfAnim::AttackEnd);
-			Montage_SetEndDelegate(MontageEndedDel, SpreadWaveMontage);
+				FOnMontageEnded MontageEndedDel;
+				MontageEndedDel.BindUObject(this, &UBossWerewolfAnim::AttackEnd);
+				Montage_SetEndDelegate(MontageEndedDel, SpreadWaveMontage);
+			}
 		}
 	}
 }

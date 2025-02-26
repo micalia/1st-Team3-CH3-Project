@@ -57,7 +57,9 @@ public:
 	virtual void SetAIAttackDelegate(const FAIBossAttackFinished& InOnAttackFinished) override;
 
 	FAIBossAttackFinished OnAttackFinished;
-	
+
+	float JumpAttackStartTime;	
+	float JumpAttackEndTime;	
 private:
 	EBossWerewolfState CurrAnimState = EBossWerewolfState::Idle;
 };
