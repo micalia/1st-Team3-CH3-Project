@@ -1,4 +1,4 @@
-// 보스 AI 담당 : 신설빈
+// Boss AI - Shin Seol Bin
 
 #include "AI/BTTaskCppUppercutAtk.h"
 #include "AIController.h"

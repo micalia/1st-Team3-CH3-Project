@@ -1,4 +1,4 @@
-// 보스 AI 담당 : 신설빈
+// Boss AI - Shin Seol Bin
 
 #include "AI/BossWerewolfAnim.h"
 #include "AI/BossWerewolf.h"

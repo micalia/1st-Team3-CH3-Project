@@ -1,5 +1,5 @@
 
-// 보스 AI 담당 : 신설빈
+// Boss AI - Shin Seol Bin
 
 #pragma once
 
