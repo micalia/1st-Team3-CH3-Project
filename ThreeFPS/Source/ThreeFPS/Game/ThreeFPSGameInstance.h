@@ -14,4 +14,6 @@ class THREEFPS_API UThreeFPSGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 	
+public:
+	virtual void Init() override;
 };

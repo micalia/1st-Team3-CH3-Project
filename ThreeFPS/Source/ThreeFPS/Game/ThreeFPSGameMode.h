@@ -21,6 +21,13 @@ private:
 	TSubclassOf<UUserWidget> IntroHUDWidgetClass;
 	UPROPERTY()
 	UUserWidget* IntroHUDWidget;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> LoadingWidgetClass;
+
+	UFUNCTION()
+	void SwitchToCineCamera();
+	UFUNCTION()
+	void SetIntroUI();
 };
 
 

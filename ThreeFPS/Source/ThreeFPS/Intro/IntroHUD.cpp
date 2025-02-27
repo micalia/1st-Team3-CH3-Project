@@ -4,6 +4,7 @@
 #include "Character/ThreeFPSCharacter.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Game/LevelManager.h"
 
 void UIntroHUD::NativeConstruct()
 {
@@ -25,6 +26,8 @@ void UIntroHUD::GameStart()
 {
 	RemoveFromParent();
 
+	ULevelManager* LevelManager = GetGameInstance()->GetSubsystem<ULevelManager>();
+	
 	if (AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0)))
 	{
 		PlayerController->bShowMouseCursor = false;
@@ -36,9 +39,26 @@ void UIntroHUD::GameStart()
 			Player->GameStart();
 		}
 	}
+
+	if (IsValid(LevelManager))
+	{
+		FOnLevelLoadedDelegate Callback;
+		Callback.BindDynamic(this, &UIntroHUD::OnLevelLoaded);
+		LevelManager->LoadLevel(ELevelType::Tutorial, Callback);
+	}
 }
 
 void UIntroHUD::GameExit()
 {
 	UKismetSystemLibrary::QuitGame(this, 0, EQuitPreference::Quit, false);
 }
+
+void UIntroHUD::OnLevelLoaded()
+{
+	ULevelManager* LevelManager = GetGameInstance()->GetSubsystem<ULevelManager>();
+	if (IsValid(LevelManager))
+	{
+		LevelManager->UnLoadLevel(ELevelType::Intro, true);
+	}
+}
+
