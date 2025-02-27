@@ -24,9 +24,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "State")
 	virtual void UpdatePatrolState(EPATROLTYPE type);
 
+	void UpdatePlayerDetectedState(bool isPlayerDetected, AActor* Actor);
 
 	virtual void OnPossess(APawn* pawn) override;
 	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable,Category = "State")
+	void RandomSelectPatrolState();
 
 
 	void TempOnMoveCompleted();
@@ -37,7 +41,10 @@ protected:
 	int32 CurrentPatrolIndex = 0;
 	bool bFound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Costume")
+	UPROPERTY( BlueprintReadWrite, Category = "Costume")
+	bool bPlayerDetected; 
+
+	UPROPERTY( BlueprintReadWrite, Category = "Costume")
 	EPATROLTYPE PatrolType = EPATROLTYPE::Empty;
 
 	// 현재 순찰 지점으로 이동하는 공통 함수

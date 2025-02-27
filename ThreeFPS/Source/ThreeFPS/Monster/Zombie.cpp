@@ -5,13 +5,16 @@
 #include "MonsterAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstance.h"
 #include "MonsterAIController.h"
-
+#include "DrawDebugHelpers.h"
+#include "ZombieAnimInstance.h"
+#include "BehaviorTree/BehaviorTreeComponent.h"
 AZombie::AZombie()
 {
-    PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = true;
     GetCharacterMovement()->bUseRVOAvoidance = true; //true가 적용된 몬스터들은  AvoidanceConsiderationRadius 가중치에 따라 들러붙지않으려고 한다.
     GetCharacterMovement()->AvoidanceConsiderationRadius = 100.f;
     GetCapsuleComponent()->InitCapsuleSize(86.42f, 24.64f);
@@ -20,6 +23,20 @@ AZombie::AZombie()
     GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
     GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
     GetCapsuleComponent()->SetGenerateOverlapEvents(true);
+
+    DetectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("DetectionSphere"));//DetectionSphere = NewObject<USphereComponent>(this);
+    if (DetectionSphere)
+    {
+        DetectionSphere->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+        DetectionSphere->SetSphereRadius(60.f);
+        DetectionSphere->SetRelativeLocation(FVector(40.f, 0.f, 20.f));
+        DetectionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+        DetectionSphere->SetCollisionObjectType(ECC_WorldDynamic);
+        DetectionSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+        DetectionSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+        DetectionSphere->RegisterComponent();
+        DetectionSphere->SetCollisionProfileName(TEXT("Trigger"));
+    }
 
     bool bSelectFeMale = false; //FMath::RandRange(0, 1) == 0 ? true : false;
     FString BodyMeshFilePath = "";
@@ -33,7 +50,7 @@ AZombie::AZombie()
         GetMesh()->SetSkeletalMesh(BodyMeshAsset.Object);
 
     GetMesh()->MarkRenderStateDirty();
-    GetMesh()->SetRelativeLocationAndRotation(FVector(0, 0, -91.f), FRotator(0, 0, -90.f));
+    GetMesh()->SetRelativeLocationAndRotation(FVector(0, 0, -90.f), FRotator(0.f, -90.f, 0.f));
     GetMesh()->SetRelativeScale3D(FVector(1.f));
     
     PantsMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PantsMesh"));
@@ -50,9 +67,20 @@ AZombie::AZombie()
     HairMeshComp->SetLeaderPoseComponent(GetMesh());
 
     HairStaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HairStaticMesh"));
-    HairStaticMeshComp->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("head"));
-    HairStaticMeshComp->SetRelativeLocationAndRotation(FVector(-164.7f, 0.f, 0.f), FRotator(0.f, -90.f, 0.f));
+    FAttachmentTransformRules Rules(EAttachmentRule::SnapToTarget, true);
+    HairStaticMeshComp->AttachToComponent(GetMesh(), Rules, FName("headSocket"));
+    //HairStaticMeshComp->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("head"));
+    FQuat NewRotation = FQuat(FRotator(90.f, -90.f, -90.f));
+    HairStaticMeshComp->SetRelativeRotation(NewRotation);
+    HairStaticMeshComp->SetRelativeLocation(FVector(-164.7f, 0.f, 0.f));
+    HairStaticMeshComp->SetRelativeScale3D(FVector(1.f, 1.f, -1.f));
 
+    GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AZombie::OnCapsuleOverlap);
+
+    DetectionSphere->OnComponentBeginOverlap.AddDynamic(this, &AZombie::OnDetectionOverlap);
+    DetectionSphere->OnComponentEndOverlap.AddDynamic(this, &AZombie::OnDetectionEndOverlap);
+    DisableDetection();
+    Hp = 10;
 }
 
 void AZombie::SetClothingMeshs(USkeletalMesh* Pants, USkeletalMesh* Shirt, USkeletalMesh* Hair , UStaticMesh* HairStatic )
@@ -69,6 +97,7 @@ void AZombie::SetClothingMeshs(USkeletalMesh* Pants, USkeletalMesh* Shirt, USkel
 
 void AZombie::OnCapsuleOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+    Super::OnCapsuleOverlap(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
     if (OtherActor && OtherActor->ActorHasTag("Projectile"))
     {
         FVector AttackDirection = (GetActorLocation() - OtherActor->GetActorLocation()).GetSafeNormal();
@@ -76,33 +105,181 @@ void AZombie::OnCapsuleOverlap(UPrimitiveComponent* OverlappedComp, AActor* Othe
         //UE_LOG(LogTemp, Warning, TEXT("몬스터가 %s와 오버랩 발생!"), *OtherActor->GetName());
     }
 }
-
 void AZombie::OnCapsuleEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+    Super::OnCapsuleEndOverlap(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex);
+}
+void AZombie::OnDetectionEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+    Super::OnDetectionEndOverlap(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex);
+    if (OtherActor == TargetActor)
+    {
+        bDetectionOverlapping = false;
+        bAttackTimming = false;
+        TargetActor = nullptr;
+       // UE_LOG(LogTemp, Warning, TEXT("몬스터가 %s와 End오버랩 !"), *OtherActor->GetName());
+    }
+}
+void AZombie::OnDetectionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    Super::OnDetectionOverlap(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
+   
+    if (OtherActor && OtherActor->ActorHasTag("Player") )
+    {
+        bDetectionOverlapping = true;
+        TargetActor = Cast<ACharacter>(OtherActor);
+       // UE_LOG(LogTemp, Warning, TEXT("몬스터가 %s와 오버랩 발생!"), *OtherActor->GetName());
+       // FVector CurPos = GetActorLocation() + DetectionSphere->GetRelativeLocation();
+       // float Distance = FVector::DistXY(CurPos, TargetActor->GetActorLocation());
+       // UE_LOG(LogTemp, Warning, TEXT("Distance:%f/ SphereRadius:"), Distance, DetectionSphere->GetScaledSphereRadius());
+    }
+}
+void AZombie::EnableDetection()
+{
+    Super::EnableDetection();
+   // UE_LOG(LogTemp, Warning, TEXT("EnableDetection()!!!"));
 
+    if (DetectionSphere && bDebugDetectionSphere)
+    {
+        DetectionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+        DrawDebugSphere(GetWorld(), DetectionSphere->GetComponentLocation(),
+        DetectionSphere->GetScaledSphereRadius(), 12, FColor::Red, false, 3.f, 0, 2.f);
+    }
 }
 
+void AZombie::DisableDetection()
+{
+    Super::DisableDetection();
+    if (DetectionSphere)
+        DetectionSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    bDetectionOverlapping = false;
+    bAttackTimming = false;
+    TargetActor = nullptr;
+}
+float AZombie::Attack()
+{
+    Super::Attack();
+
+    ZombieState = EZONBIE_ST::ATTACK;
+    UZombieAnimInstance* Anim = Cast < UZombieAnimInstance>(GetMesh()->GetAnimInstance());
+    float AniPlayLength = -1.f;
+    if (Anim )
+        AniPlayLength = Anim->AnimationPlay(ZombieState);
+    return AniPlayLength;
+}
 void AZombie::BeginPlay()
 {
     Super::BeginPlay();
-    GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AZombie::OnCapsuleOverlap);
 
-    
-    VariousJombie();
-  
-
-    //=========현재는 의미없는 로직임. ZombieState 가 쓰이고 있지 않음.======================
-    //ZombieState = EZONBIE_ST::DELAY;
-    //float RandActiveTime = FMath::RandRange(0.f, 1.5f);
-    //GetWorldTimerManager().SetTimer(
-    //    GameStateHandle, [this, RandActiveTime]()
-    //    {
-    //        ZombieState = EZONBIE_ST::IDLE;
-    //    },
-    //    RandActiveTime,
-    //    true
-    //);
+    VariousJombie();//Random Custom Jombie
 }
+
+void AZombie::AttackTimming(int AttType)
+{
+    Super::AttackTimming(AttType);
+
+    Power = AttackPowerArr[AttType];
+    bAttackTimming = true;
+}
+
+void AZombie::Tick(float DeltaTime)
+{
+    if ( bDetectionOverlapping )
+    {
+        if (bAttackTimming)
+        {
+            if (TargetActor&& TargetActor->ActorHasTag("Player"))
+            {
+                //FVector CurPos = GetActorLocation() +  DetectionSphere->GetRelativeLocation();
+                //float Distance = FVector::DistXY(CurPos, TargetActor->GetActorLocation());
+                //UE_LOG(LogTemp, Warning, TEXT("Distance:%f/ SphereRadius:"), Distance, DetectionSphere->GetScaledSphereRadius());
+                //if (150.f >= Distance)
+                    float  ReceiveApplyDamage = UGameplayStatics::ApplyDamage(TargetActor, Power, TargetActor->GetInstigatorController(), TargetActor, NULL);
+                    UE_LOG(LogTemp, Warning, TEXT("ATT:%f"),Power);
+
+            }
+            bAttackTimming = false;
+        }
+    }
+}
+float AZombie::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+    if (Hp <= 0)
+        return 0.f;
+
+    float ReceiveADamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+    Hp -= DamageAmount;
+
+    UZombieAnimInstance* animInst = Cast< UZombieAnimInstance>(GetMesh()->GetAnimInstance());
+    if (!animInst)
+        return 0.f;
+
+    if (Hp <= 0)
+    {
+        ZombieState = EZONBIE_ST::DIE;
+        float aniLength = animInst->AnimationPlay(ZombieState)-0.3f;
+
+        GetCharacterMovement()->StopMovementImmediately();
+        GetCharacterMovement()->DisableMovement();
+        GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
+        GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        DisableDetection();
+        GetController()->Destroy();
+
+        FTimerHandle TimerHandle;
+        //GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AZombie::Die, aniLength, false);
+        GetWorld()->GetTimerManager().SetTimer(
+            TimerHandle, ( [this, animInst]() {
+                animInst->Montage_Pause(animInst->DieMontage);
+            // animInst->Montage_SetPlayRate(animInst->DieMontage, 0.0f);
+             Die();
+        }),  aniLength, false);
+    }
+    else
+    {
+        ZombieState = EZONBIE_ST::DAMAGE;
+        float DamageAniTime = animInst->AnimationPlay(ZombieState);
+        PauseMoveForDamage(DamageAniTime);
+    }
+    return ReceiveADamage;
+}
+void AZombie::Die()
+{
+    Super::Die();
+  /*  GetMesh()->bPauseAnims = true;
+    GetMesh()->bNoSkeletonUpdate = true;*/
+   // Destroy();
+    UE_LOG(LogTemp, Warning, TEXT("Die"));
+}
+void AZombie::PauseMoveForDamage(float PauseTime)
+{
+    AAIController* MAIController = Cast<AAIController>(GetController());//StopMovement();
+    UBehaviorTreeComponent* BT = nullptr;
+    if (MAIController)
+    {
+        if (MAIController)
+        {
+            BT = Cast<UBehaviorTreeComponent>(MAIController->GetBrainComponent());//(TEXT("TakeDamage"));
+            if (IsValid(BT))
+            {
+                BT->PauseLogic(TEXT("TakeDamage"));
+                MAIController->StopMovement();
+            }
+        }
+    }
+    GetWorld()->GetTimerManager().ClearTimer(DamageTimerHandler);
+
+    GetWorld()->GetTimerManager().SetTimer(
+        DamageTimerHandler, ([this, MAIController, BT]() {
+            BT->ResumeLogic(TEXT("TakeDamage"));
+            }), PauseTime+1.f, false
+    );
+   
+}
+#pragma region //VariousJombie
 void AZombie::VariousJombie()
 {
     TMap<FString, FString> CostumeMap =  // Shirt 4개, Pants 2개 , hair 5개,
@@ -148,14 +325,14 @@ void AZombie::VariousJombie()
         int randHairType = FMath::RandRange(0, 2);
         if (bSelectFeMale)//여성이면 브라자 입힘.
         {
-           BraMesh = LoadObject<USkeletalMesh>(nullptr, *CostumeMap["Shirt3"]);
-           if (randHairType != 0)
-           {
-               HairKey = "Hair" + FString::FromInt(FMath::RandRange(3, 4));
-               FhairMesh = LoadObject<USkeletalMesh>(nullptr, *CostumeMap[HairKey]);
-           }
+            BraMesh = LoadObject<USkeletalMesh>(nullptr, *CostumeMap["Shirt3"]);
+            if (randHairType != 0)
+            {
+                HairKey = "Hair" + FString::FromInt(FMath::RandRange(3, 4));
+                FhairMesh = LoadObject<USkeletalMesh>(nullptr, *CostumeMap[HairKey]);
+            }
         }
-        else 
+        else
         {
             if (randHairType != 0)
             {
@@ -163,12 +340,9 @@ void AZombie::VariousJombie()
                 MhairMesh = LoadObject<UStaticMesh>(nullptr, *CostumeMap[HairKey]);
             }
         }
-        
         SetClothingMeshs(nullptr, BraMesh, FhairMesh, MhairMesh);
         return;
     }
-
-
 
     int32 HairIdx = -1;
     int32 ShirtIdx = -1;
@@ -184,28 +358,11 @@ void AZombie::VariousJombie()
         HairIdx = FMath::RandRange(0, 2);
         ShirtIdx = FMath::RandRange(0, 1);
         PantsIdx = 0;
-        // HairStaticMeshComp->SetRelativeLocationAndRotation(FVector(-164.7f, 0.f, 0.f), FRotator(0.f, -90.f, 0.f));
     }
 
     FString FileLoadPathHair = "Hair" + FString::FromInt(HairIdx);
     FString FileLoadPathShirt = "Shirt" + FString::FromInt(ShirtIdx);
     FString FileLoadPathPants = "Pants" + FString::FromInt(PantsIdx);
-
-    /* static ConstructorHelpers::FObjectFinder<USkeletalMesh> ShirtMeshAsset(*CostumeMap[FileLoadPathShirt]);
-       static ConstructorHelpers::FObjectFinder<USkeletalMesh> PantsMeshAsset(*CostumeMap[FileLoadPathPants]);
-       static ConstructorHelpers::FObjectFinder<USkeletalMesh> HairMeshAsset = nullptr;
-       static ConstructorHelpers::FObjectFinder<UStaticMesh> HairStaticMeshAsset = nullptr;
-
-       if (!bSelectFeMale)
-       {
-           HairStaticMeshAsset = *CostumeMap[FileLoadPathHair];
-           SetClothingMeshs(PantsMeshAsset.Object, ShirtMeshAsset.Object, nullptr, HairStaticMeshAsset.Object);
-       }
-       else
-       {
-           HairMeshAsset = *CostumeMap[FileLoadPathHair];
-           SetClothingMeshs(PantsMeshAsset.Object, ShirtMeshAsset.Object, HairMeshAsset.Object, nullptr);
-       }*/
 
     UStaticMesh* HairStaticMesh = nullptr;
     USkeletalMesh* HairMesh = nullptr;
@@ -232,26 +389,30 @@ void AZombie::VariousJombie()
 
     //FString LogString = bSelectFeMale ? "True" : "False";
     //UE_LOG(LogTemp, Warning, TEXT("bSelectFeMale : %s"), *LogString);
+#pragma region //생성자에서 사용하기
+/* static ConstructorHelpers::FObjectFinder<USkeletalMesh> ShirtMeshAsset(*CostumeMap[FileLoadPathShirt]);
+   static ConstructorHelpers::FObjectFinder<USkeletalMesh> PantsMeshAsset(*CostumeMap[FileLoadPathPants]);
+   static ConstructorHelpers::FObjectFinder<USkeletalMesh> HairMeshAsset = nullptr;
+   static ConstructorHelpers::FObjectFinder<UStaticMesh> HairStaticMeshAsset = nullptr;
 
+   if (!bSelectFeMale)
+   {
+       HairStaticMeshAsset = *CostumeMap[FileLoadPathHair];
+       SetClothingMeshs(PantsMeshAsset.Object, ShirtMeshAsset.Object, nullptr, HairStaticMeshAsset.Object);
+   }
+   else
+   {
+       HairMeshAsset = *CostumeMap[FileLoadPathHair];
+       SetClothingMeshs(PantsMeshAsset.Object, ShirtMeshAsset.Object, HairMeshAsset.Object, nullptr);
+   }*/
+#pragma endregion
 }
-void AZombie::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-    Super::EndPlay(EndPlayReason);
-
-}
-
-void AZombie::Tick(float DeltaTime)
-{
-}
-
-float AZombie::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
-{
-    float Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-    return Damage;
-}
+#pragma endregion
+#pragma region //ApplyRagdoll
 void AZombie::ApplyRagdoll(FVector HitDirection)
 {
     Super::ApplyRagdoll(HitDirection);
+    ZombieState = EZONBIE_ST::DIE;
 
     //  캡슐 콜리전 비활성화 (레그돌이 제대로 작동하도록 설정)
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -272,3 +433,11 @@ void AZombie::ApplyRagdoll(FVector HitDirection)
     // FTimerHandle DestroyTimerHandle;
     // GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &AMonster::Destroy, 3.0f, false);
 }
+
+#pragma endregion
+#pragma region //EndPlay
+void AZombie::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
+}
+#pragma endregion

@@ -36,5 +36,37 @@ protected:
 		UPrimitiveComponent* OtherComp,/*충돌한 액터에 달린 충돌 컴포넌트(Collision)*/
 		int32 OtherBodyIndex) override;
 
+	virtual void OnDetectionOverlap(
+		UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult) override;
+
+	virtual void OnDetectionEndOverlap(UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex) override;
+
+	UFUNCTION(BlueprintCallable, Category = "DebugDetection")
+	virtual void EnableDetection()override;
+	UFUNCTION(BlueprintCallable, Category = "DebugDetection")
+	virtual void DisableDetection() override;
+	UFUNCTION(BlueprintCallable, Category = "State")
+	virtual float Attack();
+	UFUNCTION(BlueprintCallable, Category = "State")
+	virtual void AttackTimming(int AttType);
+	UFUNCTION(BlueprintCallable, Category = "State")
+	virtual void Die() ;
+
+	UFUNCTION(BlueprintCallable, Category = "State")
 	virtual void ApplyRagdoll(FVector HitDirection) override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster")
+	USphereComponent* DetectionSphere;
+
+	int32 Hp;
+	float Power = 1.f;
+	float Speed;
 };
