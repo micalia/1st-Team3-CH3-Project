@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// 보스 AI 담당 : 신설빈
 
 #include "AI/BTTaskCppUppercutAtk.h"
 #include "AIController.h"
@@ -20,20 +20,24 @@ EBTNodeResult::Type UBTTaskCppUppercutAtk::ExecuteTask(UBehaviorTreeComponent& O
 		return EBTNodeResult::Failed;
 	}
 
-	FAIBossAttackFinished OnAttackFinished;
-	OnAttackFinished.BindLambda(
-		[&]()
-		{	
-			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-		}
-	);
-
 	if (ABossWerewolf* Boss = Cast<ABossWerewolf>(ControllingPawn)) {
-		if (UBossWerewolfAnim* BossAnim = Cast<UBossWerewolfAnim>(Boss->GetMesh()->GetAnimInstance())) {
+		if (TObjectPtr<UBossWerewolfAnim> BossAnim = Cast<UBossWerewolfAnim>(Boss->GetMesh()->GetAnimInstance())) {
+			BossAnim->SetAnimState(EBossWerewolfState::Uppercut);
+			FAIBossAttackFinished OnAttackFinished;
+			OnAttackFinished.BindLambda(
+				[&, BossAnim]()
+				{
+					FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+					if (IsValid(BossAnim)) {
+						BossAnim->SetAnimState(EBossWerewolfState::Move);
+					}
+				}
+			);
+
 			BossAnim->SetAIAttackDelegate(OnAttackFinished);
 			BossAnim->PlayUppercutAtk();
 		}
 	}
-	
-    return EBTNodeResult::InProgress;
+
+	return EBTNodeResult::InProgress;
 }
