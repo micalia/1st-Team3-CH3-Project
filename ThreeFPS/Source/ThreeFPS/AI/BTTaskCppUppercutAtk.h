@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// 보스 AI 담당 : 신설빈
 
 #pragma once
 

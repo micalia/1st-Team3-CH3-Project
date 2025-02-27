@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// 보스 AI 담당 : 신설빈
 
 #pragma once
 
@@ -23,32 +23,48 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	void Init();
+
 	void CalculateDistance();
 	TObjectPtr<AThreeFPSCharacter> GetTarget();
 
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE void Damaged(float InHitDamage) {
+		CurrHp -= InHitDamage;
+		if (CurrHp < 0) {
+			CurrHp = 0;
+		}
+	}
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE float GetHp() const { return CurrHp; };
+
 public:
-	FVector CalculateBezier(float ratio, FVector P0, FVector P1, FVector P2);
-	void JumpAttackPath(FVector InStartPos, FVector InBetweenPos, FVector InEndPos);
+	FVector CalculateBezier(float ratio, const FVector P0, const FVector P1, const FVector P2);
+	void JumpAttackPath(const FVector InStartPos, const FVector InBetweenPos, const FVector InEndPos);
 	UFUNCTION(BlueprintCallable)
 	void MakeJumpAttackTrajectory();
 	void JumpAttackState();
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = JumpAttack)
-		float JumpAttackCurrentTime = 0;
+	float JumpAttackCurrentTime = 0;
 	UPROPERTY(EditAnywhere, Category = JumpAttack)
-		float JumpMovingTime = 0.85f;
+	float JumpMovingTime = 0.85f;
 
 	UFUNCTION(BlueprintCallable)
 	void SetNewGoalDirection();
 	void LookAtPlayerToAttack();
 
 	UPROPERTY(EditAnywhere, Category = Bezier)
-		float EndPosSub = -40;
+	float EndPosSub = -40;
 	UPROPERTY(EditAnywhere, Category = Bezier)
-		float BetweenHeight = 4000;
+	float BetweenHeight = 4000;
 	UPROPERTY(EditAnywhere, Category = Bezier)
-		float CurvePointCount = 7;
+	float CurvePointCount = 7;
+
+	UPROPERTY(EditAnywhere)
+	float FullHp = 1000;
 private:
+	float CurrHp = 0;
 	FVector PlayerPosition;
 	float TurnAngle;
 	FVector ToPlayerDir;
@@ -67,6 +83,7 @@ private:
 	float PtoPCurrTime = 0;
 	int32 jumpAttackIdx = 0;
 	bool jumpAttackOn = false;
+
 public:
 	UPROPERTY(EditAnywhere)
 	float AttackRange = 1500;

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// 보스 AI 담당 : 신설빈
 
 
 #include "BossWerewolf.h"
@@ -42,6 +42,8 @@ ABossWerewolf::ABossWerewolf()
 void ABossWerewolf::BeginPlay()
 {
 	Super::BeginPlay();
+
+	Init();
 }
 
 void ABossWerewolf::Tick(float DeltaTime)
@@ -59,6 +61,11 @@ void ABossWerewolf::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void ABossWerewolf::Init()
+{
+	CurrHp = FullHp;
 }
 
 void ABossWerewolf::CalculateDistance()
@@ -84,7 +91,7 @@ TObjectPtr<AThreeFPSCharacter> ABossWerewolf::GetTarget()
 	return nullptr;
 }
 
-FVector ABossWerewolf::CalculateBezier(float ratio, FVector P0, FVector P1, FVector P2)
+FVector ABossWerewolf::CalculateBezier(float ratio, const FVector P0, const FVector P1, const FVector P2)
 {
 	FVector M0 = FMath::Lerp<FVector, float>(P0, P1, ratio);
 	FVector M1 = FMath::Lerp<FVector, float>(P1, P2, ratio);
@@ -92,7 +99,7 @@ FVector ABossWerewolf::CalculateBezier(float ratio, FVector P0, FVector P1, FVec
 	return B;
 }
 
-void ABossWerewolf::JumpAttackPath(FVector InStartPos, FVector InBetweenPos, FVector InEndPos)
+void ABossWerewolf::JumpAttackPath(const FVector InStartPos, const FVector InBetweenPos, const FVector InEndPos)
 {
 	LineLoc.Empty();
 	float ratio = 1 / CurvePointCount;

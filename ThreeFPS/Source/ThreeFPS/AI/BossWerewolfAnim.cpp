@@ -1,5 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+// 보스 AI 담당 : 신설빈
 
 #include "AI/BossWerewolfAnim.h"
 #include "AI/BossWerewolf.h"
@@ -22,6 +21,10 @@ UBossWerewolfAnim::UBossWerewolfAnim()
 	if (tempSpreadWaveMontage.Succeeded()) {
 		SpreadWaveMontage = tempSpreadWaveMontage.Object;
 	}
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> tempDieMontage(TEXT("/Script/Engine.AnimMontage'/Game/SB/Animation/BossWearAnim/Use/AM_Die.AM_Die'"));
+	if (tempDieMontage.Succeeded()) {
+		DieMontage = tempDieMontage.Object;
+	}
 }
 
 void UBossWerewolfAnim::SetAnimState(EBossWerewolfState InNewState)
@@ -39,6 +42,7 @@ void UBossWerewolfAnim::PlayUppercutAtk()
 	if (AActor* Owner = TryGetPawnOwner()) {
 		if (ABossWerewolf* Boss = Cast<ABossWerewolf>(Owner)) {
 			if (UppercutMontage) {
+				SetAnimState(EBossWerewolfState::Uppercut);
 				Montage_Play(UppercutMontage);
 				FOnMontageEnded MontageEndedDel;
 				MontageEndedDel.BindUObject(this, &UBossWerewolfAnim::AttackEnd);
@@ -53,6 +57,7 @@ void UBossWerewolfAnim::PlayJumpAtk()
 	if (AActor* Owner = TryGetPawnOwner()) {
 		if (ABossWerewolf* Boss = Cast<ABossWerewolf>(Owner)) {
 			if (JumpAtkMontage) {
+				SetAnimState(EBossWerewolfState::JumpAtk);
 				JumpAtkMontage->GetSectionStartAndEndTime(1, JumpAttackStartTime, JumpAttackEndTime);
 				Montage_Play(JumpAtkMontage);
 				FOnMontageEnded MontageEndedDel;
@@ -68,6 +73,7 @@ void UBossWerewolfAnim::PlayStoneUpAtk()
 	if (AActor* Owner = TryGetPawnOwner()) {
 		if (ABossWerewolf* Boss = Cast<ABossWerewolf>(Owner)) {
 			if (StoneUpMontage) {
+				SetAnimState(EBossWerewolfState::StoneUp);
 				Montage_Play(StoneUpMontage);
 				FOnMontageEnded MontageEndedDel;
 				MontageEndedDel.BindUObject(this, &UBossWerewolfAnim::AttackEnd);
@@ -82,10 +88,27 @@ void UBossWerewolfAnim::PlaySpreadWaveAtk()
 	if (AActor* Owner = TryGetPawnOwner()) {
 		if (ABossWerewolf* Boss = Cast<ABossWerewolf>(Owner)) {
 			if (SpreadWaveMontage) {
+				SetAnimState(EBossWerewolfState::SpreadWave);
 				Montage_Play(SpreadWaveMontage);
 				FOnMontageEnded MontageEndedDel;
 				MontageEndedDel.BindUObject(this, &UBossWerewolfAnim::AttackEnd);
 				Montage_SetEndDelegate(MontageEndedDel, SpreadWaveMontage);
+			}
+		}
+	}
+}
+
+void UBossWerewolfAnim::PlaySwitchPhase()
+{
+	SetAnimState(EBossWerewolfState::SwitchPhase);
+}
+
+void UBossWerewolfAnim::PlayDie()
+{
+	if (AActor* Owner = TryGetPawnOwner()) {
+		if (ABossWerewolf* Boss = Cast<ABossWerewolf>(Owner)) {
+			if (DieMontage) {
+				Montage_Play(DieMontage);
 			}
 		}
 	}

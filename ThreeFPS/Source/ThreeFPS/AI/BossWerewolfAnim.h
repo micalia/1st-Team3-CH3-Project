@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// 보스 AI 담당 : 신설빈
 
 #pragma once
 
@@ -12,6 +12,7 @@ enum class EBossWerewolfState :uint8
 {
 	Idle,
 	Move,
+	SwitchPhase,
 	Die,
 
 	Uppercut,
@@ -28,7 +29,7 @@ class THREEFPS_API UBossWerewolfAnim : public UAnimInstance, public IBossAIInter
 public:
 	UBossWerewolfAnim();
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
 	void SetAnimState(EBossWerewolfState InNewState);
 	UFUNCTION(BlueprintPure, meta = (BlueprintThreadSafe))
 	EBossWerewolfState GetAnimState();
@@ -41,6 +42,10 @@ public:
 	void PlayStoneUpAtk();
 	UFUNCTION(BlueprintCallable)
 	void PlaySpreadWaveAtk();
+	UFUNCTION(BlueprintCallable)
+	void PlaySwitchPhase();
+	UFUNCTION(BlueprintCallable)
+	void PlayDie();
 
 	void AttackEnd(UAnimMontage* InMontage, bool bInterrupted);
 
@@ -53,6 +58,8 @@ public:
 	TObjectPtr<UAnimMontage> StoneUpMontage;
 	UPROPERTY()
 	TObjectPtr<UAnimMontage> SpreadWaveMontage;
+	UPROPERTY()
+	TObjectPtr<UAnimMontage> DieMontage;
 
 	virtual void SetAIAttackDelegate(const FAIBossAttackFinished& InOnAttackFinished) override;
 
