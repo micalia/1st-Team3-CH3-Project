@@ -34,11 +34,11 @@ AZombie::AZombie()
         DetectionSphere->SetCollisionObjectType(ECC_WorldDynamic);
         DetectionSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
         DetectionSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-        DetectionSphere->RegisterComponent();
+        //DetectionSphere->RegisterComponent();
         DetectionSphere->SetCollisionProfileName(TEXT("Trigger"));
     }
 
-    bool bSelectFeMale = FMath::RandRange(0, 1) == 0 ? true : false;
+    bool bSelectFeMale = 0;
     FString BodyMeshFilePath = "";
     if (bSelectFeMale)
         BodyMeshFilePath = TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/SK_Zombie_F02_01.SK_Zombie_F02_01'");
@@ -68,7 +68,8 @@ AZombie::AZombie()
 
     HairStaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HairStaticMesh"));
     FAttachmentTransformRules Rules(EAttachmentRule::SnapToTarget, true);
-    HairStaticMeshComp->AttachToComponent(GetMesh(), Rules, FName("headSocket"));
+    // HairStaticMeshComp->AttachToComponent(GetMesh(), Rules, FName("headSocket"));
+    HairStaticMeshComp->SetupAttachment(GetMesh(), FName("headSocket"));
     //HairStaticMeshComp->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("head"));
     FQuat NewRotation = FQuat(FRotator(90.f, -90.f, -90.f));
     HairStaticMeshComp->SetRelativeRotation(NewRotation);
