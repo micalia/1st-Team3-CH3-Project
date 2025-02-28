@@ -85,21 +85,23 @@ void ABossWerewolf::Init()
 
 void ABossWerewolf::CalculateDistance()
 {
-	if (auto Target = GetTarget()) {
-		DistanceToTarget = (GetActorLocation() - Target->GetActorLocation()).Length();
+	if (TObjectPtr<AThreeFPSCharacter> Target = GetTarget()) {
+		if (IsValid(Target)) {
+			DistanceToTarget = (GetActorLocation() - Target->GetActorLocation()).Length();
+		}
 	}
 }
 
 TObjectPtr<AThreeFPSCharacter> ABossWerewolf::GetTarget()
 {
-	if (TargetPtr->IsValidLowLevel()) {
+	if (IsValid(TargetPtr)) {
 		return TargetPtr;
 	}
 	else {
 		for (TActorIterator<AThreeFPSCharacter> it(GetWorld()); it; ++it) {
 			TargetPtr = *it;
 		}
-		if (TargetPtr->IsValidLowLevel()) {
+		if (IsValid(TargetPtr)) {
 			return TargetPtr;
 		}
 	}
