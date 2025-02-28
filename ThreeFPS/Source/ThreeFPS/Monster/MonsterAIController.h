@@ -11,7 +11,8 @@ enum class EPATROLTYPE :uint8
 {
 	Empty,
 	TargetKey,
-	Random
+	Random,
+	Charge
 };
 UCLASS()
 class THREEFPS_API AMonsterAIController : public AAIController
@@ -31,6 +32,8 @@ public:
 
 	UFUNCTION(BlueprintCallable,Category = "State")
 	void RandomSelectPatrolState();
+	UFUNCTION(BlueprintCallable, Category = "State")
+	void ChargingState();
 
 
 	void TempOnMoveCompleted();

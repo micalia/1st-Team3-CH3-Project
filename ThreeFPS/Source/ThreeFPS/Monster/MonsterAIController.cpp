@@ -3,9 +3,13 @@
 
 #include "MonsterAIController.h"
 #include "BaseMonster.h"
+#include "APatrolPath.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "NavigationSystem.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISenseConfig_Sight.h"
+#include "Perception/AISense_Sight.h" 
 
 void AMonsterAIController::OnPossess(APawn* pawn)
 {
@@ -20,11 +24,57 @@ void AMonsterAIController::BeginPlay()
 }
 void AMonsterAIController::RandomSelectPatrolState() //시작하면 좀비들의 PatrolType이 랜덤으로  선택된다
 {
-    PatrolType = static_cast<EPATROLTYPE>(FMath::RandRange(0, 2)); //Empty,Random,TargetPos EPATROLTYPE::Random; //
     UBlackboardComponent* BlackBoard = GetBlackboardComponent();
-    if (BlackBoard)
-        BlackBoard->SetValueAsEnum(TEXT("PatrolState"), static_cast<uint8>(PatrolType));
+    if (!BlackBoard)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Error! !BlackBoard"));
+        return;
+    }
+
+    ABaseMonster* Zombie = Cast<ABaseMonster>(GetPawn());
+    if (Zombie)
+    {
+        if (Zombie->PatrolPath->Num() > 0)
+        {
+            PatrolType = EPATROLTYPE::TargetKey;
+           
+            BlackBoard->SetValueAsObject(TEXT("PatrolPath"), Zombie->PatrolPath);
+        }
+        else
+            PatrolType = static_cast<EPATROLTYPE>(FMath::RandRange(0, 1));
+    }
+
+    BlackBoard->SetValueAsEnum(TEXT("PatrolState"), static_cast<uint8>(PatrolType));
     UE_LOG(LogTemp, Warning, TEXT("PatrolState :%s"), *(StaticEnum<EPATROLTYPE>()->GetNameStringByIndex(static_cast<int32>(PatrolType))));
+}
+void AMonsterAIController::ChargingState()
+{
+    if (PatrolType == EPATROLTYPE::Charge)
+        return;
+
+    PatrolType = EPATROLTYPE::Charge;
+    UBlackboardComponent* BlackBoard = GetBlackboardComponent();
+    BlackBoard->SetValueAsEnum(TEXT("PatrolState"), static_cast<uint8>(PatrolType));
+
+    //돌격상태는 시아센서의 값을 최대치로 올려서 플레이어를 무조건 찾아가게 만들기.
+    ABaseMonster* Zombie = Cast<ABaseMonster>(GetPawn());
+    UAIPerceptionComponent* PerceptionComp = Zombie->FindComponentByClass<UAIPerceptionComponent>();
+    if (PerceptionComp)
+    {
+        UAISenseConfig_Sight* SightConfig = PerceptionComp->GetSenseConfig<UAISenseConfig_Sight>();
+        if (SightConfig)
+        {
+            SightConfig->SightRadius = 1000000.f;
+            SightConfig->LoseSightRadius = 1000000.f;
+            SightConfig->PeripheralVisionAngleDegrees = 360.f;
+
+            // 설정이 바뀌었으므로 적용
+            PerceptionComp->RequestStimuliListenerUpdate();
+            UE_LOG(LogTemp, Warning, TEXT("Success Find! UAIPerceptionComponent!"));
+        }
+    }
+    else
+        UE_LOG(LogTemp, Warning, TEXT("Not Find ! UAIPerceptionComponent!"));
 }
 void AMonsterAIController::UpdatePatrolState(EPATROLTYPE type)
 {

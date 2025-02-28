@@ -29,23 +29,15 @@ AZombie::AZombie()
     {
         DetectionSphere->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
         DetectionSphere->SetSphereRadius(60.f);
-        DetectionSphere->SetRelativeLocation(FVector(40.f, 0.f, 20.f));
+        DetectionSphere->SetRelativeLocation(FVector(0.f, 30.f, 100.f));//40.f, 0.f, 20.f
         DetectionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
         DetectionSphere->SetCollisionObjectType(ECC_WorldDynamic);
         DetectionSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
         DetectionSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-        //DetectionSphere->RegisterComponent();
         DetectionSphere->SetCollisionProfileName(TEXT("Trigger"));
     }
 
-    bool bSelectFeMale = 0;
-    FString BodyMeshFilePath = "";
-    if (bSelectFeMale)
-        BodyMeshFilePath = TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/SK_Zombie_F02_01.SK_Zombie_F02_01'");
-    else
-        BodyMeshFilePath = TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/male/AA_SK_Zombie_M02_01.AA_SK_Zombie_M02_01'");
-
-    static ConstructorHelpers::FObjectFinder<USkeletalMesh> BodyMeshAsset(*BodyMeshFilePath);
+    static ConstructorHelpers::FObjectFinder<USkeletalMesh> BodyMeshAsset(TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/male/AA_SK_Zombie_M02_01.AA_SK_Zombie_M02_01'"));
     if (BodyMeshAsset.Succeeded())
         GetMesh()->SetSkeletalMesh(BodyMeshAsset.Object);
 
@@ -67,23 +59,29 @@ AZombie::AZombie()
     HairMeshComp->SetLeaderPoseComponent(GetMesh());
 
     HairStaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HairStaticMesh"));
-    FAttachmentTransformRules Rules(EAttachmentRule::SnapToTarget, true);
-    // HairStaticMeshComp->AttachToComponent(GetMesh(), Rules, FName("headSocket"));
     HairStaticMeshComp->SetupAttachment(GetMesh(), FName("headSocket"));
-    //HairStaticMeshComp->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("head"));
     FQuat NewRotation = FQuat(FRotator(90.f, -90.f, -90.f));
     HairStaticMeshComp->SetRelativeRotation(NewRotation);
     HairStaticMeshComp->SetRelativeLocation(FVector(-164.7f, 0.f, 0.f));
     HairStaticMeshComp->SetRelativeScale3D(FVector(1.f, 1.f, -1.f));
+    Hp = 100;
+}
+void AZombie::BeginPlay()
+{
+    Super::BeginPlay();
 
     GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AZombie::OnCapsuleOverlap);
-
     DetectionSphere->OnComponentBeginOverlap.AddDynamic(this, &AZombie::OnDetectionOverlap);
     DetectionSphere->OnComponentEndOverlap.AddDynamic(this, &AZombie::OnDetectionEndOverlap);
     DisableDetection();
-    Hp = 10;
+
+    VariousJombie();//Random Custom Jombie
 }
 
+void TestSp()
+{
+
+}
 void AZombie::SetClothingMeshs(USkeletalMesh* Pants, USkeletalMesh* Shirt, USkeletalMesh* Hair , UStaticMesh* HairStatic )
 {
     if(Pants)
@@ -169,12 +167,7 @@ float AZombie::Attack()
         AniPlayLength = Anim->AnimationPlay(ZombieState);
     return AniPlayLength;
 }
-void AZombie::BeginPlay()
-{
-    Super::BeginPlay();
 
-    VariousJombie();//Random Custom Jombie
-}
 
 void AZombie::AttackTimming(int AttType)
 {
@@ -206,12 +199,16 @@ void AZombie::Tick(float DeltaTime)
 }
 float AZombie::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+    //float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    //Hp = FMath::Clamp(Hp - ActualDamage, 0.f, Hp);
+    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("액터 : %f"), Hp));
+    //return ActualDamage;
+
     if (Hp <= 0)
         return 0.f;
 
     float ReceiveADamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-
-    Hp -= DamageAmount;
+    Hp -= ReceiveADamage;
 
     UZombieAnimInstance* animInst = Cast< UZombieAnimInstance>(GetMesh()->GetAnimInstance());
     if (!animInst)
@@ -245,6 +242,7 @@ float AZombie::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, A
         float DamageAniTime = animInst->AnimationPlay(ZombieState);
         PauseMoveForDamage(DamageAniTime);
     }
+
     return ReceiveADamage;
 }
 void AZombie::Die()
@@ -257,7 +255,7 @@ void AZombie::Die()
 }
 void AZombie::PauseMoveForDamage(float PauseTime)
 {
-    AAIController* MAIController = Cast<AAIController>(GetController());//StopMovement();
+    AMonsterAIController* MAIController = Cast<AMonsterAIController>(GetController());//StopMovement();
     UBehaviorTreeComponent* BT = nullptr;
     if (MAIController)
     {
@@ -276,10 +274,12 @@ void AZombie::PauseMoveForDamage(float PauseTime)
     GetWorld()->GetTimerManager().SetTimer(
         DamageTimerHandler, ([this, MAIController, BT]() {
             BT->ResumeLogic(TEXT("TakeDamage"));
+            MAIController->ChargingState();
+
             }), PauseTime+1.f, false
     );
-   
 }
+
 #pragma region //VariousJombie
 void AZombie::VariousJombie()
 {
@@ -390,23 +390,6 @@ void AZombie::VariousJombie()
 
     //FString LogString = bSelectFeMale ? "True" : "False";
     //UE_LOG(LogTemp, Warning, TEXT("bSelectFeMale : %s"), *LogString);
-#pragma region //생성자에서 사용하기
-/* static ConstructorHelpers::FObjectFinder<USkeletalMesh> ShirtMeshAsset(*CostumeMap[FileLoadPathShirt]);
-   static ConstructorHelpers::FObjectFinder<USkeletalMesh> PantsMeshAsset(*CostumeMap[FileLoadPathPants]);
-   static ConstructorHelpers::FObjectFinder<USkeletalMesh> HairMeshAsset = nullptr;
-   static ConstructorHelpers::FObjectFinder<UStaticMesh> HairStaticMeshAsset = nullptr;
-
-   if (!bSelectFeMale)
-   {
-       HairStaticMeshAsset = *CostumeMap[FileLoadPathHair];
-       SetClothingMeshs(PantsMeshAsset.Object, ShirtMeshAsset.Object, nullptr, HairStaticMeshAsset.Object);
-   }
-   else
-   {
-       HairMeshAsset = *CostumeMap[FileLoadPathHair];
-       SetClothingMeshs(PantsMeshAsset.Object, ShirtMeshAsset.Object, HairMeshAsset.Object, nullptr);
-   }*/
-#pragma endregion
 }
 #pragma endregion
 #pragma region //ApplyRagdoll

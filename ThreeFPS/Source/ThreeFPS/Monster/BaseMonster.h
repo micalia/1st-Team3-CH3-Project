@@ -6,7 +6,7 @@
 #include "BaseMonster.generated.h"
 
 class USphereComponent;
-
+class AAPatrolPath;
 
 UCLASS()
 class THREEFPS_API ABaseMonster : public ACharacter, public IMonsterInterface
@@ -16,12 +16,16 @@ class THREEFPS_API ABaseMonster : public ACharacter, public IMonsterInterface
 public:
 	ABaseMonster();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	AAPatrolPath* PatrolPath;
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster")
 	FName MonsterType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Effects")
 	UParticleSystem* ParticleBlood;
+
+
 
 	virtual void OnCapsuleOverlap(
 		UPrimitiveComponent* OverlappedComp,/*자신*/

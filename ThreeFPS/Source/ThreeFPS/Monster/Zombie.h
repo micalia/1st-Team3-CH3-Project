@@ -105,4 +105,5 @@ protected:
 	void VariousJombie();
 	void PauseMoveForDamage(float PauseTime);
 
+
 };
