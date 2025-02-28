@@ -85,8 +85,10 @@ void ABossWerewolf::Init()
 
 void ABossWerewolf::CalculateDistance()
 {
-	if (auto Target = GetTarget()) {
-		DistanceToTarget = (GetActorLocation() - Target->GetActorLocation()).Length();
+	if (TObjectPtr<AThreeFPSCharacter> Target = GetTarget()) {
+		if (IsValid(Target)) {
+			DistanceToTarget = (GetActorLocation() - Target->GetActorLocation()).Length();
+		}
 	}
 }
 
