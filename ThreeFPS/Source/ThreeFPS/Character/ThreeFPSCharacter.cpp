@@ -11,20 +11,22 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "HUDWidget.h"
+#include "ThreeFPSUIComponent.h"
 #include "InputActionValue.h"
 #include "HUDWidget.h"
 #include "MovieSceneTracksComponentTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "Engine/LocalPlayer.h"
+#include "Kismet/GameplayStatics.h"
 #include "ViewportToolbar/UnrealEdViewportToolbar.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
-//////////////////////////////////////////////////////////////////////////
-// AThreeFPSCharacter
-
 AThreeFPSCharacter::AThreeFPSCharacter()
 {
+	PrimaryActorTick.bCanEverTick = true;
+	//UI컴포넌트 부착
+	UIComponent = CreateDefaultSubobject<UThreeFPSUIComponent>(TEXT("UIComponent"));
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 	
@@ -86,6 +88,10 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	//HUD
 	HUDClass =nullptr;
 	HUDInstance = nullptr;
+
+	//발사 변수
+	bIsFiring=false;
+	FireRate = 0.23f;
 }
 
 // Input
@@ -111,7 +117,7 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			}
 			if (PlayerController->SprintAction)
 			{
-				EnhancedInputComponent->BindAction(PlayerController->SprintAction,ETriggerEvent::Triggered,this, &AThreeFPSCharacter::StartSprint);
+				EnhancedInputComponent->BindAction(PlayerController->SprintAction,ETriggerEvent::Started,this, &AThreeFPSCharacter::StartSprint);
 				EnhancedInputComponent->BindAction(PlayerController->SprintAction,ETriggerEvent::Completed,this, &AThreeFPSCharacter::StopSprint);
 			}
 			if (PlayerController->AimAction)
@@ -119,7 +125,11 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 				EnhancedInputComponent->BindAction(PlayerController->AimAction,ETriggerEvent::Started, this, &AThreeFPSCharacter::StartAim);
 				EnhancedInputComponent->BindAction(PlayerController->AimAction,ETriggerEvent::Completed, this, &AThreeFPSCharacter::StopAim);
 			}
-			
+			if (PlayerController->FireAction)
+			{
+				EnhancedInputComponent->BindAction(PlayerController->FireAction,ETriggerEvent::Triggered, this, &AThreeFPSCharacter::StartFiring);
+				EnhancedInputComponent->BindAction(PlayerController->FireAction,ETriggerEvent::Completed, this, &AThreeFPSCharacter::StopFiring);
+			}
 		}
 	}
 	else
@@ -127,7 +137,7 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
 }
-
+//비긴 플레이
 void AThreeFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -137,15 +147,34 @@ void AThreeFPSCharacter::BeginPlay()
 		HUDInstance = CreateWidget<UHUDWidget>(PlayerController, HUDClass);
 		HUDInstance->AddToViewport();
 	}
-	
 	//스테미너 업데이트 타이머
 	GetWorldTimerManager().SetTimer(UpdateStaminaTimer, this, &AThreeFPSCharacter::UpdateStamina, 0.1f, true);
+	
+	//체력 UI업데이트
+	UpdateHP();
 	
 	if (WeaponMesh && GetMesh())
 	{
 		FAttachmentTransformRules attachmentRules(EAttachmentRule::SnapToTarget, true);
 		WeaponMesh->AttachToComponent(GetMesh(), attachmentRules, FName("hr_weapon"));
 	}
+}
+
+//틱 함수
+void AThreeFPSCharacter::Tick(float DeltaTime)
+{
+	FVector Velocity = GetVelocity();
+	if (Velocity.Size() > 0)
+	{
+		bShouldMove = true;
+	}
+	else bShouldMove = false;
+}
+
+float AThreeFPSCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }
 
 //------------------------//
@@ -168,6 +197,14 @@ void AThreeFPSCharacter::UpdateStamina()
 		HUDInstance->SetStaminaBar(CurrentStamina, MaxStamina);
 	}
 	/***/
+}
+
+void AThreeFPSCharacter::UpdateHP()
+{
+	if (HUDInstance)
+	{
+		HUDInstance->SetHealthBar(CurrentHealth, MaxHealth);
+	}
 }
 
 //------------------------//
@@ -201,7 +238,7 @@ void AThreeFPSCharacter::Look(const FInputActionValue& Value)
 
 void AThreeFPSCharacter::StartSprint()
 {
-	if (!bIsSprinting && !GetCharacterMovement()->IsFalling())
+	if (bShouldMove && !GetCharacterMovement()->IsFalling())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 		bIsSprinting = true;
@@ -231,4 +268,59 @@ void AThreeFPSCharacter::StartAim()
 void AThreeFPSCharacter::StopAim()
 {
 	bIsAiming = false;
+}
+
+void AThreeFPSCharacter::StartFiring()
+{
+	if (!bIsSprinting)
+	{
+		bIsFiring=true;
+		Fire();
+		GetWorldTimerManager().SetTimer(FireTimer,this, &AThreeFPSCharacter::Fire, FireRate,true);
+	}
+}
+
+void AThreeFPSCharacter::StopFiring()
+{
+	bIsFiring = false;
+	GetWorldTimerManager().ClearTimer(FireTimer);
+}
+
+void AThreeFPSCharacter::Fire()
+{
+	if (!WeaponMesh) return;
+	
+	FVector MuzzleLocation = WeaponMesh->GetSocketLocation(FName("Muzzle"));
+
+	FVector ShotDirection;
+	FVector TraceEnd;
+	
+	AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetController());
+	if (PlayerController)
+	{
+		FRotator CameraRotator;
+		FVector CameraLocation;
+		PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotator);
+
+		ShotDirection = CameraRotator.Vector();
+		TraceEnd = CameraLocation + (ShotDirection* 5000.f);
+	}
+	
+	FHitResult HitResult;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.AddIgnoredComponent(WeaponMesh);
+
+	
+	if (bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult,MuzzleLocation,TraceEnd,ECC_Pawn, QueryParams))
+	{
+		TraceEnd = HitResult.ImpactPoint;
+		if (AActor* HitActor = HitResult.GetActor())
+		{
+			UGameplayStatics::ApplyDamage(HitResult.GetActor(),20.f, GetController(), this,  UDamageType::StaticClass());
+			//디버깅용 메세지
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("액터 : %s"), *HitActor->GetName()));
+		}
+	}
+	DrawDebugLine(GetWorld(), MuzzleLocation, TraceEnd, FColor::Red, false, 1.f,0,2.f);
 }
