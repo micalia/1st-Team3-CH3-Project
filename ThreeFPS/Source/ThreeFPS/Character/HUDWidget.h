@@ -15,7 +15,7 @@ class THREEFPS_API UHUDWidget : public UUserWidget
 public:
 	void SetHealthBar(float CurrentHealth, float MaxHealth);
 	void SetStaminaBar(float CurrentStamina, float MaxStamina);
-
+	//체력스태미나
 	UPROPERTY(EditAnywhere, meta=(BindWidget))
 	UProgressBar* HealthBar;
 	UPROPERTY(EditAnywhere, meta=(BindWidget))
