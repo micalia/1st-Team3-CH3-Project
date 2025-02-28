@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Boss AI - Shin Seol Bin
 
 #pragma once
 
@@ -12,6 +12,7 @@ enum class EBossWerewolfState :uint8
 {
 	Idle,
 	Move,
+	SwitchPhase,
 	Die,
 
 	Uppercut,
@@ -28,10 +29,10 @@ class THREEFPS_API UBossWerewolfAnim : public UAnimInstance, public IBossAIInter
 public:
 	UBossWerewolfAnim();
 
-	UFUNCTION(BlueprintCallable)
-	FORCEINLINE void SetAnimState(EBossWerewolfState InNewState){ CurrAnimState = InNewState; };
+	UFUNCTION(BlueprintCallable, meta = (BlueprintThreadSafe))
+	void SetAnimState(EBossWerewolfState InNewState);
 	UFUNCTION(BlueprintPure, meta = (BlueprintThreadSafe))
-	FORCEINLINE EBossWerewolfState GetAnimState(){ return CurrAnimState; };
+	EBossWerewolfState GetAnimState();
 
 	UFUNCTION(BlueprintCallable)
 	void PlayUppercutAtk();
@@ -41,6 +42,10 @@ public:
 	void PlayStoneUpAtk();
 	UFUNCTION(BlueprintCallable)
 	void PlaySpreadWaveAtk();
+	UFUNCTION(BlueprintCallable)
+	void PlaySwitchPhase();
+	UFUNCTION(BlueprintCallable)
+	void PlayDie();
 
 	void AttackEnd(UAnimMontage* InMontage, bool bInterrupted);
 
@@ -53,10 +58,15 @@ public:
 	TObjectPtr<UAnimMontage> StoneUpMontage;
 	UPROPERTY()
 	TObjectPtr<UAnimMontage> SpreadWaveMontage;
+	UPROPERTY()
+	TObjectPtr<UAnimMontage> DieMontage;
 
 	virtual void SetAIAttackDelegate(const FAIBossAttackFinished& InOnAttackFinished) override;
 
 	FAIBossAttackFinished OnAttackFinished;
+
+	float JumpAttackStartTime;	
+	float JumpAttackEndTime;	
 private:
 	EBossWerewolfState CurrAnimState = EBossWerewolfState::Idle;
 };
