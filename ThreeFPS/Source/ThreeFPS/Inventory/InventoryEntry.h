@@ -16,7 +16,6 @@ class THREEFPS_API UInventoryEntry : public UUserWidget, public IUserObjectListE
 	
 public:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
-
 private:
 	UPROPERTY(meta = (BindWidget))
 	UImage* IconImage;

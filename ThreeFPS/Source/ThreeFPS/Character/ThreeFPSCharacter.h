@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "ThreeFPS/Item/ItemDatabase.h"
 #include "ThreeFPSCharacter.generated.h"
 
 class UThreeFPSUIComponent;
@@ -15,7 +16,9 @@ class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
 class UHUDWidget;
+class UInventoryWidget;
 struct FInputActionValue;
+struct FItemData;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -89,10 +92,27 @@ class AThreeFPSCharacter : public ACharacter
 	UHUDWidget* HUDInstance;
 	UPROPERTY(visibleAnywhere, Category = "Movement")
 	UThreeFPSUIComponent* UIComponent;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> InventoryWidgetClass;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> InteractWidgetClass;
+	UPROPERTY()
+	UUserWidget* InteractWidget;
+
+	// 아이템 베이스
+	UPROPERTY(EditDefaultsOnly)
+	UItemDatabase* ItemDatabase;
+
 	
 	//타이머 핸들 변수
 	FTimerHandle UpdateStaminaTimer;
 	FTimerHandle FireTimer;
+
+	// 인터렉션 관련 변수
+	FVector ViewVector;
+	FRotator ViewRotation;
+	FVector InteractVectorEnd;
+	FHitResult InteractHitResult;
 	
 protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
@@ -115,6 +135,11 @@ protected:
 	void StartFiring();
 	void StopFiring();
 	void Fire();
+	// 인터렉션 함수
+	void Interact();
+	void InteractCheck();
+	// 인벤토리 함수
+	void ToggleInventory();
 
 public:
 	AThreeFPSCharacter();
@@ -126,5 +151,10 @@ public:
 	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
 	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
+
+	TArray<FItemData> Inventory;
+	UPROPERTY()
+	UInventoryWidget* InventoryWidget;
+
 };
 

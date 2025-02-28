@@ -13,12 +13,13 @@
 #include "HUDWidget.h"
 #include "ThreeFPSUIComponent.h"
 #include "InputActionValue.h"
-#include "HUDWidget.h"
+#include "Inventory/InventoryWidget.h"
 #include "MovieSceneTracksComponentTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "Engine/LocalPlayer.h"
 #include "Kismet/GameplayStatics.h"
 #include "ViewportToolbar/UnrealEdViewportToolbar.h"
+#include <Item/ItemBase.h>
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -131,6 +132,14 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 				EnhancedInputComponent->BindAction(PlayerController->FireAction,ETriggerEvent::Triggered, this, &AThreeFPSCharacter::StartFiring);
 				EnhancedInputComponent->BindAction(PlayerController->FireAction,ETriggerEvent::Completed, this, &AThreeFPSCharacter::StopFiring);
 			}
+			if (PlayerController->InteractAction)
+			{
+				EnhancedInputComponent->BindAction(PlayerController->InteractAction, ETriggerEvent::Started, this, &AThreeFPSCharacter::Interact);
+			}
+			if (PlayerController->InventoryAction)
+			{
+				EnhancedInputComponent->BindAction(PlayerController->InventoryAction, ETriggerEvent::Started, this, &AThreeFPSCharacter::ToggleInventory);
+			}
 		}
 	}
 	else
@@ -145,7 +154,7 @@ void AThreeFPSCharacter::GameStart()
 	{
 		AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetController());
 		HUDInstance = CreateWidget<UHUDWidget>(PlayerController, HUDClass);
-		HUDInstance->AddToViewport();
+		HUDInstance->AddToViewport(1);
 
 		if (APawn* PlayerPawn = PlayerController->GetPawn())
 		{
@@ -170,6 +179,13 @@ void AThreeFPSCharacter::GameStart()
 void AThreeFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	InventoryWidget = CreateWidget<UInventoryWidget>(Cast<APlayerController>(GetController()), InventoryWidgetClass);
+	InteractWidget = CreateWidget(Cast<APlayerController>(GetController()), InteractWidgetClass);
+	InventoryWidget->AddToViewport(5);
+	InteractWidget->AddToViewport(5);
+	InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+	InteractWidget->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 //틱 함수
@@ -181,6 +197,8 @@ void AThreeFPSCharacter::Tick(float DeltaTime)
 		bShouldMove = true;
 	}
 	else bShouldMove = false;
+
+	if (InventoryWidget && InventoryWidget->IsVisible() == false) InteractCheck();
 }
 
 float AThreeFPSCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
@@ -273,6 +291,8 @@ void AThreeFPSCharacter::StopCrouch()
 }
 void AThreeFPSCharacter::StartAim()
 {
+	if (InventoryWidget && InventoryWidget->IsVisible()) return;
+	
 	bIsAiming = true;
 	GetCharacterMovement()->bOrientRotationToMovement=false;
 	GetCharacterMovement()->bUseControllerDesiredRotation=true;
@@ -284,6 +304,8 @@ void AThreeFPSCharacter::StopAim()
 
 void AThreeFPSCharacter::StartFiring()
 {
+	if (InventoryWidget && InventoryWidget->IsVisible()) return;
+
 	if (!bIsSprinting)
 	{
 		bIsFiring=true;
@@ -335,4 +357,65 @@ void AThreeFPSCharacter::Fire()
 		}
 	}
 	DrawDebugLine(GetWorld(), MuzzleLocation, TraceEnd, FColor::Red, false, 1.f,0,2.f);
+}
+
+void AThreeFPSCharacter::InteractCheck()
+{
+	Cast<APlayerController>(GetController())->GetPlayerViewPoint(ViewVector, ViewRotation);
+	FVector VecDirection = ViewRotation.Vector() * 1000.f;
+	InteractVectorEnd = ViewVector + VecDirection;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	GetWorld()->LineTraceSingleByChannel(InteractHitResult, ViewVector, InteractVectorEnd, ECollisionChannel::ECC_GameTraceChannel2, QueryParams);
+	if (Cast<AItemBase>(InteractHitResult.GetActor()))
+	{
+		InteractWidget->SetVisibility(ESlateVisibility::Visible);
+	}
+	else
+	{
+		InteractWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+}
+
+void AThreeFPSCharacter::Interact()
+{
+	if (Cast<AItemBase>(InteractHitResult.GetActor()))
+	{
+		FItemData* Data = ItemDatabase->Items.FindByPredicate([&](const FItemData& ItemData)
+			{
+				return ItemData.Class == InteractHitResult.GetActor()->GetClass();
+			});
+		Inventory.Emplace(*Data);
+		InteractHitResult.GetActor()->Destroy();
+	}
+}
+
+void AThreeFPSCharacter::ToggleInventory()
+{
+	if (IsValid(InventoryWidget))
+	{
+		if (!InventoryWidget->IsVisible())
+		{
+			InteractWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+			InventoryWidget->SetVisibility(ESlateVisibility::Visible);
+			InventoryWidget->RefreshInventory(Inventory);
+
+			FInputModeGameAndUI InputMode;
+			InputMode.SetWidgetToFocus(InventoryWidget->TakeWidget());
+			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+			Cast<APlayerController>(GetController())->SetInputMode(InputMode);
+			Cast<APlayerController>(GetController())->SetCinematicMode(true, true, true);
+			Cast<APlayerController>(GetController())->bShowMouseCursor = true;
+		}
+		else
+		{
+			InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+			Cast<APlayerController>(GetController())->SetInputMode(FInputModeGameOnly());
+			Cast<APlayerController>(GetController())->SetCinematicMode(false, true, true);
+			Cast<APlayerController>(GetController())->bShowMouseCursor = false;
+		}
+	}
 }
