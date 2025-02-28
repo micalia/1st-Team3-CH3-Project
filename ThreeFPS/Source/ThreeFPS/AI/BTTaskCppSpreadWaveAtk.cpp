@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Boss AI - Shin Seol Bin
 #include "AI/BTTaskCppSpreadWaveAtk.h"
 #include "AIController.h"
 #include "BossAIInterface.h"
