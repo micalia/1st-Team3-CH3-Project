@@ -3,3 +3,7 @@
 
 #include "ThreeFPSGameInstance.h"
 
+void UThreeFPSGameInstance::Init()
+{
+	Super::Init();
+}

@@ -29,4 +29,7 @@ private:
 
 	UFUNCTION()
 	void GameExit();
+
+	UFUNCTION()
+	void OnLevelLoaded();
 };

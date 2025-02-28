@@ -4,7 +4,10 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Blueprint/UserWidget.h"
 #include "Intro/IntroHUD.h"
+#include "Loading/LoadingUIUserWidget.h"
+#include "Camera/CameraActor.h"
 #include "Kismet/GameplayStatics.h"
+#include "LevelManager.h"
 
 AThreeFPSGameMode::AThreeFPSGameMode()
 	: Super()
@@ -24,8 +27,50 @@ void AThreeFPSGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UE_LOG(LogTemp, Warning, TEXT("Start"));
+	ULevelManager* LevelManager = GetGameInstance()->GetSubsystem<ULevelManager>();
+	if (!IsValid(LevelManager))
+	{
+		UE_LOG(LogTemp, Error, TEXT("LevelManager nullptr"));
+	}
+	if (IsValid(LevelManager->LoadingWidget))
+	{
+		LevelManager->LoadingWidget->RemoveFromParent();
+		LevelManager->LoadingWidget = nullptr;
+	}
 
+	if (IsValid(LoadingWidgetClass))
+	{
+		LevelManager->LoadingWidget = Cast<ULoadingUIUserWidget>(CreateWidget(GetWorld(), LoadingWidgetClass));
+		FOnLevelLoadedDelegate OnDelegate;
+		OnDelegate.BindDynamic(this, &AThreeFPSGameMode::SwitchToCineCamera);
+		LevelManager->LoadLevel(ELevelType::Intro, OnDelegate);
+	}
+}
+
+void AThreeFPSGameMode::SwitchToCineCamera()
+{
+	TArray<AActor*> FoundCameras;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), FoundCameras);
+
+	for (AActor* Actor : FoundCameras)
+	{
+		if (Actor->GetName().Contains("CineCamera"))
+		{
+			ACameraActor* CineCamera = Cast<ACameraActor>(Actor);
+			if (CineCamera)
+			{
+				if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+				{
+					PlayerController->SetViewTargetWithBlend(CineCamera, 0.0f);
+				}
+			}
+		}
+	}
+	SetIntroUI();
+}
+
+void AThreeFPSGameMode::SetIntroUI()
+{
 	if (IsValid(IntroHUDWidgetClass))
 	{
 		IntroHUDWidget = Cast<UIntroHUD>(CreateWidget(GetWorld(), IntroHUDWidgetClass));
