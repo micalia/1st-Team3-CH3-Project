@@ -63,6 +63,21 @@ void ABossWerewolf::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 }
 
+/* 승현 추가 */
+float ABossWerewolf::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	CurrHp = FMath::Clamp(CurrHp - ActualDamage, 0.f, FullHp);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("액터 : %f"), CurrHp));
+
+	if (CurrHp <= 0)
+	{
+		//Die()
+	}
+	return ActualDamage;
+}
+
 void ABossWerewolf::Init()
 {
 	CurrHp = FullHp;
