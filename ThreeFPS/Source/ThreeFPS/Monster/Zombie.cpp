@@ -38,7 +38,7 @@ AZombie::AZombie()
         DetectionSphere->SetCollisionProfileName(TEXT("Trigger"));
     }
 
-    bool bSelectFeMale = false; //FMath::RandRange(0, 1) == 0 ? true : false;
+    bool bSelectFeMale = FMath::RandRange(0, 1) == 0 ? true : false;
     FString BodyMeshFilePath = "";
     if (bSelectFeMale)
         BodyMeshFilePath = TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/SK_Zombie_F02_01.SK_Zombie_F02_01'");

@@ -1,9 +1,6 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
-
-//#include "Monster/ZombieAnimInstance.h"
-#include "Zombie.h"
 #include "ZombieAnimInstance.h"
+#include "Zombie.h"
 
 UZombieAnimInstance::UZombieAnimInstance()
 {
