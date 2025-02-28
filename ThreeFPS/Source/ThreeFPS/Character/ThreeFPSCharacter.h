@@ -118,7 +118,7 @@ protected:
 
 public:
 	AThreeFPSCharacter();
-	
+	void GameStart();
 	void UpdateStamina();
 	void UpdateHP();
 	

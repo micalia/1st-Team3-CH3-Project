@@ -5,10 +5,12 @@
 #include "BaseMonster.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "NavigationSystem.h"
+#include "BehaviorTree/BlackboardComponent.h"
+
 void AMonsterAIController::OnPossess(APawn* pawn)
 {
     Super::OnPossess(pawn);
-    bFound = false;
+    //bFound = false;
 }
 
 void AMonsterAIController::BeginPlay()
@@ -16,7 +18,40 @@ void AMonsterAIController::BeginPlay()
     Super::BeginPlay();
     //	MoveToCurrentPatrolPoint();
 }
+void AMonsterAIController::RandomSelectPatrolState() //시작하면 좀비들의 PatrolType이 랜덤으로  선택된다
+{
+    PatrolType = static_cast<EPATROLTYPE>(FMath::RandRange(0, 2)); //Empty,Random,TargetPos EPATROLTYPE::Random; //
+    UBlackboardComponent* BlackBoard = GetBlackboardComponent();
+    if (BlackBoard)
+        BlackBoard->SetValueAsEnum(TEXT("PatrolState"), static_cast<uint8>(PatrolType));
+    UE_LOG(LogTemp, Warning, TEXT("PatrolState :%s"), *(StaticEnum<EPATROLTYPE>()->GetNameStringByIndex(static_cast<int32>(PatrolType))));
+}
+void AMonsterAIController::UpdatePatrolState(EPATROLTYPE type)
+{
+    PatrolType = type;
+    UBlackboardComponent* BlackBoard = GetBlackboardComponent();
+    if(BlackBoard)
+        BlackBoard->SetValueAsEnum(TEXT("PatrolState"), static_cast<uint8>(PatrolType));
+    UE_LOG(LogTemp, Warning, TEXT("PatrolState :%s"), *(StaticEnum<EPATROLTYPE>()->GetNameStringByIndex(static_cast<int32>(PatrolType))));
+}
 
+//20250227 보류중 아직 안쓰임.
+void AMonsterAIController::UpdatePlayerDetectedState(bool isPlayerDetected,AActor* Actor) 
+{
+    bPlayerDetected = isPlayerDetected;
+    UBlackboardComponent* BlackBoard = GetBlackboardComponent();
+    if (BlackBoard)
+    {
+        BlackBoard->SetValueAsBool(TEXT("PlayerDetected"), bPlayerDetected);
+        if (bPlayerDetected)
+            BlackBoard->SetValueAsObject(TEXT("TargetActor"), Actor );
+        else
+            BlackBoard->SetValueAsObject(TEXT("TargetActor"), nullptr);
+    }
+    UE_LOG(LogTemp, Warning, TEXT("PlayerDetected :%s / TargetActor : %s"), bPlayerDetected ? TEXT("True") : TEXT("false"), bPlayerDetected ? *Actor->GetName() : TEXT("Null"));
+}
+
+#pragma region //당장쓰이지 않는 함수 주석
 /*
 void AMonsterAIController::MoveToCurrentPatrolPoint()
 {
@@ -51,7 +86,7 @@ void AMonsterAIController::MoveToCurrentPatrolPoint()
 }
 */
 
-
+/*
 void AMonsterAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
     Super::OnMoveCompleted(RequestID, Result);
@@ -135,7 +170,7 @@ void AMonsterAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFo
     return;
 
 }
-
+*/
 void AMonsterAIController::TempOnMoveCompleted()
 {
     /*
@@ -228,3 +263,4 @@ void AMonsterAIController::TempOnMoveCompleted()
     }
     */
 }
+#pragma endregion

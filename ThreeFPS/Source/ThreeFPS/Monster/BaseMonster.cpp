@@ -18,29 +18,39 @@ void ABaseMonster::OnCapsuleOverlap(UPrimitiveComponent* OverlappedComp, AActor*
 void ABaseMonster::OnCapsuleEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 }
+void ABaseMonster::OnDetectionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+}
+
+void ABaseMonster::OnDetectionEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+}
+
+void ABaseMonster::EnableDetection()
+{
+	
+}
+
+void ABaseMonster::DisableDetection()
+{
+}
+
+float ABaseMonster::Attack()
+{
+	return 0.f;
+}
+
+void ABaseMonster::AttackTimming(int AttType)
+{
+}
 
 void ABaseMonster::ApplyRagdoll(FVector HitDirection)
 {
 }
 
-// Called when the game starts or when spawned
-//void ABaseMonster::BeginPlay()
-//{
-//	Super::BeginPlay();
-//	
-//}
-//
-//// Called every frame
-//void ABaseMonster::Tick(float DeltaTime)
-//{
-//	Super::Tick(DeltaTime);
-//
-//}
-//
-//// Called to bind functionality to input
-//void ABaseMonster::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-//{
-//	Super::SetupPlayerInputComponent(PlayerInputComponent);
-//
-//}
+void ABaseMonster::Die()
+{
+}
+
+
 
