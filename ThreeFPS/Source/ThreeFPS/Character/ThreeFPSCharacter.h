@@ -7,6 +7,8 @@
 #include "Logging/LogMacros.h"
 #include "ThreeFPSCharacter.generated.h"
 
+enum class EGunType : uint8;
+class UGunSKComponent;
 class UThreeFPSUIComponent;
 class USpringArmComponent;
 class UInputComponent;
@@ -24,13 +26,11 @@ class AThreeFPSCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
-	/** Pawn mesh: 1st person view (arms; seen only by self) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* Mesh1P;
-
 	// 무기 메쉬
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* WeaponMesh;
+	UPROPERTY(VisibleAnywhere,Category="Weapon")
+	TMap<EGunType ,UGunSKComponent*> UIComponents;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon", meta = (AllowPrivateAccess = "true"))
+	UGunSKComponent* CurrentWeapon;
 	
 	/** camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -79,14 +79,13 @@ class AThreeFPSCharacter : public ACharacter
 	float AimedSpringArmLength;
 	UPROPERTY(EditAnywhere, Category = "Fire")
 	bool bIsFiring;
-	UPROPERTY(EditAnywhere, Category = "Fire")
-	float FireRate;
 	
 	//HUD
 	UPROPERTY(EditAnywhere,Category = "HUD")
 	TSubclassOf<UHUDWidget> HUDClass;
 	UPROPERTY()
 	UHUDWidget* HUDInstance;
+	//크로스헤어용 UI컴포넌트.
 	UPROPERTY(visibleAnywhere, Category = "Movement")
 	UThreeFPSUIComponent* UIComponent;
 	
@@ -95,6 +94,7 @@ class AThreeFPSCharacter : public ACharacter
 	FTimerHandle FireTimer;
 	
 protected:
+	
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
@@ -121,7 +121,7 @@ public:
 	
 	void UpdateStamina();
 	void UpdateHP();
-
+	
 	//Getter 함수
 	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
 	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }

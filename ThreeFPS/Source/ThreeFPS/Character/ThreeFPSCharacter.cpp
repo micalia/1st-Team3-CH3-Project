@@ -17,8 +17,10 @@
 #include "MovieSceneTracksComponentTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "Engine/LocalPlayer.h"
-#include "Kismet/GameplayStatics.h"
 #include "ViewportToolbar/UnrealEdViewportToolbar.h"
+#include "Weapon/GunSKComponent.h"
+#include "Weapon/EGunType.h"
+#include "Weapon/RifleSKComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -27,8 +29,11 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	//UI컴포넌트 부착
 	UIComponent = CreateDefaultSubobject<UThreeFPSUIComponent>(TEXT("UIComponent"));
+	
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+	
+	CurrentWeapon = nullptr;
 	
 	//3인칭 카메라 설정
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -51,21 +56,6 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	}
 	GetMesh()->SetRelativeRotation(FRotator(0, -90.f, 0.f));
 	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
-
-	//무기 메쉬 초기화
-	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
-	WeaponMesh->SetupAttachment(GetMesh());
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> WeaponMeshAsset(TEXT("/Game/SHyeon/M4A1/Meshes/SK_M4A1"));
-	if (WeaponMeshAsset.Succeeded())
-	{
-		WeaponMesh->SetSkeletalMesh(WeaponMeshAsset.Object);
-	}
-	
-	// if (WeaponMesh && !GetMesh())
-	// {
-	// 	FAttachmentTransformRules attachmentRules(EAttachmentRule::SnapToTarget, true);
-	// 	WeaponMesh-> AttachToComponent(GetMesh(), attachmentRules, FName("hr_weapon"));
-	// }
 	
 	//앉기 활성화
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
@@ -91,7 +81,6 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 
 	//발사 변수
 	bIsFiring=false;
-	FireRate = 0.23f;
 }
 
 // Input
@@ -149,15 +138,11 @@ void AThreeFPSCharacter::BeginPlay()
 	}
 	//스테미너 업데이트 타이머
 	GetWorldTimerManager().SetTimer(UpdateStaminaTimer, this, &AThreeFPSCharacter::UpdateStamina, 0.1f, true);
-	
 	//체력 UI업데이트
 	UpdateHP();
 	
-	if (WeaponMesh && GetMesh())
-	{
-		FAttachmentTransformRules attachmentRules(EAttachmentRule::SnapToTarget, true);
-		WeaponMesh->AttachToComponent(GetMesh(), attachmentRules, FName("hr_weapon"));
-	}
+	URifleSKComponent* Rifle = NewObject<URifleSKComponent>(this);
+	
 }
 
 //틱 함수
@@ -238,7 +223,7 @@ void AThreeFPSCharacter::Look(const FInputActionValue& Value)
 
 void AThreeFPSCharacter::StartSprint()
 {
-	if (bShouldMove && !GetCharacterMovement()->IsFalling())
+	if (bShouldMove && !GetCharacterMovement()->IsFalling() && !bIsFiring && !bIsAiming)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 		bIsSprinting = true;
@@ -262,8 +247,6 @@ void AThreeFPSCharacter::StopCrouch()
 void AThreeFPSCharacter::StartAim()
 {
 	bIsAiming = true;
-	GetCharacterMovement()->bOrientRotationToMovement=false;
-	GetCharacterMovement()->bUseControllerDesiredRotation=true;
 }
 void AThreeFPSCharacter::StopAim()
 {
@@ -272,55 +255,18 @@ void AThreeFPSCharacter::StopAim()
 
 void AThreeFPSCharacter::StartFiring()
 {
-	if (!bIsSprinting)
+	if (!bIsSprinting && !GetCharacterMovement()->IsFalling())
 	{
-		bIsFiring=true;
 		Fire();
-		GetWorldTimerManager().SetTimer(FireTimer,this, &AThreeFPSCharacter::Fire, FireRate,true);
 	}
 }
 
 void AThreeFPSCharacter::StopFiring()
 {
 	bIsFiring = false;
-	GetWorldTimerManager().ClearTimer(FireTimer);
 }
 
 void AThreeFPSCharacter::Fire()
 {
-	if (!WeaponMesh) return;
-	
-	FVector MuzzleLocation = WeaponMesh->GetSocketLocation(FName("Muzzle"));
-
-	FVector ShotDirection;
-	FVector TraceEnd;
-	
-	AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetController());
-	if (PlayerController)
-	{
-		FRotator CameraRotator;
-		FVector CameraLocation;
-		PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotator);
-
-		ShotDirection = CameraRotator.Vector();
-		TraceEnd = CameraLocation + (ShotDirection* 5000.f);
-	}
-	
-	FHitResult HitResult;
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-	QueryParams.AddIgnoredComponent(WeaponMesh);
-
-	
-	if (bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult,MuzzleLocation,TraceEnd,ECC_Pawn, QueryParams))
-	{
-		TraceEnd = HitResult.ImpactPoint;
-		if (AActor* HitActor = HitResult.GetActor())
-		{
-			UGameplayStatics::ApplyDamage(HitResult.GetActor(),20.f, GetController(), this,  UDamageType::StaticClass());
-			//디버깅용 메세지
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("액터 : %s"), *HitActor->GetName()));
-		}
-	}
-	DrawDebugLine(GetWorld(), MuzzleLocation, TraceEnd, FColor::Red, false, 1.f,0,2.f);
+	CurrentWeapon->StartFire();
 }
