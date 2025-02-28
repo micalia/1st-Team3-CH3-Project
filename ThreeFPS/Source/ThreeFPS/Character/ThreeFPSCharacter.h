@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "ThreeFPSCharacter.generated.h"
 
+class UThreeFPSUIComponent;
 class USpringArmComponent;
 class UInputComponent;
 class USkeletalMeshComponent;
@@ -50,6 +51,8 @@ class AThreeFPSCharacter : public ACharacter
 	float SprintRate;
 	UPROPERTY(EditAnywhere,Category = "Movement")
 	bool bIsSprinting;
+	UPROPERTY(EditAnywhere,Category = "Movement")
+	bool bShouldMove;
 
 	//체력, 스태미너 변수
 	UPROPERTY(EditAnywhere,Category = "Status")
@@ -74,21 +77,28 @@ class AThreeFPSCharacter : public ACharacter
 	float OriginSpringArmLength;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
 	float AimedSpringArmLength;
-
+	UPROPERTY(EditAnywhere, Category = "Fire")
+	bool bIsFiring;
+	UPROPERTY(EditAnywhere, Category = "Fire")
+	float FireRate;
+	
 	//HUD
 	UPROPERTY(EditAnywhere,Category = "HUD")
 	TSubclassOf<UHUDWidget> HUDClass;
 	UPROPERTY()
 	UHUDWidget* HUDInstance;
+	UPROPERTY(visibleAnywhere, Category = "Movement")
+	UThreeFPSUIComponent* UIComponent;
 	
 	//타이머 핸들 변수
 	FTimerHandle UpdateStaminaTimer;
+	FTimerHandle FireTimer;
 	
 protected:
-	
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	virtual void BeginPlay() override;
-	
+	virtual void Tick(float DeltaSeconds) override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
@@ -101,11 +111,16 @@ protected:
 	//조준 함수
 	void StartAim();
 	void StopAim();
+	//발사 함수
+	void StartFiring();
+	void StopFiring();
+	void Fire();
 
 public:
 	AThreeFPSCharacter();
 	void GameStart();
 	void UpdateStamina();
+	void UpdateHP();
 
 	//Getter 함수
 	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
