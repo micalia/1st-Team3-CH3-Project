@@ -38,9 +38,27 @@ protected:
 		int32 OtherBodyIndex) = 0;
 
 	UFUNCTION()
+	virtual void OnDetectionOverlap(
+		UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult) = 0;
+
+	UFUNCTION()
+	virtual void OnDetectionEndOverlap(UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex) = 0;
+
+	
+	virtual void EnableDetection() = 0;
+	virtual void DisableDetection() = 0;
+
+	UFUNCTION()
 	virtual void ApplyRagdoll(FVector HitDirection) = 0;
 
-	int Hp;
-	float Speed;
+
 
 };
