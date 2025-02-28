@@ -92,14 +92,14 @@ void ABossWerewolf::CalculateDistance()
 
 TObjectPtr<AThreeFPSCharacter> ABossWerewolf::GetTarget()
 {
-	if (TargetPtr->IsValidLowLevel()) {
+	if (IsValid(TargetPtr)) {
 		return TargetPtr;
 	}
 	else {
 		for (TActorIterator<AThreeFPSCharacter> it(GetWorld()); it; ++it) {
 			TargetPtr = *it;
 		}
-		if (TargetPtr->IsValidLowLevel()) {
+		if (IsValid(TargetPtr)) {
 			return TargetPtr;
 		}
 	}
