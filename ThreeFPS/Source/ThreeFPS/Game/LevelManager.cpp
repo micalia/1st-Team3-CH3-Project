@@ -38,6 +38,8 @@ void ULevelManager::LoadLevel(ELevelType LevelType, FOnLevelLoadedDelegate& OnLo
 			LoadingWidget->AddToViewport();
 			// UI 페이드인 애니메이션 실행
 			Cast<ULoadingUIUserWidget>(LoadingWidget)->PlayFadeInAnimation(false);
+
+			UKismetSystemLibrary::Delay(this, 1.0f, FLatentActionInfo());
 		}
 	}
 

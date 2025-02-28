@@ -27,18 +27,6 @@ void UIntroHUD::GameStart()
 	RemoveFromParent();
 
 	ULevelManager* LevelManager = GetGameInstance()->GetSubsystem<ULevelManager>();
-	
-	if (AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0)))
-	{
-		PlayerController->bShowMouseCursor = false;
-		PlayerController->SetInputMode(FInputModeGameOnly());
-		PlayerController->Possess(0);
-		
-		if (AThreeFPSCharacter* Player = Cast<AThreeFPSCharacter>(PlayerController->GetCharacter()))
-		{
-			Player->GameStart();
-		}
-	}
 
 	if (IsValid(LevelManager))
 	{
@@ -59,6 +47,18 @@ void UIntroHUD::OnLevelLoaded()
 	if (IsValid(LevelManager))
 	{
 		LevelManager->UnLoadLevel(ELevelType::Intro, true);
+	}
+
+	if (AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0)))
+	{
+		PlayerController->bShowMouseCursor = false;
+		PlayerController->SetInputMode(FInputModeGameOnly());
+		PlayerController->Possess(0);
+
+		if (AThreeFPSCharacter* Player = Cast<AThreeFPSCharacter>(PlayerController->GetCharacter()))
+		{
+			Player->GameStart();
+		}
 	}
 }
 

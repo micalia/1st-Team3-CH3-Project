@@ -94,6 +94,7 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	FireRate = 0.23f;
 }
 
+
 // Input
 void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -137,26 +138,38 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
 }
-//비긴 플레이
-void AThreeFPSCharacter::BeginPlay()
+
+void AThreeFPSCharacter::GameStart()
 {
 	if (HUDClass)
 	{
 		AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetController());
 		HUDInstance = CreateWidget<UHUDWidget>(PlayerController, HUDClass);
 		HUDInstance->AddToViewport();
+
+		if (APawn* PlayerPawn = PlayerController->GetPawn())
+		{
+			PlayerController->SetViewTargetWithBlend(PlayerPawn, 1.0f);
+		}
 	}
 	//스테미너 업데이트 타이머
 	GetWorldTimerManager().SetTimer(UpdateStaminaTimer, this, &AThreeFPSCharacter::UpdateStamina, 0.1f, true);
-	
+
 	//체력 UI업데이트
 	UpdateHP();
-	
+
 	if (WeaponMesh && GetMesh())
 	{
 		FAttachmentTransformRules attachmentRules(EAttachmentRule::SnapToTarget, true);
 		WeaponMesh->AttachToComponent(GetMesh(), attachmentRules, FName("hr_weapon"));
 	}
+}
+
+
+//비긴 플레이
+void AThreeFPSCharacter::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 //틱 함수
