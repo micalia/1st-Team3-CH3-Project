@@ -49,7 +49,7 @@ void ABossWerewolfAIController::OnPossess(APawn* InPawn)
 	if (ABossWerewolf* Wolf = Cast<ABossWerewolf>(InPawn)) {
 		BossAnim = Cast<UBossWerewolfAnim>(Wolf->GetMesh()->GetAnimInstance());
 	}
-	RunAI();
+	//RunAI();
 }
 
 void ABossWerewolfAIController::Tick(float DeltaTime)

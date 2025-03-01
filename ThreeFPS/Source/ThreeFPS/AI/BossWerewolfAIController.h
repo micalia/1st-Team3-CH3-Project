@@ -19,7 +19,8 @@ class THREEFPS_API ABossWerewolfAIController : public AAIController
 
 public:
 	ABossWerewolfAIController();
-
+	
+	UFUNCTION(BlueprintCallable)
 	void RunAI();
 	void StopAI();
 
