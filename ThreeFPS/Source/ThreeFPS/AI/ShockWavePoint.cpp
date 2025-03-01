@@ -1,4 +1,4 @@
-// Boss AI - Shin Seol Bin
+// Boss AI - ì‹ ì„¤ë¹ˆ
 
 
 #include "AI/ShockWavePoint.h"
@@ -45,7 +45,7 @@ void AShockWavePoint::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		{
 			if (WaveManager->DamageActor == nullptr)
 			{
-				// TODO: µ¥¹ÌÁö¸¦ ÀÔÈù´Ù
+				// TODO: ë°ë¯¸ì§€ë¥¼ ìž…ížŒë‹¤
 				WaveManager->DamageActor = this;
 			}
 		}

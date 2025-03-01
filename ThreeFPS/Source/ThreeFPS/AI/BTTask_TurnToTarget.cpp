@@ -1,4 +1,4 @@
-// Boss AI - Shin Seol Bin
+// Boss AI - 신설빈
 
 
 #include "AI/BTTask_TurnToTarget.h"

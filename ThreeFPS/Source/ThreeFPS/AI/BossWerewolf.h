@@ -1,4 +1,4 @@
-﻿// Boss AI - 신설빈
+// Boss AI - 신설빈
 
 #pragma once
 
@@ -28,6 +28,7 @@ public:
 	TObjectPtr<AThreeFPSCharacter> GetTarget(); 
 
 	void Init();
+	void Die();
 
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE void Damaged(float InHitDamage) {

@@ -1,4 +1,4 @@
-// Boss AI - Shin Seol Bin
+// Boss AI - 신설빈
 
 
 #include "BossWerewolf.h"
@@ -7,6 +7,7 @@
 #include "Character/ThreeFPSCharacter.h"
 #include "EngineUtils.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "BehaviorTree/BehaviorTreeComponent.h"
 
 ABossWerewolf::ABossWerewolf()
 {
@@ -73,7 +74,7 @@ float ABossWerewolf::TakeDamage(float DamageAmount, struct FDamageEvent const& D
 
 	if (CurrHp <= 0)
 	{
-		//Die()
+		Die();
 	}
 	return ActualDamage;
 }
@@ -81,6 +82,22 @@ float ABossWerewolf::TakeDamage(float DamageAmount, struct FDamageEvent const& D
 void ABossWerewolf::Init()
 {
 	CurrHp = FullHp;
+}
+
+void ABossWerewolf::Die()
+{
+	if (auto Anim = Cast<UBossWerewolfAnim>(GetMesh()->GetAnimInstance())) {
+		Anim->SetAnimState(EBossWerewolfState::Die);
+		Anim->PlayDie();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if (auto AiCon = Cast<ABossWerewolfAIController>(GetController())) {
+			UBehaviorTreeComponent* BTComponent = Cast<UBehaviorTreeComponent>(AiCon->GetBrainComponent());
+			if (BTComponent)
+			{
+				BTComponent->StopTree(EBTStopMode::Safe);
+			}
+		}
+	}
 }
 
 void ABossWerewolf::CalculateDistance()

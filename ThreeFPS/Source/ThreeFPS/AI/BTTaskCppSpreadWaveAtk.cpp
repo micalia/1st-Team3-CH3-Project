@@ -1,4 +1,4 @@
-// Boss AI - Shin Seol Bin
+// Boss AI - 신설빈
 #include "AI/BTTaskCppSpreadWaveAtk.h"
 #include "AIController.h"
 #include "BossAIInterface.h"
