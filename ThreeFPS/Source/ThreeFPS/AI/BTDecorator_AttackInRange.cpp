@@ -12,7 +12,7 @@ UBTDecorator_AttackInRange::UBTDecorator_AttackInRange()
 {
 	NodeName = TEXT("CanAttack");
 }
-#pragma optimize("" , off) 
+
 bool UBTDecorator_AttackInRange::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
 	bool bResult = Super::CalculateRawConditionValue(OwnerComp, NodeMemory);
@@ -32,7 +32,7 @@ bool UBTDecorator_AttackInRange::CalculateRawConditionValue(UBehaviorTreeCompone
 	if (auto Boss = Cast<ABossWerewolf>(ControllingPawn)) {
 		float DistanceToTarget = ControllingPawn->GetDistanceTo(Target);
 		float AttackRangeWithRadius = Boss->AttackRange;
-		GEngine->AddOnScreenDebugMessage(-1, 999, FColor::Purple, FString::Printf(TEXT("%s >> Dist2Target: %f / AttackRange: %f"), *FDateTime::UtcNow().ToString(TEXT("%H:%M:%S")), DistanceToTarget, AttackRangeWithRadius), true, FVector2D(1.5f, 1.5f));
+
 		bResult = (DistanceToTarget <= AttackRangeWithRadius);
 		if (bResult == false) {
 			int a = 1;
@@ -44,4 +44,3 @@ bool UBTDecorator_AttackInRange::CalculateRawConditionValue(UBehaviorTreeCompone
 	}
 	return false;
 }
-#pragma optimize("" , on) 

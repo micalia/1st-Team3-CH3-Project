@@ -6,7 +6,6 @@
 #include "UObject/Interface.h"
 #include "BossAIInterface.generated.h"
 
-// This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UBossAIInterface : public UInterface
 {
@@ -19,7 +18,6 @@ class THREEFPS_API IBossAIInterface
 {
 	GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	virtual void SetAIAttackDelegate(const FAIBossAttackFinished& InOnAttackFinished) = 0;
 };
