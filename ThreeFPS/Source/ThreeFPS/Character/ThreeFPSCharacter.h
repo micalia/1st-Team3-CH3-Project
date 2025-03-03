@@ -124,6 +124,7 @@ public:
 
 	//Getter 함수
 	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
 };

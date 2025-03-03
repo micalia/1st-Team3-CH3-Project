@@ -89,6 +89,7 @@ void ABossWerewolf::Die()
 	if (auto Anim = Cast<UBossWerewolfAnim>(GetMesh()->GetAnimInstance())) {
 		Anim->SetAnimState(EBossWerewolfState::Die);
 		Anim->PlayDie();
+		HideBossHUD();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		if (auto AiCon = Cast<ABossWerewolfAIController>(GetController())) {
 			UBehaviorTreeComponent* BTComponent = Cast<UBehaviorTreeComponent>(AiCon->GetBrainComponent());

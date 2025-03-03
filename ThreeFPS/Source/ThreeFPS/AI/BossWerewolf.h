@@ -40,6 +40,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE float GetHp() const { return CurrHp; };
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void HideBossHUD();
+
 public:
 	FVector CalculateBezier(float ratio, const FVector P0, const FVector P1, const FVector P2);
 	void JumpAttackPath(const FVector InStartPos, const FVector InBetweenPos, const FVector InEndPos);
@@ -63,7 +66,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = Bezier)
 	float CurvePointCount = 7;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float FullHp = 1000;
 private:
 	float CurrHp = 0;

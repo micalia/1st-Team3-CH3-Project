@@ -37,7 +37,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	USceneComponent* RootComp;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UCapsuleComponent* CapsuleComp;
 
 	UPROPERTY(EditAnywhere)

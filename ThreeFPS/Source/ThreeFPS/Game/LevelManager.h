@@ -12,7 +12,8 @@ enum class ELevelType : uint8
 	Tutorial UMETA(DisplayName = "Tutorial Level"),
 	FirstChapter UMETA(DisplayName = "FirstChapter Level"),
 	SecondChapter UMETA(DisplayName = "SecondChapter Level"),
-	Boss UMETA(DisplayName = "Boss Level")
+	BossCinema UMETA(DisplayName = "BossCinema Level"),
+	BossBattle UMETA(DisplayName = "BossBattle Level")
 };
 
 DECLARE_DYNAMIC_DELEGATE(FOnLevelLoadedDelegate);

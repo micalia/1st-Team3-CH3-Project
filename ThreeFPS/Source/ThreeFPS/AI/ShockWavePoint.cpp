@@ -6,6 +6,7 @@
 #include "CableComponent.h"
 #include "Character/ThreeFPSCharacter.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AShockWavePoint::AShockWavePoint()
@@ -45,7 +46,8 @@ void AShockWavePoint::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		{
 			if (WaveManager->DamageActor == nullptr)
 			{
-				// TODO: 데미지를 입힌다
+				UGameplayStatics::ApplyDamage(Player, 5, nullptr, this, UDamageType::StaticClass());
+
 				WaveManager->DamageActor = this;
 			}
 		}
