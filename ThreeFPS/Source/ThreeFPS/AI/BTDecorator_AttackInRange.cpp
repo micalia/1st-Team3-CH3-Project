@@ -32,7 +32,6 @@ bool UBTDecorator_AttackInRange::CalculateRawConditionValue(UBehaviorTreeCompone
 	if (auto Boss = Cast<ABossWerewolf>(ControllingPawn)) {
 		float DistanceToTarget = ControllingPawn->GetDistanceTo(Target);
 		float AttackRangeWithRadius = Boss->AttackRange;
-
 		bResult = (DistanceToTarget <= AttackRangeWithRadius);
 		if (bResult == false) {
 			int a = 1;

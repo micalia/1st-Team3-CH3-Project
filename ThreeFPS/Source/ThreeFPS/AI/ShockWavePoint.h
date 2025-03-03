@@ -15,15 +15,12 @@ class THREEFPS_API AShockWavePoint : public AActor
 	GENERATED_BODY()
 
 public:
-	
 	AShockWavePoint();
 
 protected:
-	
 	virtual void BeginPlay() override;
 
 public:
-	
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()

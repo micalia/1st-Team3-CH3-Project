@@ -7,16 +7,10 @@
 // Sets default values
 AShockWaveManager::AShockWaveManager()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	/*static ConstructorHelpers::FClassFinder<AShockWavePoint> tempWavePoint(TEXT("/Game/SB/Blueprint/Attack/BP_WavePoint.BP_WavePoint_C"));
-	if (tempWavePoint.Succeeded()) {
-		ShockWavePointFactory = tempWavePoint.Class;
-	}*/
 }
 
-// Called when the game starts or when spawned
 void AShockWaveManager::BeginPlay()
 {
 	Super::BeginPlay();
@@ -37,7 +31,6 @@ void AShockWaveManager::BeginPlay()
 	ConnectCablePointToPoint();
 }
 
-// Called every frame
 void AShockWaveManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);

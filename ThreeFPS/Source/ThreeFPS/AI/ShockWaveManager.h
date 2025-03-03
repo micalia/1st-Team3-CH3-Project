@@ -14,7 +14,6 @@ class THREEFPS_API AShockWaveManager : public AActor
 	GENERATED_BODY()
 	
 public:	
-	
 	AShockWaveManager();
 
 protected:

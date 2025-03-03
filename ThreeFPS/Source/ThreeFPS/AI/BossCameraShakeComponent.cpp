@@ -1,20 +1,14 @@
-// Boss AI - ½Å¼³ºó
-
+ï»¿// Boss AI - ì‹ ì„¤ë¹ˆ
 
 #include "AI/BossCameraShakeComponent.h"
 
-// Sets default values for this component's properties
 UBossCameraShakeComponent::UBossCameraShakeComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
 	// ...
 }
 
-
-// Called when the game starts
 void UBossCameraShakeComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -23,8 +17,6 @@ void UBossCameraShakeComponent::BeginPlay()
 	
 }
 
-
-// Called every frame
 void UBossCameraShakeComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);

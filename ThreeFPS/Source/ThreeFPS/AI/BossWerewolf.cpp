@@ -70,7 +70,6 @@ float ABossWerewolf::TakeDamage(float DamageAmount, struct FDamageEvent const& D
 {
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	CurrHp = FMath::Clamp(CurrHp - ActualDamage, 0.f, FullHp);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("액터 : %f"), CurrHp));
 
 	if (CurrHp <= 0)
 	{
