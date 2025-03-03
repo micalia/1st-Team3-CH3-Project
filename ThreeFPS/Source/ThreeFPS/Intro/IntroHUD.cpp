@@ -32,7 +32,7 @@ void UIntroHUD::GameStart()
 	{
 		FOnLevelLoadedDelegate Callback;
 		Callback.BindDynamic(this, &UIntroHUD::OnLevelLoaded);
-		LevelManager->LoadLevel(ELevelType::Tutorial, Callback);
+		LevelManager->LoadLevel(ELevelType::BossBattle, Callback);
 	}
 }
 
@@ -46,7 +46,7 @@ void UIntroHUD::OnLevelLoaded()
 	ULevelManager* LevelManager = GetGameInstance()->GetSubsystem<ULevelManager>();
 	if (IsValid(LevelManager))
 	{
-		LevelManager->UnLoadLevel(ELevelType::Intro, true);
+		LevelManager->UnLoadLevel(ELevelType::BossBattle, true);
 	}
 
 	if (AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0)))

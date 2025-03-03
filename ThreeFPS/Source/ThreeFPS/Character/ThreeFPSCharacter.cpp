@@ -204,7 +204,17 @@ void AThreeFPSCharacter::Tick(float DeltaTime)
 float AThreeFPSCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
-	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	/***설빈 추가***/
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	CurrentHealth = FMath::Clamp(CurrentHealth - ActualDamage, 0.f, MaxHealth);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("액터 : %f"), CurrentHealth));
+
+	if (CurrentHealth <= 0)
+	{
+//		Die();
+	}
+	/***************************/
+	return ActualDamage;
 }
 
 //------------------------//

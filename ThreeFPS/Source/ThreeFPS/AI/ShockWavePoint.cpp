@@ -1,4 +1,4 @@
-// Boss AI - Shin Seol Bin
+// Boss AI - ì‹ ì„¤ë¹ˆ
 
 
 #include "AI/ShockWavePoint.h"
@@ -6,6 +6,7 @@
 #include "CableComponent.h"
 #include "Character/ThreeFPSCharacter.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AShockWavePoint::AShockWavePoint()
@@ -45,7 +46,8 @@ void AShockWavePoint::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		{
 			if (WaveManager->DamageActor == nullptr)
 			{
-				// TODO: µ¥¹ÌÁö¸¦ ÀÔÈù´Ù
+				UGameplayStatics::ApplyDamage(Player, 5, nullptr, this, UDamageType::StaticClass());
+
 				WaveManager->DamageActor = this;
 			}
 		}
