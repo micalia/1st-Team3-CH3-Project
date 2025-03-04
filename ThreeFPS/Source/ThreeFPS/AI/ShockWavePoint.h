@@ -1,4 +1,4 @@
-// Boss AI - Shin Seol Bin
+// Boss AI - 신설빈
 
 #pragma once
 
@@ -15,15 +15,12 @@ class THREEFPS_API AShockWavePoint : public AActor
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
 	AShockWavePoint();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()

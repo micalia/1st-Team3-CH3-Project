@@ -1,7 +1,7 @@
 ﻿#include "InventoryEntry.h"
 #include "ThreeFPS/Item/ItemDatabase.h"
 #include "Components/TextBlock.h"
-#include "TestCharacter.h"
+#include "Character/ThreeFPSCharacter.h"
 #include "Components/Button.h"
 #include "InventoryWidget.h"
 #include "ThreeFPS/Item/ItemBase.h"
@@ -29,7 +29,7 @@ void UInventoryEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
 
 void UInventoryEntry::UseItem()
 {
-	ATestCharacter* PlayerCharacter = Cast<ATestCharacter>(GetOwningPlayer()->GetPawn());
+	AThreeFPSCharacter* PlayerCharacter = Cast<AThreeFPSCharacter>(GetOwningPlayer()->GetPawn());
 	FItemData ItemData = GetListItem<UItemUIObject>()->ItemData;
 	if (!ItemData.IsUsable) return;
 	if (AItemBase* ItemBase = Cast<AItemBase>(ItemData.Class->ClassDefaultObject))
@@ -42,7 +42,7 @@ void UInventoryEntry::UseItem()
 
 void UInventoryEntry::DropItem()
 {
-	ATestCharacter* PlayerCharacter = Cast<ATestCharacter>(GetOwningPlayer()->GetPawn());
+	AThreeFPSCharacter* PlayerCharacter = Cast<AThreeFPSCharacter>(GetOwningPlayer()->GetPawn());
 	FItemData ItemData = GetListItem<UItemUIObject>()->ItemData;
 	GetWorld()->SpawnActor<AItemBase>(ItemData.Class, PlayerCharacter->GetActorLocation() + PlayerCharacter->GetActorForwardVector() * 100, FRotator());
 	PlayerCharacter->Inventory.RemoveSingle(ItemData);

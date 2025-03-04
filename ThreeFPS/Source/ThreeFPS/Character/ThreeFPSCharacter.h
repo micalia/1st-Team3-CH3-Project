@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "Components/TimelineComponent.h"
 #include "Weapon/EGunType.h"
+#include "ThreeFPS/Item/ItemDatabase.h"
 #include "ThreeFPSCharacter.generated.h"
 
 class UWeaponInventoryComponent;
@@ -19,8 +20,10 @@ class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
 class UHUDWidget;
+class UInventoryWidget;
 class AGunBase;
 struct FInputActionValue;
+struct FItemData;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -91,10 +94,28 @@ class AThreeFPSCharacter : public ACharacter
 	//크로스헤어용 UI컴포넌트.
 	UPROPERTY(visibleAnywhere, Category = "Movement")
 	UThreeFPSUIComponent* UIComponent;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> InventoryWidgetClass;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> InteractWidgetClass;
+	UPROPERTY()
+	UUserWidget* InteractWidget;
+	UUserWidget* MissionWidget;
+
+	// 아이템 베이스
+	UPROPERTY(EditDefaultsOnly)
+	UItemDatabase* ItemDatabase;
+
 	
 	//타이머 핸들 변수
 	FTimerHandle UpdateStaminaTimer;
 	FTimerHandle FireTimer;
+
+	// 인터렉션 관련 변수
+	FVector ViewVector;
+	FRotator ViewRotation;
+	FVector InteractVectorEnd;
+	FHitResult InteractHitResult;
 	FTimerHandle ReloadTimer;
 	
 protected:
@@ -129,6 +150,12 @@ protected:
 	//발사 함수
 	void StartFiring();
 	void StopFiring();
+	void Fire();
+	// 인터렉션 함수
+	void Interact();
+	void InteractCheck();
+	// 인벤토리 함수
+	void ToggleInventory();
 	//재장전
 	void StartReload();
 	void OnReloaded();
@@ -150,8 +177,14 @@ public:
 	//Getter 함수
 	FORCEINLINE bool GetIsAiming() { return bIsAiming; }
 	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
+
+	TArray<FItemData> Inventory;
+	UPROPERTY()
+	UInventoryWidget* InventoryWidget;
+
 	
 	//무기에 따른 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Animation")

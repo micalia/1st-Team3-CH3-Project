@@ -1,4 +1,4 @@
-// Boss AI - Shin Seol Bin
+// Boss AI - ì‹ ì„¤ë¹ˆ
 
 
 #include "AI/ShockWavePoint.h"
@@ -6,11 +6,10 @@
 #include "CableComponent.h"
 #include "Character/ThreeFPSCharacter.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
 
-// Sets default values
 AShockWavePoint::AShockWavePoint()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	RootComp = CreateDefaultSubobject<USceneComponent>(TEXT("RootComp"));
@@ -21,7 +20,6 @@ AShockWavePoint::AShockWavePoint()
 	SphereCollComp->SetupAttachment(RootComp);
 }
 
-// Called when the game starts or when spawned
 void AShockWavePoint::BeginPlay()
 {
 	Super::BeginPlay();
@@ -30,7 +28,6 @@ void AShockWavePoint::BeginPlay()
 	SphereCollComp->OnComponentEndOverlap.AddDynamic(this, &AShockWavePoint::EndOverlap);
 }
 
-// Called every frame
 void AShockWavePoint::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -45,7 +42,8 @@ void AShockWavePoint::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		{
 			if (WaveManager->DamageActor == nullptr)
 			{
-				// TODO: µ¥¹ÌÁö¸¦ ÀÔÈù´Ù
+				UGameplayStatics::ApplyDamage(Player, 5, nullptr, this, UDamageType::StaticClass());
+
 				WaveManager->DamageActor = this;
 			}
 		}

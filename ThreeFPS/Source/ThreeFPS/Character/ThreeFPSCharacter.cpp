@@ -14,13 +14,14 @@
 #include "HUDWidget.h"
 #include "ThreeFPSUIComponent.h"
 #include "InputActionValue.h"
-#include "HUDWidget.h"
+#include "Inventory/InventoryWidget.h"
 #include "MovieSceneTracksComponentTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "Engine/LocalPlayer.h"
 #include "ViewportToolbar/UnrealEdViewportToolbar.h"
 #include "Weapon/EGunType.h"
 #include "Weapon/Rifle.h"
+#include <Item/ItemBase.h>
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -127,6 +128,14 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 				EnhancedInputComponent->BindAction(PlayerController->FireAction,ETriggerEvent::Started, this, &AThreeFPSCharacter::StartFiring);
 				EnhancedInputComponent->BindAction(PlayerController->FireAction,ETriggerEvent::Completed, this, &AThreeFPSCharacter::StopFiring);
 			}
+			if (PlayerController->InteractAction)
+			{
+				EnhancedInputComponent->BindAction(PlayerController->InteractAction, ETriggerEvent::Started, this, &AThreeFPSCharacter::Interact);
+			}
+			if (PlayerController->InventoryAction)
+			{
+				EnhancedInputComponent->BindAction(PlayerController->InventoryAction, ETriggerEvent::Started, this, &AThreeFPSCharacter::ToggleInventory);
+			}
 			if (PlayerController->ReloadAction) EnhancedInputComponent->BindAction(PlayerController->ReloadAction, ETriggerEvent::Triggered,this, &AThreeFPSCharacter::StartReload);
 			
 			if (PlayerController->EquipRifleAction) EnhancedInputComponent->BindAction(PlayerController->EquipRifleAction, ETriggerEvent::Triggered, this, &AThreeFPSCharacter::EquipRifle);
@@ -145,7 +154,7 @@ void AThreeFPSCharacter::GameStart()
 	{
 		AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetController());
 		HUDInstance = CreateWidget<UHUDWidget>(PlayerController, HUDClass);
-		HUDInstance->AddToViewport();
+		HUDInstance->AddToViewport(1);
 
 		if (APawn* PlayerPawn = PlayerController->GetPawn())
 		{
@@ -182,6 +191,13 @@ void AThreeFPSCharacter::GameStart()
 void AThreeFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	InventoryWidget = CreateWidget<UInventoryWidget>(Cast<APlayerController>(GetController()), InventoryWidgetClass);
+	InteractWidget = CreateWidget(Cast<APlayerController>(GetController()), InteractWidgetClass);
+	InventoryWidget->AddToViewport(5);
+	InteractWidget->AddToViewport(5);
+	InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+	InteractWidget->SetVisibility(ESlateVisibility::Collapsed);
 	GameStart();
 }
 
@@ -198,7 +214,8 @@ void AThreeFPSCharacter::Tick(float DeltaTime)
 		bShouldMove = true;
 	}
 	else bShouldMove = false;
-	
+
+	if (InventoryWidget && InventoryWidget->IsVisible() == false) InteractCheck();
 }
 
 float AThreeFPSCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
@@ -313,6 +330,7 @@ void AThreeFPSCharacter::StopCrouch()
 }
 void AThreeFPSCharacter::StartAim()
 {
+	if (InventoryWidget && InventoryWidget->IsVisible()) return;
 	if (!bIsReloading)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = OriginSpeed / 2;
@@ -336,6 +354,7 @@ void AThreeFPSCharacter::StopAim()
 
 void AThreeFPSCharacter::UpdateAimProgress(float Value)
 {
+	if (InventoryWidget && InventoryWidget->IsVisible()) return;
 	if (SpringArm)
 	{
 		UE_LOG(LogTemp, Log, TEXT("UpdateAimProgress: %f"), Value);
@@ -380,4 +399,3 @@ void AThreeFPSCharacter::OnReloaded()
 	GetWorldTimerManager().ClearTimer(ReloadTimer);
 	bIsReloading = false;
 }
-
