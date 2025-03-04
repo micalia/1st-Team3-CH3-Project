@@ -6,7 +6,7 @@
 #include "GameFramework/DamageType.h"
 #include "Engine/DamageEvents.h"
 #include "Character/ThreeFPSCharacter.h"
-
+#include "Mission/TutorialTarget.h"
 
 AGunBase::AGunBase(): Damage(10.f), FireRate(0.1f), ReloadTime(2.25f), MaxAmmo(300), MagazineSize(30), CurrentAmmo(MagazineSize),
                       GunType(),bIsFiring(false), bIsReloading(false),bIsAuto(true), FireSound(nullptr), FireParticle(nullptr), FireMontage(nullptr), ReloadMontage(nullptr)
@@ -140,6 +140,10 @@ void AGunBase::Fire()
 			UGameplayStatics::ApplyPointDamage(HitResult.GetActor(), 20.f, TraceEnd,
 				PointDamageEvent.HitInfo, PlayerController, this,
 				UDamageType::StaticClass());
+		}
+		/*튜토리얼 과녁 쓰러지는 이벤트 - 설빈 추가*/
+		else if (auto Target = Cast<ATutorialTarget>(HitActor)) {
+			Target->OnHitTarget();
 		}
 		else if (HitActor)
 		{
