@@ -201,7 +201,7 @@ void AThreeFPSCharacter::BeginPlay()
 	InteractWidget->AddToViewport(5);
 	InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
 	InteractWidget->SetVisibility(ESlateVisibility::Collapsed);
-	// GameStart();
+	GameStart();
 }
 
 //틱 함수
