@@ -3,15 +3,31 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/SkeletalMeshComponent.h"
-#include "EGunType.h"
-#include "GunSKComponent.generated.h"
+#include "Components/TimelineComponent.h"
+#include "GameFramework/Actor.h"
+#include "GunBase.generated.h"
+
+
+enum class EGunType : uint8;
+class UCurveFloat;
 
 UCLASS()
-class THREEFPS_API UGunSKComponent : public USkeletalMeshComponent
+class THREEFPS_API AGunBase : public AActor
 {
 	GENERATED_BODY()
+	
+public:	
+	AGunBase();
+	
 protected:
+	
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Mesh")
+	USkeletalMeshComponent* MeshComp;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Root")
+	USceneComponent* Root;
+	
 	/* 총 속성들 */
 	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
 	float Damage;
@@ -29,29 +45,46 @@ protected:
 	EGunType GunType;
 
 	/* bool 변수들 */
-	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
+	UPROPERTY(VisibleAnywhere,BlueprintReadWrite ,Category = "GunProperties")
 	bool bIsFiring;
-	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite ,Category = "GunProperties")
 	bool bIsReloading;
-	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
+	UPROPERTY(VisibleAnywhere,BlueprintReadWrite ,Category = "GunProperties")
 	bool bIsAuto;
 
 	/* 타이머 핸들 */
 	FTimerHandle AutoFireTimer;
 	FTimerHandle ReloadTimer;
+	
+	/* 타임 라인 */
+	FTimeline RecoilTimeLine;
 
 	//사격 이펙트 및 애니메이션
 	UPROPERTY(EditAnywhere, Category = "GunEffect")
 	USoundBase* FireSound;
+	UPROPERTY(EditAnywhere, Category = "GunEffect")
+	USoundBase* ClickSound;
 	UPROPERTY(EditAnywhere, Category = "GunEffect")
 	UParticleSystem* FireParticle;
 	UPROPERTY(EditAnywhere, Category = "GunEffect")
 	UAnimMontage* FireMontage;
 	UPROPERTY(EditAnywhere, Category = "GunEffect")
 	UAnimMontage* ReloadMontage;
+
+	/* 반동 변수 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Recoil")
+	UCurveFloat* VerticalCurve;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Recoil")
+	UCurveFloat* HorizontalCurve;
 	
 public:
-	UGunSKComponent();
+	UFUNCTION()
+	virtual void StartHorizontalRecoil(float Value);
+	UFUNCTION()
+	virtual void StartVerticalRecoil(float Value);
+
+	virtual void StartRecoil();
+	virtual void ReverseRecoil();
 	
 	virtual void Fire();
 	virtual void StartFire();
@@ -60,6 +93,8 @@ public:
 	virtual void StartReload();
 	virtual void OnReloaded();
 
+	
+	virtual bool CanReloading() const;
 	FORCEINLINE virtual bool IsReloading() const { return bIsReloading; }
 	FORCEINLINE virtual bool IsAuto() const { return bIsAuto; }
 	FORCEINLINE virtual bool IsFiring() const { return bIsFiring; }
@@ -69,4 +104,5 @@ public:
 	FORCEINLINE virtual uint8 GetMaxAmmo() const { return MaxAmmo; }
 	FORCEINLINE virtual uint8 GetMagazineSize() const { return MagazineSize; }
 	FORCEINLINE virtual EGunType GetGunType() const { return GunType; }
+	
 };
