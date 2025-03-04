@@ -38,11 +38,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
 	float ReloadTime;
 	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
-	uint16 MaxAmmo;
+	int MaxAmmo;
 	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
-	uint8 MagazineSize;
+	int MagazineSize;
 	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
-	uint8 CurrentAmmo;
+	int CurrentAmmo;
 	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
 	EGunType GunType;
 
@@ -105,9 +105,8 @@ public:
 	FORCEINLINE virtual bool IsFiring() const { return bIsFiring; }
 	FORCEINLINE virtual float GetFireRate() const { return FireRate; }
 	FORCEINLINE virtual float GetReloadTime() const { return ReloadTime; }
-	FORCEINLINE virtual uint8 GetCurrentAmmo() const { return CurrentAmmo; }
-	FORCEINLINE virtual uint8 GetMaxAmmo() const { return MaxAmmo; }
-	FORCEINLINE virtual uint8 GetMagazineSize() const { return MagazineSize; }
+	FORCEINLINE virtual int GetCurrentAmmo() const { return CurrentAmmo; }
+	FORCEINLINE virtual int GetMaxAmmo() const { return MaxAmmo; }
+	FORCEINLINE virtual int GetMagazineSize() const { return MagazineSize; }
 	FORCEINLINE virtual EGunType GetGunType() const { return GunType; }
-	
 };

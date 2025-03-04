@@ -130,6 +130,13 @@ void AGunBase::Fire()
 	}
 	DrawDebugLine(GetWorld(), MuzzleLocation, TraceEnd, FColor::Red, false, 1.f,0,2.f);
 	CurrentAmmo--;
+	
+	if (AThreeFPSCharacter* Character = Cast<AThreeFPSCharacter>(GetOwner()))
+	{
+		Character->UpdateAmmo();
+	}
+	
+	UE_LOG(LogTemp, Display, TEXT("Current Ammo : %d"), CurrentAmmo);
 	// PlayFireAnimation(bIsAiming);
 	ApplyRecoil();
 }
@@ -182,7 +189,7 @@ void AGunBase::StartReload()
 		MeshComp->PlayAnimation(ReloadMontage, false);
 	}
 	
-	int8 NeededAmmo = MagazineSize - CurrentAmmo;
+	int NeededAmmo = MagazineSize - CurrentAmmo;
 	if (MaxAmmo <= NeededAmmo)
 	{
 		MaxAmmo = 0;

@@ -80,9 +80,13 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	MaxStamina = 100.f;
 	CurrentStamina = MaxStamina;
 	bIsStaminaEmpty = false;
-	StaminaConsumeRate = 5.0f;
-	StaminaRegenRate = 3.0f;
-
+	StaminaConsumeRate = 0.5f;
+	StaminaRegenRate = 0.3f;
+	// 돌연변이
+	MaxMutation = 200.f;
+	MutationRate = 1.f;
+	CurrentMutation = 0.f;
+	
 	//HUD
 	HUDClass =nullptr;
 	HUDInstance = nullptr;
@@ -183,11 +187,14 @@ void AThreeFPSCharacter::GameStart()
 	// 	TimeLineProgress.BindUFunction(this, FName("UpdateAimProgress"));
 	// 	AimTimeLine.AddInterpFloat(AimCurve, TimeLineProgress);
 	// }
+	
 	//체력 UI업데이트
 	UpdateHP();
-	
 	//스테미너 업데이트 타이머
-	GetWorldTimerManager().SetTimer(UpdateStaminaTimer, this, &AThreeFPSCharacter::UpdateStamina, 0.1f, true);
+	GetWorldTimerManager().SetTimer(UpdateStaminaTimer, this, &AThreeFPSCharacter::UpdateStamina, 0.01f, true);
+	GetWorldTimerManager().SetTimer(UpdateMutationTimer, this, &AThreeFPSCharacter::UpdateMutation, 1.f, true);
+	//탄약 Text블록
+	UpdateAmmo();
 }
 
 //비긴 플레이
@@ -217,7 +224,7 @@ void AThreeFPSCharacter::Tick(float DeltaTime)
 		bShouldMove = true;
 	}
 	else bShouldMove = false;
-	UpdateMovementState();
+	
 	if (InventoryWidget && InventoryWidget->IsVisible() == false) InteractCheck();
 }
 
@@ -242,35 +249,37 @@ void AThreeFPSCharacter::Die()
 void AThreeFPSCharacter::EquipRifle()
 {
 	WeaponInventory->EquipWeapon(EGunType::Rifle, this);
+	UpdateAmmo();
 }
 void AThreeFPSCharacter::EquipPistol()
 {
 	WeaponInventory->EquipWeapon(EGunType::Pistol,this);
-}
-
-void AThreeFPSCharacter::UpdateMovementState()
-{
-	if (bShouldMove)
-	{
-		if (bIsAiming)
-		{
-			CurrentMovementState = AIMING;
-		}
-		else CurrentMovementState = MOVING;
-	}
-	else
-	{
-		if (bIsAiming)
-		{
-			CurrentMovementState = AIMING;
-		}
-		else CurrentMovementState = IDLE;
-	}
+	UpdateAmmo();
 }
 
 //------------------------//
 //        업데이트 함수     //
 //-----------------------//
+
+// void AThreeFPSCharacter::UpdateMovementState()
+// {
+// 	if (bShouldMove)
+// 	{
+// 		if (bIsAiming)
+// 		{
+// 			CurrentMovementState = AIMING;
+// 		}
+// 		else CurrentMovementState = MOVING;
+// 	}
+// 	else
+// 	{
+// 		if (bIsAiming)
+// 		{
+// 			CurrentMovementState = AIMING;
+// 		}
+// 		else CurrentMovementState = IDLE;
+// 	}
+// }
 
 void AThreeFPSCharacter::UpdateStamina()
 {
@@ -295,6 +304,19 @@ void AThreeFPSCharacter::UpdateHP()
 	if (HUDInstance)
 	{
 		HUDInstance->SetHealthBar(CurrentHealth, MaxHealth);
+	}
+}
+
+void AThreeFPSCharacter::UpdateMutation()
+{
+	CurrentMutation = FMath::Clamp(CurrentMutation+MutationRate, 0.0f, MaxMutation);
+	if (HUDInstance)
+	{
+		HUDInstance->SetMutationBar(CurrentMutation, MaxMutation);
+	}
+	if (CurrentMutation >= MaxMutation)
+	{
+		Die();
 	}
 }
 
@@ -374,15 +396,15 @@ void AThreeFPSCharacter::StopAim()
 	}
 }
 
-void AThreeFPSCharacter::UpdateAimProgress(float Value)
-{
-	if (InventoryWidget && InventoryWidget->IsVisible()) return;
+// void AThreeFPSCharacter::UpdateAimProgress(float Value)
+// {
+// 	if (InventoryWidget && InventoryWidget->IsVisible()) return;
 	// if (SpringArm)
 	// {
 	// 	UE_LOG(LogTemp, Log, TEXT("UpdateAimProgress: %f"), Value);
 	// 	SpringArm->TargetArmLength = FMath::Lerp(OriginSpringArmLength, AimedSpringArmLength, Value);
 	// }
-}
+// }
 
 void AThreeFPSCharacter::StartFiring()
 {
@@ -390,10 +412,11 @@ void AThreeFPSCharacter::StartFiring()
 	{
 		if (WeaponInventory && WeaponInventory->GetCurrentWeapon()->CanFire())
 		{
-			WeaponInventory->GetCurrentWeapon()->StartFire();
 			bIsFiring = true;
+			WeaponInventory->GetCurrentWeapon()->StartFire();
 		}
 	}
+	UpdateAmmo();
 }
 
 void AThreeFPSCharacter::StopFiring()
@@ -421,7 +444,24 @@ void AThreeFPSCharacter::StartReload()
 void AThreeFPSCharacter::OnReloaded()
 {
 	GetWorldTimerManager().ClearTimer(ReloadTimer);
+	UpdateAmmo();
 	bIsReloading = false;
+	
+}
+
+//장전 했을 때 UI업데이트
+void AThreeFPSCharacter::UpdateAmmo()
+{
+	if (HUDInstance)
+	{
+		HUDInstance->SetCurrentAmmoText(WeaponInventory->GetCurrentWeapon()->GetCurrentAmmo());
+		HUDInstance->SetMaxAmmoText(WeaponInventory->GetCurrentWeapon()->GetMaxAmmo());
+	}
+}
+
+void AThreeFPSCharacter::StopMutation()
+{
+	GetWorldTimerManager().ClearTimer(UpdateMutationTimer);
 }
 
 void AThreeFPSCharacter::InteractCheck()

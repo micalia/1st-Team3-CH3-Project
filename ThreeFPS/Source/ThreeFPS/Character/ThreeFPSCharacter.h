@@ -72,6 +72,15 @@ class AThreeFPSCharacter : public ACharacter
 	UPROPERTY(EditAnywhere,Category = "Status")
 	bool bIsStaminaEmpty;
 
+	//돌연변이 변수
+	UPROPERTY(EditAnywhere,Category = "Status")
+	float MaxMutation;
+	UPROPERTY(EditAnywhere,Category = "Status")
+	float CurrentMutation;
+	UPROPERTY(EditAnywhere,Category = "Status")
+	float MutationRate;
+	FTimerHandle UpdateMutationTimer;
+
 	//조준, 발사
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
 	bool bIsAiming;
@@ -147,23 +156,29 @@ protected:
 	//조준 함수
 	void StartAim();
 	void StopAim();
-	void UpdateAimProgress(float Value);
+	
+	// void UpdateAimProgress(float Value);
+	
 	//발사 함수
 	void StartFiring();
 	void StopFiring();
+	
 	// 인터렉션 함수
 	void Interact();
 	void InteractCheck();
+	
 	// 인벤토리 함수
 	void ToggleInventory();
+	
 	//재장전
 	void StartReload();
 	void OnReloaded();
-
+	
 	void EquipRifle();
 	void EquipPistol();
-
-	void UpdateMovementState();
+	
+	//상태 변화
+	//void UpdateMovementState();
 public:
 	FTimeline AimTimeLine;
 	
@@ -173,9 +188,13 @@ public:
 	AThreeFPSCharacter();
 	
 	void GameStart();
+	//업데이트 함수
 	void UpdateStamina();
 	void UpdateHP();
-	
+	void UpdateMutation();
+	void UpdateAmmo();
+
+	void StopMutation();
 	//Getter 함수
 	FORCEINLINE EPlayerMovementState GetCurrentMovementState() const {return CurrentMovementState;}
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
@@ -183,6 +202,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
+	FORCEINLINE UHUDWidget* GetHUDWidget() const {return HUDInstance;}
 	
 	TArray<FItemData> Inventory;
 	UPROPERTY()

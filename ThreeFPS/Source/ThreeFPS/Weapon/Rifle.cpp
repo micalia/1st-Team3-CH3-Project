@@ -18,7 +18,7 @@ ARifle::ARifle()
 	FireRate = 0.117f;
 	MeshComp->SetRelativeScale3D(FVector(0.9f, 0.9f, 0.9f));
 
-	RecoilAmount = 0.3f;
+	RecoilAmount = 0.2f;
 	RecoilRandomness = 0.5f;
 	AimRecoilMultiplier =0.3f;
 }

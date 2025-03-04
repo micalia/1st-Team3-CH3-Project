@@ -36,8 +36,8 @@ public:
 	FORCEINLINE virtual bool IsFiring() const override { return bIsFiring; }
 	FORCEINLINE virtual float GetFireRate() const override { return FireRate; }
 	FORCEINLINE virtual float GetReloadTime() const override { return ReloadTime; }
-	FORCEINLINE virtual uint8 GetCurrentAmmo() const override { return CurrentAmmo; }
-	FORCEINLINE virtual uint8 GetMaxAmmo() const override { return MaxAmmo; }
-	FORCEINLINE virtual uint8 GetMagazineSize() const override { return MagazineSize; }
+	FORCEINLINE virtual int GetCurrentAmmo() const override { return CurrentAmmo; }
+	FORCEINLINE virtual int GetMaxAmmo() const override { return MaxAmmo; }
+	FORCEINLINE virtual int GetMagazineSize() const override { return MagazineSize; }
 	FORCEINLINE virtual EGunType GetGunType() const override { return GunType; }
 };
