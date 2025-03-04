@@ -22,21 +22,21 @@ UZombieAnimInstance::UZombieAnimInstance()
 		DieMontage = MontageDie.Object;
 }
 
-float UZombieAnimInstance::AnimationPlay(EZONBIE_ST Ani)
+float UZombieAnimInstance::AnimationPlay(EANIM_MONTAGE Ani)
 {
 	float AniLength = 0.f;
-	if (EZONBIE_ST::ATTACK == Ani)
+	if (EANIM_MONTAGE::ATTACK == Ani)
 	{
 		int32 Rand = FMath::RandRange(0, 1);
 		AniLength = AttMontageArr[Rand]->GetPlayLength();
 		Montage_Play(AttMontageArr[Rand]);
 	}
-	else if (EZONBIE_ST::DAMAGE == Ani)
+	else if (EANIM_MONTAGE::DAMAGE == Ani)
 	{
 		AniLength = DamageMontage->GetPlayLength();
 		Montage_Play(DamageMontage);
 	}
-	else if (EZONBIE_ST::DIE == Ani)
+	else if (EANIM_MONTAGE::DIE == Ani)
 	{
 		int32 RandIdx = FMath::RandRange(1, 4);
 		FString SectionName = "Die" + FString::FromInt(RandIdx);

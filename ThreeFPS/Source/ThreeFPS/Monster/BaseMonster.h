@@ -69,8 +69,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster")
 	USphereComponent* DetectionSphere;
-
-	int32 Hp;
+	
+	int32 FullHp;
+	int32 CurrHp;
 	float Power = 1.f;
 	float Speed;
 };

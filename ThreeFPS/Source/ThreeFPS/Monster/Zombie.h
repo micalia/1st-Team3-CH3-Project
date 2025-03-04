@@ -3,19 +3,10 @@
 #include "CoreMinimal.h"
 #include "BaseMonster.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/UserDefinedEnum.h" 
+#include "EnumsDefinitions.h"
 #include "Zombie.generated.h"
 
-UENUM(BlueprintType)
-enum class EZONBIE_ST : uint8
-{
-	DELAY,
-	IDLE,
-	PATROL,
-	CHASE,
-	DAMAGE,
-	ATTACK,
-	DIE
-};
 
 UCLASS()
 class THREEFPS_API AZombie : public ABaseMonster
@@ -26,12 +17,19 @@ public:
 
 	void SetClothingMeshs(USkeletalMesh* Pants, USkeletalMesh* Shirt, USkeletalMesh* Hair, UStaticMesh* HairStatic);
 
+	EPATROLTYPE GetterPatrolType()const;
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
-	EZONBIE_ST ZombieState;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	EPATROLTYPE PatrolType;
+
+	// 에디터에서 User Defined Enum을 선택할 수 있도록 설정
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	//UUserDefinedEnum* PatrolTypeEnum;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "State")
 	bool bPlayerDetected;
-
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "State")
 	TArray<float> AttackPowerArr;
 
@@ -52,6 +50,15 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Battle")
 	bool bDebugDetectionSphere = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	UParticleSystem* HitImpactEffect;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Battle")
+	float ImpulseStrength;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	UMaterialInterface* DecalMaterial;
+
 
 	FTimerHandle GameStateHandle;
 	FTimerHandle DamageTimerHandler;
@@ -103,7 +110,9 @@ protected:
 	void AttackTimming(int AttType);
 
 	void VariousJombie();
-	void PauseMoveForDamage(float PauseTime);
+	void PauseMoveForDamage(float PauseTime, FHitResult HitResult);
+
+	void SpawnDecalAtLocation(FVector Location, FRotator Rotation, float LifeSpan);
 
 
 };
