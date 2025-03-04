@@ -1,5 +1,6 @@
-#include "Components/TextBlock.h"
 #include "Mission/MissionWidget.h"
+#include "Components/TextBlock.h"
+
 
 void UMissionWidget::UpdateMissionText(FString text)
 {
