@@ -4,27 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "EnumsDefinitions.h"
 #include "MonsterAIController.generated.h"
 
-UENUM(BlueprintType)
-enum class EPATROLTYPE :uint8
-{
-	Empty,
-	TargetKey,
-	Random
-};
+
 UCLASS()
 class THREEFPS_API AMonsterAIController : public AAIController
 {
 	GENERATED_BODY()
 
 public:
-
-
 	UFUNCTION(BlueprintCallable, Category = "State")
-	virtual void UpdatePatrolState(EPATROLTYPE type);
-
-	void UpdatePlayerDetectedState(bool isPlayerDetected, AActor* Actor);
+	void UpdatePatrolState2(EPATROLTYPE type);
 
 	virtual void OnPossess(APawn* pawn) override;
 	virtual void BeginPlay() override;
@@ -32,6 +23,11 @@ public:
 	UFUNCTION(BlueprintCallable,Category = "State")
 	void RandomSelectPatrolState();
 
+	UFUNCTION(BlueprintCallable, Category = "State")
+	void ChaseAfterDamage();
+
+	UFUNCTION(BlueprintCallable, Category = "State")
+	void ChargingState(float SightRadius = 1000000.f, float LoseSightRadius = 1000000.f,float PeripheralVisionAngleDegrees = 360.f);
 
 	void TempOnMoveCompleted();
 

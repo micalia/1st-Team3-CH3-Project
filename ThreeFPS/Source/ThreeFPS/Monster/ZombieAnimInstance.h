@@ -13,6 +13,17 @@ enum class EZONBIE_BTT_ANI : uint8
     Btt_Damage,
     Btt_Die
 };
+UENUM(BlueprintType)//
+enum class EANIM_MONTAGE : uint8
+{
+    EMPTY,
+    //IDLE,
+    //PATROL,
+    //CHASE,
+    DAMAGE,
+    ATTACK,
+    DIE
+};
 UCLASS()
 class THREEFPS_API UZombieAnimInstance : public UAnimInstance
 {
@@ -27,7 +38,7 @@ public:
     UAnimMontage* DieMontage;
 
     UFUNCTION(BlueprintCallable, Category = "Animation")
-    float AnimationPlay(EZONBIE_ST Ani);
+    float AnimationPlay(EANIM_MONTAGE Ani);
 
     //  애니메이션 인스턴스 초기화 (BeginPlay 대체)
     virtual void NativeInitializeAnimation() override;
