@@ -71,7 +71,7 @@ void AThreeFPSGameMode::SwitchToCineCamera()
 
 void AThreeFPSGameMode::SetIntroUI()
 {
-	/*if (IsValid(IntroHUDWidgetClass))
+	if (IsValid(IntroHUDWidgetClass))
 	{
 		IntroHUDWidget = Cast<UIntroHUD>(CreateWidget(GetWorld(), IntroHUDWidgetClass));
 		if (IntroHUDWidget)
@@ -85,7 +85,7 @@ void AThreeFPSGameMode::SetIntroUI()
 				PlayerController->SetInputMode(FInputModeUIOnly());
 			}
 		}
-	}*/
+	}
 }
 
 void AThreeFPSGameMode::LoadingSecondChapter()
