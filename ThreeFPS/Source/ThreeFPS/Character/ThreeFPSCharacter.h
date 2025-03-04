@@ -8,6 +8,7 @@
 #include "Components/TimelineComponent.h"
 #include "Weapon/EGunType.h"
 #include "ThreeFPS/Item/ItemDatabase.h"
+#include "Weapon/EPlayerMovementState.h"
 #include "ThreeFPSCharacter.generated.h"
 
 class UWeaponInventoryComponent;
@@ -31,6 +32,7 @@ UCLASS(config=Game)
 class AThreeFPSCharacter : public ACharacter
 {
 	GENERATED_BODY()
+	EPlayerMovementState CurrentMovementState;
 	
 	/** camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -77,7 +79,7 @@ class AThreeFPSCharacter : public ACharacter
 	float OriginSpringArmLength;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
 	float AimedSpringArmLength;
-	UPROPERTY(EditAnywhere, Category = "Fire")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
 	bool bIsFiring;
 
 	
@@ -161,6 +163,8 @@ protected:
 
 	void EquipRifle();
 	void EquipPistol();
+
+	void UpdateMovementState();
 public:
 	FTimeline AimTimeLine;
 	
@@ -174,12 +178,13 @@ public:
 	void UpdateHP();
 	
 	//Getter 함수
-	FORCEINLINE bool GetIsAiming() { return bIsAiming; }
+	FORCEINLINE EPlayerMovementState GetCurrentMovementState() const {return CurrentMovementState;}
+	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
-
+	
 	TArray<FItemData> Inventory;
 	UPROPERTY()
 	UInventoryWidget* InventoryWidget;

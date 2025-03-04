@@ -8,6 +8,7 @@
 #include "GunBase.generated.h"
 
 
+class AThreeFPSCharacter;
 enum class EGunType : uint8;
 class UCurveFloat;
 
@@ -27,6 +28,7 @@ protected:
 	USkeletalMeshComponent* MeshComp;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Root")
 	USceneComponent* Root;
+	
 	
 	/* 총 속성들 */
 	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
@@ -61,7 +63,7 @@ protected:
 
 	//사격 이펙트 및 애니메이션
 	UPROPERTY(EditAnywhere, Category = "GunEffect")
-	USoundBase* FireSound;
+	TArray<USoundBase*> FireSounds;
 	UPROPERTY(EditAnywhere, Category = "GunEffect")
 	USoundBase* ClickSound;
 	UPROPERTY(EditAnywhere, Category = "GunEffect")
@@ -87,7 +89,9 @@ public:
 	virtual void ReverseRecoil();
 	
 	virtual void Fire();
+	UFUNCTION(BlueprintCallable,Category="Fire")
 	virtual void StartFire();
+	UFUNCTION(BlueprintCallable,Category="Fire")
 	virtual void StopFire();
 	
 	virtual void StartReload();

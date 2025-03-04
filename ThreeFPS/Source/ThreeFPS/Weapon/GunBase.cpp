@@ -9,15 +9,16 @@
 
 
 AGunBase::AGunBase(): Damage(10.f), FireRate(0.1f), ReloadTime(2.25f), MaxAmmo(300), MagazineSize(30), CurrentAmmo(MagazineSize),
-                      GunType(),bIsFiring(false), bIsReloading(false),bIsAuto(true), FireSound(nullptr), FireParticle(nullptr), FireMontage(nullptr), ReloadMontage(nullptr)
+                      GunType(),bIsFiring(false), bIsReloading(false),bIsAuto(true), FireParticle(nullptr), FireMontage(nullptr), ReloadMontage(nullptr)
                      
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 	
 	Root = CreateDefaultSubobject<USceneComponent>("Root");
 	RootComponent = Root;
 	MeshComp =CreateDefaultSubobject<USkeletalMeshComponent>("MeshComp");
 	MeshComp->SetupAttachment(Root);
+	
 }
 
 void AGunBase::BeginPlay()
@@ -52,26 +53,18 @@ void AGunBase::Tick(float DeltaTime)
 
 void AGunBase::StartHorizontalRecoil(float Value)
 {
-	if (AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetWorld()->GetFirstPlayerController()))
+	if (AThreeFPSCharacter* Player =  Cast<AThreeFPSCharacter>(GetWorld()->GetFirstPlayerController()))
 	{
-		AThreeFPSCharacter* Character = Cast<AThreeFPSCharacter>(PlayerController->GetPawn());
-		if (Character)
-		{
-			Character->AddControllerYawInput(Value);
-		}
-	}	
+		Player->AddControllerYawInput(Value);
+	}
 }
 
 void AGunBase::StartVerticalRecoil(float Value)
 {
-	if (AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetWorld()->GetFirstPlayerController()))
+	if (AThreeFPSCharacter* Player =  Cast<AThreeFPSCharacter>(GetWorld()->GetFirstPlayerController()))
 	{
-		AThreeFPSCharacter* Character = Cast<AThreeFPSCharacter>(PlayerController->GetPawn());
-		if (Character)
-		{
-			Character->AddControllerPitchInput(Value);
-		}
-	}	
+		Player->AddControllerPitchInput(Value);
+	}
 }
 
 void AGunBase::StartRecoil()
@@ -95,7 +88,7 @@ void AGunBase::Fire()
 		}
 		return;
 	}
-	
+	StartRecoil();
 	FVector MuzzleLocation = MeshComp->GetSocketLocation(FName("Muzzle"));
 	FRotator MuzzleRotation = MeshComp->GetSocketRotation(FName("Muzzle"));
 	FVector TraceEnd;
@@ -105,9 +98,14 @@ void AGunBase::Fire()
 		
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireParticle, MuzzleLocation, MuzzleRotation);
 	}
-	if (FireSound)
+	if (FireSounds.Num()>0)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireSound, MuzzleLocation);
+		int16 RandSoundSum = FMath::RandRange(0, FireSounds.Num()-1);
+		USoundBase* FireSound = FireSounds[RandSoundSum];
+		if (FireSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, FireSound, MuzzleLocation);
+		}
 	}
 
 	AThreeFPSPlayerController* PlayerController = nullptr;
@@ -153,7 +151,6 @@ void AGunBase::Fire()
 	CurrentAmmo--;
 }
 
-
 void AGunBase::StartFire()
 {
 	if (bIsReloading) return;
@@ -170,7 +167,6 @@ void AGunBase::StopFire()
 	if (bIsAuto)
 	{
 		GetWorldTimerManager().ClearTimer(AutoFireTimer);
-		ReverseRecoil();
 	}
 	ReverseRecoil();
 }

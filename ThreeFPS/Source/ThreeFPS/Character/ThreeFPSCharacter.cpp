@@ -39,7 +39,6 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 	
-	
 	//3인칭 카메라 설정
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(GetMesh());
@@ -213,7 +212,7 @@ void AThreeFPSCharacter::Tick(float DeltaTime)
 		bShouldMove = true;
 	}
 	else bShouldMove = false;
-
+	UpdateMovementState();
 	if (InventoryWidget && InventoryWidget->IsVisible() == false) InteractCheck();
 }
 
@@ -242,6 +241,26 @@ void AThreeFPSCharacter::EquipRifle()
 void AThreeFPSCharacter::EquipPistol()
 {
 	WeaponInventory->EquipWeapon(EGunType::Pistol,this);
+}
+
+void AThreeFPSCharacter::UpdateMovementState()
+{
+	if (bShouldMove)
+	{
+		if (bIsAiming)
+		{
+			CurrentMovementState = AIMING;
+		}
+		else CurrentMovementState = MOVING;
+	}
+	else
+	{
+		if (bIsAiming)
+		{
+			CurrentMovementState = AIMING;
+		}
+		else CurrentMovementState = IDLE;
+	}
 }
 
 //------------------------//
@@ -281,7 +300,7 @@ void AThreeFPSCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
-
+	
 	if (Controller != nullptr)
 	{
 		// add movement 
@@ -367,6 +386,7 @@ void AThreeFPSCharacter::StartFiring()
 		if (WeaponInventory && WeaponInventory->GetCurrentWeapon())
 		{
 			WeaponInventory->GetCurrentWeapon()->StartFire();
+			bIsFiring = true;
 		}
 	}
 }
@@ -376,6 +396,7 @@ void AThreeFPSCharacter::StopFiring()
 	if (WeaponInventory && WeaponInventory->GetCurrentWeapon())
 	{
 		WeaponInventory->GetCurrentWeapon()->StopFire();
+		bIsFiring = false;
 	}
 }
 
@@ -384,12 +405,11 @@ void AThreeFPSCharacter::StartReload()
 	if (WeaponInventory && WeaponInventory->GetCurrentWeapon())
 	{
 		AGunBase* CurrentWeapon = WeaponInventory->GetCurrentWeapon();
-		if (CurrentWeapon->CanReloading() && !bIsAiming)
+		if (CurrentWeapon->CanReloading() && !bIsAiming && !bIsFiring)
 		{
 			bIsReloading = true;
+			GetWorldTimerManager().SetTimer(ReloadTimer, this, &AThreeFPSCharacter::OnReloaded, CurrentWeapon->GetReloadTime(), false);
 			CurrentWeapon->StartReload();
-			bIsReloading = CurrentWeapon->IsReloading();
-			GetWorldTimerManager().SetTimer(ReloadTimer, this, &AThreeFPSCharacter::OnReloaded, CurrentWeapon->GetFireRate(), false);
 		}
 	}
 }

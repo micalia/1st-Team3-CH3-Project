@@ -14,7 +14,8 @@ ARifle::ARifle()
 	}
 	GunType = EGunType::Rifle;
 	bIsAuto = true;
-	FireRate= 2.25f;
+	ReloadTime= 2.25f;
+	FireRate = 0.117f;
 }
 
 void ARifle::BeginPlay()
