@@ -16,6 +16,9 @@ public:
 	
 	virtual void BeginPlay() override;
 
+	UFUNCTION(BlueprintCallable)
+	void LoadingSecondChapter();
+
 private:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> IntroHUDWidgetClass;
@@ -28,6 +31,8 @@ private:
 	void SwitchToCineCamera();
 	UFUNCTION()
 	void SetIntroUI();
+	UFUNCTION()
+	void SecondLevelLoaded();
 };
 
 
