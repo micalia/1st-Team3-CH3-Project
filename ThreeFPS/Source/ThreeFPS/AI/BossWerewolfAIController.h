@@ -1,4 +1,4 @@
-// Boss AI - Shin Seol Bin
+// Boss AI - 신설빈
 
 #pragma once
 
@@ -19,7 +19,8 @@ class THREEFPS_API ABossWerewolfAIController : public AAIController
 
 public:
 	ABossWerewolfAIController();
-
+	
+	UFUNCTION(BlueprintCallable)
 	void RunAI();
 	void StopAI();
 

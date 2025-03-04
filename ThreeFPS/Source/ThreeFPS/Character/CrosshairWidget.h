@@ -25,4 +25,5 @@ class THREEFPS_API UCrosshairWidget : public UUserWidget
 public:
 	UFUNCTION(BlueprintCallable, Category = "Crosshair")
 	void UpdateCrosshairSize(const float Speed);
+	void SetCrosshairVisibility(ESlateVisibility Visibility);
 };

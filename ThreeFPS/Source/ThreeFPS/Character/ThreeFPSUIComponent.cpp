@@ -16,6 +16,18 @@ UThreeFPSUIComponent::UThreeFPSUIComponent()
 void UThreeFPSUIComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	
+}
+
+void UThreeFPSUIComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+                                         FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	UpdateCrossHair(DeltaTime);
+}
+
+void UThreeFPSUIComponent::GameStart()
+{
 	if (WidgetClass)
 	{
 		CrosshairWidget = CreateWidget<UCrosshairWidget>(GetWorld(), WidgetClass);
@@ -24,13 +36,6 @@ void UThreeFPSUIComponent::BeginPlay()
 			CrosshairWidget->AddToViewport();
 		}
 	}
-}
-
-void UThreeFPSUIComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                         FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	UpdateCrossHair(DeltaTime);
 }
 
 void UThreeFPSUIComponent::UpdateCrossHair(float DeltaTime)
@@ -46,10 +51,13 @@ void UThreeFPSUIComponent::UpdateCrossHair(float DeltaTime)
 		bool IsJumping = CharacterMovement->IsFalling();
 		
 		if (Speed == 0 && AimSize == 0)return; 
-		
     
 		if (IsJumping) {
 			AimSize += 2000.f * DeltaTime;
+		}
+		else if (PlayerCharacter->GetIsAiming())
+		{
+			AimSize -= 2000.f * DeltaTime;
 		}
 		else {
 			if (Speed > 100)

@@ -32,4 +32,6 @@ public:
 	TSubclassOf<UCrosshairWidget> WidgetClass;
 	UPROPERTY(EditAnywhere, Category = "UI")
 	UCrosshairWidget* CrosshairWidget;
+
+	void GameStart();
 };

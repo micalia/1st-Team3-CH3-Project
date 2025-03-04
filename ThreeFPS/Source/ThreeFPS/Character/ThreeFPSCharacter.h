@@ -5,8 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "Components/TimelineComponent.h"
+#include "Weapon/EGunType.h"
+#include "ThreeFPS/Item/ItemDatabase.h"
 #include "ThreeFPSCharacter.generated.h"
 
+class UWeaponInventoryComponent;
+enum class EGunType : uint8;
 class UThreeFPSUIComponent;
 class USpringArmComponent;
 class UInputComponent;
@@ -15,7 +20,10 @@ class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
 class UHUDWidget;
+class UInventoryWidget;
+class AGunBase;
 struct FInputActionValue;
+struct FItemData;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -23,14 +31,6 @@ UCLASS(config=Game)
 class AThreeFPSCharacter : public ACharacter
 {
 	GENERATED_BODY()
-
-	/** Pawn mesh: 1st person view (arms; seen only by self) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* Mesh1P;
-
-	// 무기 메쉬
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* WeaponMesh;
 	
 	/** camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -49,7 +49,7 @@ class AThreeFPSCharacter : public ACharacter
 	float SprintSpeed;
 	UPROPERTY(EditAnywhere,Category = "Movement")
 	float SprintRate;
-	UPROPERTY(EditAnywhere,Category = "Movement")
+	UPROPERTY(EditAnywhere,Category = "Movement", meta= (AllowPrivateAccess = "true"))
 	bool bIsSprinting;
 	UPROPERTY(EditAnywhere,Category = "Movement")
 	bool bShouldMove;
@@ -79,26 +79,61 @@ class AThreeFPSCharacter : public ACharacter
 	float AimedSpringArmLength;
 	UPROPERTY(EditAnywhere, Category = "Fire")
 	bool bIsFiring;
-	UPROPERTY(EditAnywhere, Category = "Fire")
-	float FireRate;
+
+	
+	//재장전
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
+	bool bIsReloading;
 	
 	//HUD
 	UPROPERTY(EditAnywhere,Category = "HUD")
 	TSubclassOf<UHUDWidget> HUDClass;
 	UPROPERTY()
 	UHUDWidget* HUDInstance;
+	
+	//크로스헤어용 UI컴포넌트.
 	UPROPERTY(visibleAnywhere, Category = "Movement")
 	UThreeFPSUIComponent* UIComponent;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> InventoryWidgetClass;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> InteractWidgetClass;
+	UPROPERTY()
+	UUserWidget* InteractWidget;
+	UUserWidget* MissionWidget;
+
+	// 아이템 베이스
+	UPROPERTY(EditDefaultsOnly)
+	UItemDatabase* ItemDatabase;
+
 	
 	//타이머 핸들 변수
 	FTimerHandle UpdateStaminaTimer;
 	FTimerHandle FireTimer;
+
+	// 인터렉션 관련 변수
+	FVector ViewVector;
+	FRotator ViewRotation;
+	FVector InteractVectorEnd;
+	FHitResult InteractHitResult;
+	FTimerHandle ReloadTimer;
 	
 protected:
+
+	//인벤토리 컴포넌트
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(AllowPrivateAccess=true))
+	UWeaponInventoryComponent* WeaponInventory;
+	UPROPERTY(EditDefaultsOnly, Category="Weapon")
+	TSubclassOf<AGunBase> RifleClass;
+
+	
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	//사망
+	void Die();
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
@@ -111,20 +146,48 @@ protected:
 	//조준 함수
 	void StartAim();
 	void StopAim();
+	void UpdateAimProgress(float Value);
 	//발사 함수
 	void StartFiring();
 	void StopFiring();
-	void Fire();
+	// 인터렉션 함수
+	void Interact();
+	void InteractCheck();
+	// 인벤토리 함수
+	void ToggleInventory();
+	//재장전
+	void StartReload();
+	void OnReloaded();
 
+	void EquipRifle();
+	void EquipPistol();
 public:
+	FTimeline AimTimeLine;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Aim")
+	UCurveFloat* AimCurve;
+	
 	AThreeFPSCharacter();
+	
 	void GameStart();
 	void UpdateStamina();
 	void UpdateHP();
-
+	
 	//Getter 함수
+	FORCEINLINE bool GetIsAiming() { return bIsAiming; }
 	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
+
+	TArray<FItemData> Inventory;
+	UPROPERTY()
+	UInventoryWidget* InventoryWidget;
+
+	
+	//무기에 따른 애니메이션
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Animation")
+	TMap<EGunType, TSubclassOf<UAnimInstance>> Animations;
 };
+
 

@@ -13,7 +13,8 @@ FString ULevelManager::GetLevelName(ELevelType LevelType)
 		case ELevelType::Tutorial: return TEXT("02_Tutorial_Level");
 		case ELevelType::FirstChapter: return TEXT("03_First_Chapter_Level");
 		case ELevelType::SecondChapter: return TEXT("04_Second_Chapter_Level");
-		case ELevelType::Boss: return TEXT("05_Boss_Level");
+		case ELevelType::BossCinema: return TEXT("05_BossCinema_Level");
+		case ELevelType::BossBattle: return TEXT("06_BossBattle_Level");
 		default: return TEXT("");
 	}
 }
@@ -35,7 +36,7 @@ void ULevelManager::LoadLevel(ELevelType LevelType, FOnLevelLoadedDelegate& OnLo
 		// 1. 로딩 UI 활성화
 		if (IsValid(LoadingWidget))
 		{
-			LoadingWidget->AddToViewport();
+			LoadingWidget->AddToViewport(2);
 			// UI 페이드인 애니메이션 실행
 			Cast<ULoadingUIUserWidget>(LoadingWidget)->PlayFadeInAnimation(false);
 
@@ -103,9 +104,8 @@ void ULevelManager::PlayFadeOut()
 	if (IsValid(LoadingWidget))
 	{
 		Cast<ULoadingUIUserWidget>(LoadingWidget)->PlayFadeInAnimation(true);
-		// Cast<ULoadingUIUserWidget>(LoadingWidget)->SetVisibility(ESlateVisibility::Collapsed);
+		UKismetSystemLibrary::Delay(this, 1.0f, FLatentActionInfo());
 	}
-
 
 	if (OnLevelLoaded.IsBound())
 	{
