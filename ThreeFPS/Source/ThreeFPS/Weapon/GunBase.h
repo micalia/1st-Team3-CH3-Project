@@ -8,6 +8,7 @@
 #include "GunBase.generated.h"
 
 
+class AThreeFPSCharacter;
 enum class EGunType : uint8;
 class UCurveFloat;
 
@@ -28,6 +29,7 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Root")
 	USceneComponent* Root;
 	
+	
 	/* 총 속성들 */
 	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
 	float Damage;
@@ -36,11 +38,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
 	float ReloadTime;
 	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
-	uint16 MaxAmmo;
+	int MaxAmmo;
 	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
-	uint8 MagazineSize;
+	int MagazineSize;
 	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
-	uint8 CurrentAmmo;
+	int CurrentAmmo;
 	UPROPERTY(VisibleAnywhere, Category = "GunProperties")
 	EGunType GunType;
 
@@ -61,7 +63,7 @@ protected:
 
 	//사격 이펙트 및 애니메이션
 	UPROPERTY(EditAnywhere, Category = "GunEffect")
-	USoundBase* FireSound;
+	TArray<USoundBase*> FireSounds;
 	UPROPERTY(EditAnywhere, Category = "GunEffect")
 	USoundBase* ClickSound;
 	UPROPERTY(EditAnywhere, Category = "GunEffect")
@@ -72,37 +74,39 @@ protected:
 	UAnimMontage* ReloadMontage;
 
 	/* 반동 변수 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Recoil")
-	UCurveFloat* VerticalCurve;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Recoil")
-	UCurveFloat* HorizontalCurve;
+	float RecoilAmount;
+	float RecoilRandomness;
+	float AimRecoilMultiplier;
+
+	//발사 몽타주
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire")
+	UAnimMontage* HipFireMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire")
+	UAnimMontage* AimFireMontage;
 	
 public:
-	UFUNCTION()
-	virtual void StartHorizontalRecoil(float Value);
-	UFUNCTION()
-	virtual void StartVerticalRecoil(float Value);
-
-	virtual void StartRecoil();
-	virtual void ReverseRecoil();
 	
 	virtual void Fire();
+	UFUNCTION(BlueprintCallable,Category="Fire")
 	virtual void StartFire();
+	UFUNCTION(BlueprintCallable,Category="Fire")
 	virtual void StopFire();
 	
+	virtual void PlayFireAnimation(bool bIsAiming);
 	virtual void StartReload();
 	virtual void OnReloaded();
-
+	virtual void ApplyRecoil();
 	
+	virtual bool CanFire() const;
 	virtual bool CanReloading() const;
+	FORCEINLINE virtual float GetRecoil() const {return RecoilAmount;}
 	FORCEINLINE virtual bool IsReloading() const { return bIsReloading; }
 	FORCEINLINE virtual bool IsAuto() const { return bIsAuto; }
 	FORCEINLINE virtual bool IsFiring() const { return bIsFiring; }
 	FORCEINLINE virtual float GetFireRate() const { return FireRate; }
 	FORCEINLINE virtual float GetReloadTime() const { return ReloadTime; }
-	FORCEINLINE virtual uint8 GetCurrentAmmo() const { return CurrentAmmo; }
-	FORCEINLINE virtual uint8 GetMaxAmmo() const { return MaxAmmo; }
-	FORCEINLINE virtual uint8 GetMagazineSize() const { return MagazineSize; }
+	FORCEINLINE virtual int GetCurrentAmmo() const { return CurrentAmmo; }
+	FORCEINLINE virtual int GetMaxAmmo() const { return MaxAmmo; }
+	FORCEINLINE virtual int GetMagazineSize() const { return MagazineSize; }
 	FORCEINLINE virtual EGunType GetGunType() const { return GunType; }
-	
 };

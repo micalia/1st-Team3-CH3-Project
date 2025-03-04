@@ -41,9 +41,9 @@ void AThreeFPSGameMode::BeginPlay()
 	if (IsValid(LoadingWidgetClass))
 	{
 		LevelManager->LoadingWidget = Cast<ULoadingUIUserWidget>(CreateWidget(GetWorld(), LoadingWidgetClass));
-		FOnLevelLoadedDelegate OnDelegate;
-		OnDelegate.BindDynamic(this, &AThreeFPSGameMode::SwitchToCineCamera);
-		LevelManager->LoadLevel(ELevelType::Intro, OnDelegate);
+		FOnLevelLoadedDelegate OnIntroLoadedDelegate;
+		OnIntroLoadedDelegate.BindDynamic(this, &AThreeFPSGameMode::SwitchToCineCamera);
+		LevelManager->LoadLevel(ELevelType::Intro, OnIntroLoadedDelegate);
 	}
 }
 
@@ -86,4 +86,36 @@ void AThreeFPSGameMode::SetIntroUI()
 			}
 		}
 	}
+}
+
+void AThreeFPSGameMode::LoadingSecondChapter()
+{
+	ULevelManager* LevelManager = GetGameInstance()->GetSubsystem<ULevelManager>();
+	if (!IsValid(LevelManager))
+	{
+		UE_LOG(LogTemp, Error, TEXT("LevelManager nullptr"));
+	}
+	if (IsValid(LevelManager->LoadingWidget))
+	{
+		LevelManager->LoadingWidget->RemoveFromParent();
+		LevelManager->LoadingWidget = nullptr;
+	}
+
+	if (IsValid(LoadingWidgetClass))
+	{
+		LevelManager->LoadingWidget = Cast<ULoadingUIUserWidget>(CreateWidget(GetWorld(), LoadingWidgetClass));
+		FOnLevelLoadedDelegate OnSecondLevelLoadedDelegate;
+		OnSecondLevelLoadedDelegate.BindDynamic(this, &AThreeFPSGameMode::SecondLevelLoaded);
+		LevelManager->LoadLevel(ELevelType::SecondChapter, OnSecondLevelLoadedDelegate);
+	}
+}
+
+void AThreeFPSGameMode::SecondLevelLoaded()
+{
+	ULevelManager* LevelManager = GetGameInstance()->GetSubsystem<ULevelManager>();
+	if (!IsValid(LevelManager))
+	{
+		UE_LOG(LogTemp, Error, TEXT("LevelManager nullptr"));
+	}
+	LevelManager->UnLoadLevel(ELevelType::Tutorial, false);
 }

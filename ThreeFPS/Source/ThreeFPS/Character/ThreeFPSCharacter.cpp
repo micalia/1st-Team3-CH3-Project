@@ -39,7 +39,6 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 	
-	
 	//3인칭 카메라 설정
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(GetMesh());
@@ -81,9 +80,13 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	MaxStamina = 100.f;
 	CurrentStamina = MaxStamina;
 	bIsStaminaEmpty = false;
-	StaminaConsumeRate = 5.0f;
-	StaminaRegenRate = 3.0f;
-
+	StaminaConsumeRate = 0.5f;
+	StaminaRegenRate = 0.3f;
+	// 돌연변이
+	MaxMutation = 200.f;
+	MutationRate = 1.f;
+	CurrentMutation = 0.f;
+	
 	//HUD
 	HUDClass =nullptr;
 	HUDInstance = nullptr;
@@ -176,18 +179,22 @@ void AThreeFPSCharacter::GameStart()
 		}
 	}
 	EquipRifle();
+	
 	//스프링암 타임라인
-	if (AimCurve)
-	{
-		FOnTimelineFloat TimeLineProgress;
-		TimeLineProgress.BindUFunction(this, FName("UpdateAimProgress"));
-		AimTimeLine.AddInterpFloat(AimCurve, TimeLineProgress);
-	}
+	// if (AimCurve)
+	// {
+	// 	FOnTimelineFloat TimeLineProgress;
+	// 	TimeLineProgress.BindUFunction(this, FName("UpdateAimProgress"));
+	// 	AimTimeLine.AddInterpFloat(AimCurve, TimeLineProgress);
+	// }
+	
 	//체력 UI업데이트
 	UpdateHP();
-	
 	//스테미너 업데이트 타이머
-	GetWorldTimerManager().SetTimer(UpdateStaminaTimer, this, &AThreeFPSCharacter::UpdateStamina, 0.1f, true);
+	GetWorldTimerManager().SetTimer(UpdateStaminaTimer, this, &AThreeFPSCharacter::UpdateStamina, 0.01f, true);
+	GetWorldTimerManager().SetTimer(UpdateMutationTimer, this, &AThreeFPSCharacter::UpdateMutation, 1.f, true);
+	//탄약 Text블록
+	UpdateAmmo();
 }
 
 //비긴 플레이
@@ -201,7 +208,7 @@ void AThreeFPSCharacter::BeginPlay()
 	InteractWidget->AddToViewport(5);
 	InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
 	InteractWidget->SetVisibility(ESlateVisibility::Collapsed);
-	GameStart();
+	//GameStart();
 }
 
 //틱 함수
@@ -217,7 +224,7 @@ void AThreeFPSCharacter::Tick(float DeltaTime)
 		bShouldMove = true;
 	}
 	else bShouldMove = false;
-
+	
 	if (InventoryWidget && InventoryWidget->IsVisible() == false) InteractCheck();
 }
 
@@ -242,15 +249,37 @@ void AThreeFPSCharacter::Die()
 void AThreeFPSCharacter::EquipRifle()
 {
 	WeaponInventory->EquipWeapon(EGunType::Rifle, this);
+	UpdateAmmo();
 }
 void AThreeFPSCharacter::EquipPistol()
 {
 	WeaponInventory->EquipWeapon(EGunType::Pistol,this);
+	UpdateAmmo();
 }
 
 //------------------------//
 //        업데이트 함수     //
 //-----------------------//
+
+// void AThreeFPSCharacter::UpdateMovementState()
+// {
+// 	if (bShouldMove)
+// 	{
+// 		if (bIsAiming)
+// 		{
+// 			CurrentMovementState = AIMING;
+// 		}
+// 		else CurrentMovementState = MOVING;
+// 	}
+// 	else
+// 	{
+// 		if (bIsAiming)
+// 		{
+// 			CurrentMovementState = AIMING;
+// 		}
+// 		else CurrentMovementState = IDLE;
+// 	}
+// }
 
 void AThreeFPSCharacter::UpdateStamina()
 {
@@ -278,6 +307,19 @@ void AThreeFPSCharacter::UpdateHP()
 	}
 }
 
+void AThreeFPSCharacter::UpdateMutation()
+{
+	CurrentMutation = FMath::Clamp(CurrentMutation+MutationRate, 0.0f, MaxMutation);
+	if (HUDInstance)
+	{
+		HUDInstance->SetMutationBar(CurrentMutation, MaxMutation);
+	}
+	if (CurrentMutation >= MaxMutation)
+	{
+		Die();
+	}
+}
+
 //------------------------//
 //        입력 함수        //
 //-----------------------//
@@ -285,7 +327,7 @@ void AThreeFPSCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
-
+	
 	if (Controller != nullptr)
 	{
 		// add movement 
@@ -337,11 +379,11 @@ void AThreeFPSCharacter::StartAim()
 	{
 		GetCharacterMovement()->MaxWalkSpeed = OriginSpeed / 2;
 		bIsAiming = true;
-		if (AimCurve)
-		{
-			AimTimeLine.Play();
-			UE_LOG(LogTemp, Display, TEXT("Aim Start"));
-		}
+		// if (AimCurve)
+		// {
+		// 	AimTimeLine.Play();
+		// 	UE_LOG(LogTemp, Display, TEXT("Aim Start"));
+		// }
 	}
 }
 void AThreeFPSCharacter::StopAim()
@@ -354,25 +396,27 @@ void AThreeFPSCharacter::StopAim()
 	}
 }
 
-void AThreeFPSCharacter::UpdateAimProgress(float Value)
-{
-	if (InventoryWidget && InventoryWidget->IsVisible()) return;
-	if (SpringArm)
-	{
-		UE_LOG(LogTemp, Log, TEXT("UpdateAimProgress: %f"), Value);
-		SpringArm->TargetArmLength = FMath::Lerp(OriginSpringArmLength, AimedSpringArmLength, Value);
-	}
-}
+// void AThreeFPSCharacter::UpdateAimProgress(float Value)
+// {
+// 	if (InventoryWidget && InventoryWidget->IsVisible()) return;
+	// if (SpringArm)
+	// {
+	// 	UE_LOG(LogTemp, Log, TEXT("UpdateAimProgress: %f"), Value);
+	// 	SpringArm->TargetArmLength = FMath::Lerp(OriginSpringArmLength, AimedSpringArmLength, Value);
+	// }
+// }
 
 void AThreeFPSCharacter::StartFiring()
 {
 	if (!bIsSprinting && !GetCharacterMovement()->IsFalling() && !bIsReloading)
 	{
-		if (WeaponInventory && WeaponInventory->GetCurrentWeapon())
+		if (WeaponInventory && WeaponInventory->GetCurrentWeapon()->CanFire())
 		{
+			bIsFiring = true;
 			WeaponInventory->GetCurrentWeapon()->StartFire();
 		}
 	}
+	UpdateAmmo();
 }
 
 void AThreeFPSCharacter::StopFiring()
@@ -380,6 +424,7 @@ void AThreeFPSCharacter::StopFiring()
 	if (WeaponInventory && WeaponInventory->GetCurrentWeapon())
 	{
 		WeaponInventory->GetCurrentWeapon()->StopFire();
+		bIsFiring = false;
 	}
 }
 
@@ -388,19 +433,35 @@ void AThreeFPSCharacter::StartReload()
 	if (WeaponInventory && WeaponInventory->GetCurrentWeapon())
 	{
 		AGunBase* CurrentWeapon = WeaponInventory->GetCurrentWeapon();
-		if (CurrentWeapon->CanReloading() && !bIsAiming)
+		if (CurrentWeapon->CanReloading() && !bIsAiming && !bIsFiring)
 		{
 			bIsReloading = true;
+			GetWorldTimerManager().SetTimer(ReloadTimer, this, &AThreeFPSCharacter::OnReloaded, CurrentWeapon->GetReloadTime(), false);
 			CurrentWeapon->StartReload();
-			bIsReloading = CurrentWeapon->IsReloading();
-			GetWorldTimerManager().SetTimer(ReloadTimer, this, &AThreeFPSCharacter::OnReloaded, CurrentWeapon->GetFireRate(), false);
 		}
 	}
 }
 void AThreeFPSCharacter::OnReloaded()
 {
 	GetWorldTimerManager().ClearTimer(ReloadTimer);
+	UpdateAmmo();
 	bIsReloading = false;
+	
+}
+
+//장전 했을 때 UI업데이트
+void AThreeFPSCharacter::UpdateAmmo()
+{
+	if (HUDInstance)
+	{
+		HUDInstance->SetCurrentAmmoText(WeaponInventory->GetCurrentWeapon()->GetCurrentAmmo());
+		HUDInstance->SetMaxAmmoText(WeaponInventory->GetCurrentWeapon()->GetMaxAmmo());
+	}
+}
+
+void AThreeFPSCharacter::StopMutation()
+{
+	GetWorldTimerManager().ClearTimer(UpdateMutationTimer);
 }
 
 void AThreeFPSCharacter::InteractCheck()
