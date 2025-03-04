@@ -138,7 +138,7 @@ void AGunBase::Fire()
 			FPointDamageEvent PointDamageEvent;
 			PointDamageEvent.HitInfo = HitResult; // HitResult를 통해 정확한 충돌 정보 전달
 			UGameplayStatics::ApplyPointDamage(HitResult.GetActor(), 20.f, TraceEnd,
-				PointDamageEvent.HitInfo, PlayerController(), this,
+				PointDamageEvent.HitInfo, PlayerController, this,
 				UDamageType::StaticClass());
 		}
 		else if (HitActor)

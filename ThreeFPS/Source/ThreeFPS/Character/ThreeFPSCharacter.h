@@ -150,7 +150,6 @@ protected:
 	//발사 함수
 	void StartFiring();
 	void StopFiring();
-	void Fire();
 	// 인터렉션 함수
 	void Interact();
 	void InteractCheck();

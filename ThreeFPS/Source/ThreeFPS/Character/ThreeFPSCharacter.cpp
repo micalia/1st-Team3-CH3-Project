@@ -137,7 +137,6 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 				EnhancedInputComponent->BindAction(PlayerController->InventoryAction, ETriggerEvent::Started, this, &AThreeFPSCharacter::ToggleInventory);
 			}
 			if (PlayerController->ReloadAction) EnhancedInputComponent->BindAction(PlayerController->ReloadAction, ETriggerEvent::Triggered,this, &AThreeFPSCharacter::StartReload);
-			
 			if (PlayerController->EquipRifleAction) EnhancedInputComponent->BindAction(PlayerController->EquipRifleAction, ETriggerEvent::Triggered, this, &AThreeFPSCharacter::EquipRifle);
 			if (PlayerController->EquipRifleAction) EnhancedInputComponent->BindAction(PlayerController->EquipRifleAction, ETriggerEvent::Triggered, this, &AThreeFPSCharacter::EquipPistol);
 		}
@@ -223,7 +222,6 @@ float AThreeFPSCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 {
 	float ActualDamage = DamageAmount;
 	CurrentHealth = FMath::Clamp(CurrentHealth - ActualDamage, 0.f, MaxHealth);
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red , "Damage: %f", ActualDamage);
 	UpdateHP();
 	if (CurrentHealth <= 0.f)
 	{
@@ -388,6 +386,7 @@ void AThreeFPSCharacter::StartReload()
 		AGunBase* CurrentWeapon = WeaponInventory->GetCurrentWeapon();
 		if (CurrentWeapon->CanReloading() && !bIsAiming)
 		{
+			bIsReloading = true;
 			CurrentWeapon->StartReload();
 			bIsReloading = CurrentWeapon->IsReloading();
 			GetWorldTimerManager().SetTimer(ReloadTimer, this, &AThreeFPSCharacter::OnReloaded, CurrentWeapon->GetFireRate(), false);
@@ -398,4 +397,65 @@ void AThreeFPSCharacter::OnReloaded()
 {
 	GetWorldTimerManager().ClearTimer(ReloadTimer);
 	bIsReloading = false;
+}
+
+void AThreeFPSCharacter::InteractCheck()
+{
+	Cast<APlayerController>(GetController())->GetPlayerViewPoint(ViewVector, ViewRotation);
+	FVector VecDirection = ViewRotation.Vector() * 1000.f;
+	InteractVectorEnd = ViewVector + VecDirection;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	GetWorld()->LineTraceSingleByChannel(InteractHitResult, ViewVector, InteractVectorEnd, ECollisionChannel::ECC_GameTraceChannel2, QueryParams);
+	if (Cast<AItemBase>(InteractHitResult.GetActor()))
+	{
+		InteractWidget->SetVisibility(ESlateVisibility::Visible);
+	}
+	else
+	{
+		InteractWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+}
+
+void AThreeFPSCharacter::Interact()
+{
+	if (Cast<AItemBase>(InteractHitResult.GetActor()))
+	{
+		FItemData* Data = ItemDatabase->Items.FindByPredicate([&](const FItemData& ItemData)
+			{
+				return ItemData.Class == InteractHitResult.GetActor()->GetClass();
+			});
+		Inventory.Emplace(*Data);
+		InteractHitResult.GetActor()->Destroy();
+	}
+}
+
+void AThreeFPSCharacter::ToggleInventory()
+{
+	if (IsValid(InventoryWidget))
+	{
+		if (!InventoryWidget->IsVisible())
+		{
+			InteractWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+			InventoryWidget->SetVisibility(ESlateVisibility::Visible);
+			InventoryWidget->RefreshInventory(Inventory);
+
+			FInputModeGameAndUI InputMode;
+			InputMode.SetWidgetToFocus(InventoryWidget->TakeWidget());
+			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+			Cast<APlayerController>(GetController())->SetInputMode(InputMode);
+			Cast<APlayerController>(GetController())->SetCinematicMode(true, true, true);
+			Cast<APlayerController>(GetController())->bShowMouseCursor = true;
+		}
+		else
+		{
+			InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+			Cast<APlayerController>(GetController())->SetInputMode(FInputModeGameOnly());
+			Cast<APlayerController>(GetController())->SetCinematicMode(false, true, true);
+			Cast<APlayerController>(GetController())->bShowMouseCursor = false;
+		}
+	}
 }
