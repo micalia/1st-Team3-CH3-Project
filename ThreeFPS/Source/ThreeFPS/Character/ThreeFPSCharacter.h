@@ -8,6 +8,7 @@
 #include "Components/TimelineComponent.h"
 #include "Weapon/EGunType.h"
 #include "ThreeFPS/Item/ItemDatabase.h"
+#include "Weapon/EPlayerMovementState.h"
 #include "ThreeFPSCharacter.generated.h"
 
 class UWeaponInventoryComponent;
@@ -31,6 +32,7 @@ UCLASS(config=Game)
 class AThreeFPSCharacter : public ACharacter
 {
 	GENERATED_BODY()
+	EPlayerMovementState CurrentMovementState;
 	
 	/** camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -70,6 +72,15 @@ class AThreeFPSCharacter : public ACharacter
 	UPROPERTY(EditAnywhere,Category = "Status")
 	bool bIsStaminaEmpty;
 
+	//돌연변이 변수
+	UPROPERTY(EditAnywhere,Category = "Status")
+	float MaxMutation;
+	UPROPERTY(EditAnywhere,Category = "Status")
+	float CurrentMutation;
+	UPROPERTY(EditAnywhere,Category = "Status")
+	float MutationRate;
+	FTimerHandle UpdateMutationTimer;
+
 	//조준, 발사
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
 	bool bIsAiming;
@@ -77,9 +88,10 @@ class AThreeFPSCharacter : public ACharacter
 	float OriginSpringArmLength;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
 	float AimedSpringArmLength;
-	UPROPERTY(EditAnywhere, Category = "Fire")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
 	bool bIsFiring;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
+	float CurrentRecoil;
 	
 	//재장전
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
@@ -105,7 +117,6 @@ class AThreeFPSCharacter : public ACharacter
 	// 아이템 베이스
 	UPROPERTY(EditDefaultsOnly)
 	UItemDatabase* ItemDatabase;
-
 	
 	//타이머 핸들 변수
 	FTimerHandle UpdateStaminaTimer;
@@ -125,7 +136,6 @@ protected:
 	UWeaponInventoryComponent* WeaponInventory;
 	UPROPERTY(EditDefaultsOnly, Category="Weapon")
 	TSubclassOf<AGunBase> RifleClass;
-
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	virtual void BeginPlay() override;
@@ -146,21 +156,29 @@ protected:
 	//조준 함수
 	void StartAim();
 	void StopAim();
-	void UpdateAimProgress(float Value);
+	
+	// void UpdateAimProgress(float Value);
+	
 	//발사 함수
 	void StartFiring();
 	void StopFiring();
+	
 	// 인터렉션 함수
 	void Interact();
 	void InteractCheck();
+	
 	// 인벤토리 함수
 	void ToggleInventory();
+	
 	//재장전
 	void StartReload();
 	void OnReloaded();
-
+	
 	void EquipRifle();
 	void EquipPistol();
+	
+	//상태 변화
+	//void UpdateMovementState();
 public:
 	FTimeline AimTimeLine;
 	
@@ -170,16 +188,22 @@ public:
 	AThreeFPSCharacter();
 	
 	void GameStart();
+	//업데이트 함수
 	void UpdateStamina();
 	void UpdateHP();
-	
+	void UpdateMutation();
+	void UpdateAmmo();
+
+	void StopMutation();
 	//Getter 함수
-	FORCEINLINE bool GetIsAiming() { return bIsAiming; }
+	FORCEINLINE EPlayerMovementState GetCurrentMovementState() const {return CurrentMovementState;}
+	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
-
+	FORCEINLINE UHUDWidget* GetHUDWidget() const {return HUDInstance;}
+	
 	TArray<FItemData> Inventory;
 	UPROPERTY()
 	UInventoryWidget* InventoryWidget;
