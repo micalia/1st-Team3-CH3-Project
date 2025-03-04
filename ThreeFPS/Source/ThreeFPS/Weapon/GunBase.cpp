@@ -196,8 +196,8 @@ void AGunBase::StartReload()
 	int NeededAmmo = MagazineSize - CurrentAmmo;
 	if (MaxAmmo <= NeededAmmo)
 	{
-		MaxAmmo = 0;
 		CurrentAmmo += MaxAmmo;
+		MaxAmmo = 0;
 	}
 	else
 	{
