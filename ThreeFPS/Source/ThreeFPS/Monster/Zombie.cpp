@@ -70,6 +70,9 @@ AZombie::AZombie()
     HairStaticMeshComp->SetRelativeLocation(FVector(-164.7f, 0.f, 0.f));
     HairStaticMeshComp->SetRelativeScale3D(FVector(1.f, 1.f, -1.f));
 
+    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+    AIControllerClass = AMonsterAIController::StaticClass();
+
     FullHp =100;
     CurrHp = FullHp;
     ImpulseStrength = 1.f;
