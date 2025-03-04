@@ -17,3 +17,8 @@ void UCrosshairWidget::UpdateCrosshairSize(const float Speed)
 	LeftCrosshair->SetRenderTranslation(FVector2D(-Offset, 0));
 	RightCrosshair->SetRenderTranslation(FVector2D(Offset, 0));
 }
+
+void UCrosshairWidget::SetCrosshairVisibility(ESlateVisibility visibility)
+{
+	SetVisibility(visibility);
+}
