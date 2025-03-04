@@ -43,7 +43,7 @@ void AThreeFPSGameMode::BeginPlay()
 		LevelManager->LoadingWidget = Cast<ULoadingUIUserWidget>(CreateWidget(GetWorld(), LoadingWidgetClass));
 		FOnLevelLoadedDelegate OnDelegate;
 		OnDelegate.BindDynamic(this, &AThreeFPSGameMode::SwitchToCineCamera);
-		LevelManager->LoadLevel(ELevelType::BossBattle, OnDelegate);
+		LevelManager->LoadLevel(ELevelType::Intro, OnDelegate);
 	}
 }
 
