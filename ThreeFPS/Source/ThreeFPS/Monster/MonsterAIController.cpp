@@ -3,9 +3,16 @@
 
 #include "MonsterAIController.h"
 #include "BaseMonster.h"
+#include "Zombie.h"
+#include "APatrolPath.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "NavigationSystem.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISenseConfig_Sight.h"
+#include "Perception/AISense_Sight.h" 
+#include "EnumsDefinitions.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 void AMonsterAIController::OnPossess(APawn* pawn)
 {
@@ -18,39 +25,137 @@ void AMonsterAIController::BeginPlay()
     Super::BeginPlay();
     //	MoveToCurrentPatrolPoint();
 }
-void AMonsterAIController::RandomSelectPatrolState() //시작하면 좀비들의 PatrolType이 랜덤으로  선택된다
+void AMonsterAIController::RandomSelectPatrolState() 
 {
-    PatrolType = static_cast<EPATROLTYPE>(FMath::RandRange(0, 2)); //Empty,Random,TargetPos EPATROLTYPE::Random; //
     UBlackboardComponent* BlackBoard = GetBlackboardComponent();
-    if (BlackBoard)
-        BlackBoard->SetValueAsEnum(TEXT("PatrolState"), static_cast<uint8>(PatrolType));
-    UE_LOG(LogTemp, Warning, TEXT("PatrolState :%s"), *(StaticEnum<EPATROLTYPE>()->GetNameStringByIndex(static_cast<int32>(PatrolType))));
-}
-void AMonsterAIController::UpdatePatrolState(EPATROLTYPE type)
-{
-    PatrolType = type;
-    UBlackboardComponent* BlackBoard = GetBlackboardComponent();
-    if(BlackBoard)
-        BlackBoard->SetValueAsEnum(TEXT("PatrolState"), static_cast<uint8>(PatrolType));
-    UE_LOG(LogTemp, Warning, TEXT("PatrolState :%s"), *(StaticEnum<EPATROLTYPE>()->GetNameStringByIndex(static_cast<int32>(PatrolType))));
-}
-
-//20250227 보류중 아직 안쓰임.
-void AMonsterAIController::UpdatePlayerDetectedState(bool isPlayerDetected,AActor* Actor) 
-{
-    bPlayerDetected = isPlayerDetected;
-    UBlackboardComponent* BlackBoard = GetBlackboardComponent();
-    if (BlackBoard)
+    if (!BlackBoard)
     {
-        BlackBoard->SetValueAsBool(TEXT("PlayerDetected"), bPlayerDetected);
-        if (bPlayerDetected)
-            BlackBoard->SetValueAsObject(TEXT("TargetActor"), Actor );
-        else
-            BlackBoard->SetValueAsObject(TEXT("TargetActor"), nullptr);
+        UE_LOG(LogTemp, Warning, TEXT("Error! !BlackBoard"));
+        return;
     }
-    UE_LOG(LogTemp, Warning, TEXT("PlayerDetected :%s / TargetActor : %s"), bPlayerDetected ? TEXT("True") : TEXT("false"), bPlayerDetected ? *Actor->GetName() : TEXT("Null"));
+    AZombie* Zombie = Cast<AZombie>(GetPawn());
+    if (Zombie)
+    {
+        PatrolType = Zombie->GetterPatrolType();
+        if (Zombie->PatrolPath && Zombie->PatrolPath->Num() > 0)
+        {
+            PatrolType = EPATROLTYPE::TargetKey;
+            BlackBoard->SetValueAsObject(TEXT("PatrolPath"), Zombie->PatrolPath);
+        }
+        else 
+        {
+            PatrolType = (EPATROLTYPE)FMath::RandRange(1,3);
+            if (EPATROLTYPE::Chase == PatrolType)
+                ChargingState();
+        }
+        BlackBoard->SetValueAsEnum(TEXT("PatrolState"), static_cast<uint8>(PatrolType));
+        UE_LOG(LogTemp, Warning, TEXT("PatrolState :%s"), *(StaticEnum<EPATROLTYPE>()->GetNameStringByIndex(static_cast<int32>(PatrolType))));
+    }
+}
+void AMonsterAIController::ChaseAfterDamage()
+{
+    if (PatrolType == EPATROLTYPE::Chase)
+        return;
+    PatrolType = EPATROLTYPE::Chase;
+    ChargingState();
+
+    UBlackboardComponent* BlackBoard = GetBlackboardComponent();
+    BlackBoard->SetValueAsEnum(TEXT("PatrolState"), static_cast<uint8>(PatrolType));
+}
+void AMonsterAIController::ChargingState(float SightRadius, float LoseSightRadius, float PeripheralVisionAngleDegrees)
+{
+    bool bMoveSpeed = false;
+
+    //돌격상태는 시아센서의 값을 최대치로 올려서 플레이어를 무조건 찾아가게 만들기.
+    ABaseMonster* Zombie = Cast<ABaseMonster>(GetPawn());
+    UAIPerceptionComponent* PerceptionComp = Zombie->FindComponentByClass<UAIPerceptionComponent>();
+    if (PerceptionComp)
+    {
+        UAISenseConfig_Sight* SightConfig = PerceptionComp->GetSenseConfig<UAISenseConfig_Sight>();
+        if (SightConfig)
+        {
+            if (SightConfig->SightRadius < SightRadius)
+                bMoveSpeed = true;
+
+            SightConfig->SightRadius = SightRadius;
+            SightConfig->LoseSightRadius = LoseSightRadius;
+            SightConfig->PeripheralVisionAngleDegrees = PeripheralVisionAngleDegrees;
+
+            // 설정이 바뀌었으므로 적용
+            PerceptionComp->RequestStimuliListenerUpdate();
+            UE_LOG(LogTemp, Warning, TEXT("Success Find! UAIPerceptionComponent!"));
+        }
+    }
+    else
+        UE_LOG(LogTemp, Warning, TEXT("Not Find ! UAIPerceptionComponent!"));
+
+    float ChaseSpeed = 0.f;
+    if (Zombie)
+    {
+        ChaseSpeed = FMath::RandRange(220.f, 320.f);
+        Zombie->GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed < Zombie->GetCharacterMovement()->MaxWalkSpeed ? Zombie->GetCharacterMovement()->MaxWalkSpeed + 20.f : ChaseSpeed;
+    }
+    else
+    {
+        ChaseSpeed = FMath::RandRange(90.f, 170.f);
+        Zombie->GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed;
+    }
 }
 
+void AMonsterAIController::UpdatePatrolState2(EPATROLTYPE type)
+{
+    UBlackboardComponent* BlackBoard = GetBlackboardComponent();
+    if (!BlackBoard)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Error! !BlackBoard"));
+        return;
+    }
+    if (PatrolType == EPATROLTYPE::Chase && type != EPATROLTYPE::Chase)
+        ChargingState(700.f, 1000.f, 100.f);
+
+    AZombie* Zombie = Cast<AZombie>(GetPawn());
+    if (Zombie)
+    {
+        PatrolType = Zombie->GetterPatrolType();
+        if (type == EPATROLTYPE::TargetKey) 
+        {
+            if (Zombie->PatrolPath && Zombie->PatrolPath->Num() > 0)
+            {
+                PatrolType = EPATROLTYPE::TargetKey;
+                BlackBoard->SetValueAsObject(TEXT("PatrolPath"), Zombie->PatrolPath);
+            }
+            else 
+            {
+                PatrolType = (EPATROLTYPE)FMath::RandRange(1, 3);
+                if (EPATROLTYPE::Chase == PatrolType)
+                    ChargingState();
+            }
+        }
+        else if (EPATROLTYPE::Chase == PatrolType)
+            ChargingState();
+
+        BlackBoard->SetValueAsEnum(TEXT("PatrolState"), static_cast<uint8>(PatrolType));
+        UE_LOG(LogTemp, Warning, TEXT("PatrolState :%s"), *(StaticEnum<EPATROLTYPE>()->GetNameStringByIndex(static_cast<int32>(PatrolType))));
+    }
+}
+
+#pragma region
+//20250227 보류중 아직 안쓰임.
+//void AMonsterAIController::UpdatePlayerDetectedState(bool isPlayerDetected,AActor* Actor) 
+//{
+//    bPlayerDetected = isPlayerDetected;
+//    UBlackboardComponent* BlackBoard = GetBlackboardComponent();
+//    if (BlackBoard)
+//    {
+//        BlackBoard->SetValueAsBool(TEXT("PlayerDetected"), bPlayerDetected);
+//        if (bPlayerDetected)
+//            BlackBoard->SetValueAsObject(TEXT("TargetActor"), Actor );
+//        else
+//            BlackBoard->SetValueAsObject(TEXT("TargetActor"), nullptr);
+//    }
+//    UE_LOG(LogTemp, Warning, TEXT("PlayerDetected :%s / TargetActor : %s"), bPlayerDetected ? TEXT("True") : TEXT("false"), bPlayerDetected ? *Actor->GetName() : TEXT("Null"));
+//}
+#pragma endregion
 #pragma region //당장쓰이지 않는 함수 주석
 /*
 void AMonsterAIController::MoveToCurrentPatrolPoint()
@@ -264,3 +369,4 @@ void AMonsterAIController::TempOnMoveCompleted()
     */
 }
 #pragma endregion
+

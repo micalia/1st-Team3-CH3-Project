@@ -8,10 +8,15 @@
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstance.h"
-#include "MonsterAIController.h"
 #include "DrawDebugHelpers.h"
 #include "ZombieAnimInstance.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
+#include "GameFramework/DamageType.h"       // FPointDamageEvent, FRadialDamageEvent
+#include "Engine/DamageEvents.h" //
+#include "Components/PrimitiveComponent.h"  // UPrimitiveComponent (충돌체 및 물리 효과)
+#include "Components/DecalComponent.h"
+#include "Materials/MaterialInterface.h"
+
 AZombie::AZombie()
 {
     PrimaryActorTick.bCanEverTick = true;
@@ -29,27 +34,19 @@ AZombie::AZombie()
     {
         DetectionSphere->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
         DetectionSphere->SetSphereRadius(60.f);
-        DetectionSphere->SetRelativeLocation(FVector(40.f, 0.f, 20.f));
+        DetectionSphere->SetRelativeLocation(FVector(0.f, 30.f, 100.f));//40.f, 0.f, 20.f
         DetectionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
         DetectionSphere->SetCollisionObjectType(ECC_WorldDynamic);
         DetectionSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
         DetectionSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-        //DetectionSphere->RegisterComponent();
         DetectionSphere->SetCollisionProfileName(TEXT("Trigger"));
     }
-
-    bool bSelectFeMale = 0;
-    FString BodyMeshFilePath = "";
-    if (bSelectFeMale)
-        BodyMeshFilePath = TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/Female/SK_Zombie_F02_01.SK_Zombie_F02_01'");
-    else
-        BodyMeshFilePath = TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/male/AA_SK_Zombie_M02_01.AA_SK_Zombie_M02_01'");
-
-    static ConstructorHelpers::FObjectFinder<USkeletalMesh> BodyMeshAsset(*BodyMeshFilePath);
+   
+    static ConstructorHelpers::FObjectFinder<USkeletalMesh> BodyMeshAsset(TEXT("SkeletalMesh'/Game/KSW/Resouces/zombie/mesh/male/AA_SK_Zombie_M02_01.AA_SK_Zombie_M02_01'"));
     if (BodyMeshAsset.Succeeded())
         GetMesh()->SetSkeletalMesh(BodyMeshAsset.Object);
 
-    GetMesh()->MarkRenderStateDirty();
+   // GetMesh()->MarkRenderStateDirty();
     GetMesh()->SetRelativeLocationAndRotation(FVector(0, 0, -90.f), FRotator(0.f, -90.f, 0.f));
     GetMesh()->SetRelativeScale3D(FVector(1.f));
     
@@ -67,23 +64,38 @@ AZombie::AZombie()
     HairMeshComp->SetLeaderPoseComponent(GetMesh());
 
     HairStaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HairStaticMesh"));
-    FAttachmentTransformRules Rules(EAttachmentRule::SnapToTarget, true);
-    // HairStaticMeshComp->AttachToComponent(GetMesh(), Rules, FName("headSocket"));
     HairStaticMeshComp->SetupAttachment(GetMesh(), FName("headSocket"));
-    //HairStaticMeshComp->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("head"));
     FQuat NewRotation = FQuat(FRotator(90.f, -90.f, -90.f));
     HairStaticMeshComp->SetRelativeRotation(NewRotation);
     HairStaticMeshComp->SetRelativeLocation(FVector(-164.7f, 0.f, 0.f));
     HairStaticMeshComp->SetRelativeScale3D(FVector(1.f, 1.f, -1.f));
 
-    GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AZombie::OnCapsuleOverlap);
+    FullHp =100;
+    CurrHp = FullHp;
+    ImpulseStrength = 1.f;
+}
+void AZombie::BeginPlay()
+{
+    Super::BeginPlay();
 
+    /*GetCapsuleComponent()*/GetMesh()->OnComponentBeginOverlap.AddDynamic(this, &AZombie::OnCapsuleOverlap);
     DetectionSphere->OnComponentBeginOverlap.AddDynamic(this, &AZombie::OnDetectionOverlap);
     DetectionSphere->OnComponentEndOverlap.AddDynamic(this, &AZombie::OnDetectionEndOverlap);
     DisableDetection();
-    Hp = 10;
+
+    VariousJombie();//Random Custom 
+
+    GetCharacterMovement()->MaxWalkSpeed = FMath::RandRange(50.f,200.f);
+
+
+   // DecalMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("MaterialInstanceConstant'/Game/KSW/Resouces/Decals/Splashers/Decal_BB_Inst.Decal_BB_Inst'"));
+
 }
 
+void TestSp()
+{
+
+}
 void AZombie::SetClothingMeshs(USkeletalMesh* Pants, USkeletalMesh* Shirt, USkeletalMesh* Hair , UStaticMesh* HairStatic )
 {
     if(Pants)
@@ -94,6 +106,11 @@ void AZombie::SetClothingMeshs(USkeletalMesh* Pants, USkeletalMesh* Shirt, USkel
         HairMeshComp->SetSkeletalMesh(Hair);
     if (HairStatic)
         HairStaticMeshComp->SetStaticMesh(HairStatic);
+}
+
+EPATROLTYPE AZombie::GetterPatrolType() const
+{
+    return PatrolType;
 }
 
 void AZombie::OnCapsuleOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -137,15 +154,15 @@ void AZombie::OnDetectionOverlap(UPrimitiveComponent* OverlappedComp, AActor* Ot
 }
 void AZombie::EnableDetection()
 {
-    Super::EnableDetection();
+    Super::EnableDetection(); // Show Debug Line Sphere
    // UE_LOG(LogTemp, Warning, TEXT("EnableDetection()!!!"));
 
-    if (DetectionSphere && bDebugDetectionSphere)
-    {
-        DetectionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-        DrawDebugSphere(GetWorld(), DetectionSphere->GetComponentLocation(),
-        DetectionSphere->GetScaledSphereRadius(), 12, FColor::Red, false, 3.f, 0, 2.f);
-    }
+    //if (DetectionSphere && bDebugDetectionSphere)
+    //{
+    //    DetectionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    //    DrawDebugSphere(GetWorld(), DetectionSphere->GetComponentLocation(),
+    //    DetectionSphere->GetScaledSphereRadius(), 12, FColor::Red, false, 3.f, 0, 2.f);
+    //}
 }
 
 void AZombie::DisableDetection()
@@ -162,19 +179,13 @@ float AZombie::Attack()
 {
     Super::Attack();
 
-    ZombieState = EZONBIE_ST::ATTACK;
     UZombieAnimInstance* Anim = Cast < UZombieAnimInstance>(GetMesh()->GetAnimInstance());
     float AniPlayLength = -1.f;
     if (Anim )
-        AniPlayLength = Anim->AnimationPlay(ZombieState);
+        AniPlayLength = Anim->AnimationPlay(EANIM_MONTAGE::ATTACK);
     return AniPlayLength;
 }
-void AZombie::BeginPlay()
-{
-    Super::BeginPlay();
 
-    VariousJombie();//Random Custom Jombie
-}
 
 void AZombie::AttackTimming(int AttType)
 {
@@ -196,9 +207,18 @@ void AZombie::Tick(float DeltaTime)
                 //float Distance = FVector::DistXY(CurPos, TargetActor->GetActorLocation());
                 //UE_LOG(LogTemp, Warning, TEXT("Distance:%f/ SphereRadius:"), Distance, DetectionSphere->GetScaledSphereRadius());
                 //if (150.f >= Distance)
-                    float  ReceiveApplyDamage = UGameplayStatics::ApplyDamage(TargetActor, Power, TargetActor->GetInstigatorController(), TargetActor, NULL);
-                    UE_LOG(LogTemp, Warning, TEXT("ATT:%f"),Power);
 
+                float  ReceiveApplyDamage = UGameplayStatics::ApplyDamage(TargetActor, Power,GetController(), this, UDamageType::StaticClass());
+                  
+                UE_LOG(LogTemp, Warning, TEXT("ATT:%f"),Power);
+
+                
+                /* FPointDamageEvent PointDamageEvent;
+                PointDamageEvent.HitInfo = HitResult;
+
+                AActor* DamageCauser = this;
+                UGameplayStatics::ApplyPointDamage(TargetActor, Power, ShotDirection,PointDamageEvent.HitInfo, GetController(), DamageCauser,
+                    UDamageType::StaticClass());*/
             }
             bAttackTimming = false;
         }
@@ -206,79 +226,182 @@ void AZombie::Tick(float DeltaTime)
 }
 float AZombie::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-    if (Hp <= 0)
+    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("액터 : %f"), Hp));
+
+    if (CurrHp <= 0)
         return 0.f;
 
-    float ReceiveADamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    CurrHp = FMath::Clamp(CurrHp - ActualDamage, 0.f, FullHp);
 
-    Hp -= DamageAmount;
 
     UZombieAnimInstance* animInst = Cast< UZombieAnimInstance>(GetMesh()->GetAnimInstance());
     if (!animInst)
         return 0.f;
-
-    if (Hp <= 0)
+    
+    // 히트 결과를 받아올 FHitResult 생성
+    FHitResult HitResult;
+    if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
     {
-        ZombieState = EZONBIE_ST::DIE;
-        float aniLength = animInst->AnimationPlay(ZombieState)-0.3f;
-
-        GetCharacterMovement()->StopMovementImmediately();
-        GetCharacterMovement()->DisableMovement();
-        GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-        GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
-        GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-        DisableDetection();
-        GetController()->Destroy();
-
-        FTimerHandle TimerHandle;
-        //GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AZombie::Die, aniLength, false);
-        GetWorld()->GetTimerManager().SetTimer(
-            TimerHandle, ( [this, animInst]() {
-                animInst->Montage_Pause(animInst->DieMontage);
-            // animInst->Montage_SetPlayRate(animInst->DieMontage, 0.0f);
-             Die();
-        }),  aniLength, false);
+        const FPointDamageEvent* PointDamageEvent = static_cast<const FPointDamageEvent*>(&DamageEvent);
+        HitResult = PointDamageEvent->HitInfo;
     }
-    else
+    else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
     {
-        ZombieState = EZONBIE_ST::DAMAGE;
-        float DamageAniTime = animInst->AnimationPlay(ZombieState);
-        PauseMoveForDamage(DamageAniTime);
+        const FRadialDamageEvent* RadialDamageEvent = static_cast<const FRadialDamageEvent*>(&DamageEvent);
+        if (RadialDamageEvent->ComponentHits.Num() > 0)
+            HitResult = RadialDamageEvent->ComponentHits[0];
     }
-    return ReceiveADamage;
+    if (HitResult.GetComponent())//HitResult.IsValidBlockingHit())
+    {
+        float DamageAniTime = animInst->AnimationPlay(EANIM_MONTAGE::DAMAGE);
+        PauseMoveForDamage(DamageAniTime, HitResult);
+    }
+    return ActualDamage;
 }
 void AZombie::Die()
 {
     Super::Die();
-  /*  GetMesh()->bPauseAnims = true;
-    GetMesh()->bNoSkeletonUpdate = true;*/
-   // Destroy();
-    UE_LOG(LogTemp, Warning, TEXT("Die"));
+   
+    UZombieAnimInstance* animInst = Cast< UZombieAnimInstance>(GetMesh()->GetAnimInstance());
+    if (!IsValid(animInst))
+        return;
+
+    GetWorld()->GetTimerManager().ClearTimer(DamageTimerHandler);
+    AMonsterAIController* MAIController = Cast<AMonsterAIController>(GetController());//StopMovement();
+    if (MAIController)
+    {
+        MAIController->UnPossess();
+        MAIController->StopMovement();
+        MAIController->Destroy();
+        UBehaviorTreeComponent* BT = Cast<UBehaviorTreeComponent>(MAIController->GetBrainComponent());//(TEXT("TakeDamage"));
+        if (BT)
+        {
+            BT->Deactivate();//StopLogic(TEXT("ZombieDie"));
+            UE_LOG(LogTemp, Log, TEXT(" MAIController->Destroy()"));
+        }
+    }
+    
+    GetCharacterMovement()->StopMovementImmediately();
+    GetCharacterMovement()->DisableMovement();
+    GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
+    DisableDetection();
+    GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    GetMesh()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+    GetMesh()->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Ignore);
+    //GetMesh()->SetAllBodiesBelowSimulatePhysics(TEXT("pelvis"), true, true);
+ 
+
+    float aniLength = animInst->AnimationPlay(EANIM_MONTAGE::DIE) - 0.3f;
+    FTimerHandle TimerHandle;
+    GetWorld()->GetTimerManager().SetTimer(
+        TimerHandle, ([this, animInst, aniLength]() {
+            animInst->Montage_Pause(animInst->DieMontage);
+
+            UE_LOG(LogTemp, Warning, TEXT("Montage_Pause! : %f"), aniLength);
+            // animInst->Montage_SetPlayRate(animInst->DieMontage, 0.0f);
+            }), aniLength, false);
+
+    FTimerHandle TimerHandle2;
+    GetWorld()->GetTimerManager().SetTimer(
+        TimerHandle2, ([this]() {
+            UE_LOG(LogTemp, Warning, TEXT("Destroy !!!"));
+            Destroy();
+            }), 10.f, false);
+  
 }
-void AZombie::PauseMoveForDamage(float PauseTime)
+void AZombie::PauseMoveForDamage(float PauseTime,FHitResult HitResult)
 {
-    AAIController* MAIController = Cast<AAIController>(GetController());//StopMovement();
+    AMonsterAIController* MAIController = Cast<AMonsterAIController>(GetController());//StopMovement();
     UBehaviorTreeComponent* BT = nullptr;
     if (MAIController)
     {
-        if (MAIController)
+        BT = Cast<UBehaviorTreeComponent>(MAIController->GetBrainComponent());//(TEXT("TakeDamage"));
+        if (IsValid(BT))
         {
-            BT = Cast<UBehaviorTreeComponent>(MAIController->GetBrainComponent());//(TEXT("TakeDamage"));
-            if (IsValid(BT))
-            {
-                BT->PauseLogic(TEXT("TakeDamage"));
-                MAIController->StopMovement();
-            }
+            BT->PauseLogic(TEXT("TakeDamage"));
+            MAIController->StopMovement();
         }
     }
-    GetWorld()->GetTimerManager().ClearTimer(DamageTimerHandler);
 
-    GetWorld()->GetTimerManager().SetTimer(
-        DamageTimerHandler, ([this, MAIController, BT]() {
-            BT->ResumeLogic(TEXT("TakeDamage"));
-            }), PauseTime+1.f, false
-    );
+    UPrimitiveComponent* HitComponent = HitResult.GetComponent();
+    FName HitBoneName = HitResult.BoneName;
+    if ("pelvis" == HitBoneName  || "None" == HitBoneName )//
+        HitBoneName = FName("spine_02");
    
+    //FVector ImpulseDirection = HitResult.ImpactNormal * -1.0f;
+    //FVector Impulse = ImpulseDirection * 5000.f;//ImpulseStrength;
+    //UE_LOG(LogTemp, Log, TEXT("Impulse: %f / %f / %f"), Impulse.X, Impulse.Y, Impulse.Z);
+
+ 
+    GetMesh()->SetAllBodiesBelowSimulatePhysics(HitBoneName, true, true);
+    GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(HitBoneName, 0.5f, true, true);
+    GetMesh()->SetPhysicsAngularVelocityInRadians(FVector::ZeroVector, false, HitBoneName);
+    //GetMesh()->AddImpulseAtLocation(Impulse, HitResult.ImpactPoint, HitBoneName);
+    UE_LOG(LogTemp, Log, TEXT("Applied impulse to bone: %s"), *HitBoneName.ToString());
+    if (HitImpactEffect)
+        UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitImpactEffect, HitResult.ImpactPoint, FRotator::ZeroRotator,true);
+
+    GetWorld()->GetTimerManager().ClearTimer(DamageTimerHandler);
+    if (CurrHp <= 0)
+    {
+        Die();
+        float Rand = FMath::RandRange(0.f, 180.f);
+        float XPos = FMath::RandRange(-60.f, 60.f);
+        float YPos = FMath::RandRange(-60.f, 60.f);
+        FVector BloodPos = FVector(GetActorLocation().X + XPos, GetActorLocation().Y + YPos, GetActorLocation().Z);
+        SpawnDecalAtLocation( BloodPos + GetMesh()->GetRelativeLocation(), FRotator(90.0f, Rand, 0.f ), 30.f );
+    }
+    else {
+        
+        GetWorld()->GetTimerManager().SetTimer(
+            DamageTimerHandler, ([this, MAIController, BT]() {
+
+                //GetMesh()->SetBodySimulatePhysics(BoneName, false);
+                //GetMesh()->ResetAllBodiesSimulatePhysics();
+                if (CurrHp > 0)
+                {
+                    BT->ResumeLogic(TEXT("TakeDamage"));
+                    MAIController->ChaseAfterDamage();
+                  //  float ChaseSpeed = FMath::RandRange(220.f, 320.f);
+                  //  GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed < GetCharacterMovement()->MaxWalkSpeed ? GetCharacterMovement()->MaxWalkSpeed+20.f : ChaseSpeed;
+                }
+                }), PauseTime + 0.f, false
+        );
+    }
+
+}
+void AZombie::SpawnDecalAtLocation(FVector Location, FRotator Rotation, float LifeSpan)
+{
+    if (DecalMaterial)
+    {
+        // 데칼 사이즈 설정 (XYZ 크기)
+        FVector DecalSize = FVector( FMath::RandRange(90.f, 130.f), FMath::RandRange(90.f, 130.f), 100.0f);
+
+        // 데칼 컴포넌트 생성
+        UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(
+            GetWorld(),
+            DecalMaterial,   // 데칼에 사용할 머티리얼
+            DecalSize,              // 데칼의 크기
+            Location,               // 데칼을 표시할 위치
+            Rotation,               // 데칼의 회전값
+            LifeSpan                // 데칼의 생존 시간 (0이면 영구 표시)
+        );
+
+        if (Decal)
+        {
+            // 추가적인 데칼 설정
+            Decal->SetFadeScreenSize(0.0f); // 카메라와의 거리에서 페이드 아웃되는 크기 설정
+            Decal->SetFadeOut(LifeSpan - 1.0f, 2.0f); // 사라질 때 페이드 효과
+            //UMaterialInstanceDynamic* DynamicMaterial = UMaterialInstanceDynamic::Create(DecalMaterial, this);
+            //if (DynamicMaterial)
+            //    DynamicMaterial->SetVectorParameterValue("Color", FLinearColor::Red); // 'Color' 파라미터를 빨간색으로 변경
+            //    Decal->SetDecalMaterial(DynamicMaterial);
+        }
+    }
+    else
+        UE_LOG(LogTemp, Error, TEXT("Error Decal Material "));
 }
 #pragma region //VariousJombie
 void AZombie::VariousJombie()
@@ -390,34 +513,27 @@ void AZombie::VariousJombie()
 
     //FString LogString = bSelectFeMale ? "True" : "False";
     //UE_LOG(LogTemp, Warning, TEXT("bSelectFeMale : %s"), *LogString);
-#pragma region //생성자에서 사용하기
-/* static ConstructorHelpers::FObjectFinder<USkeletalMesh> ShirtMeshAsset(*CostumeMap[FileLoadPathShirt]);
-   static ConstructorHelpers::FObjectFinder<USkeletalMesh> PantsMeshAsset(*CostumeMap[FileLoadPathPants]);
-   static ConstructorHelpers::FObjectFinder<USkeletalMesh> HairMeshAsset = nullptr;
-   static ConstructorHelpers::FObjectFinder<UStaticMesh> HairStaticMeshAsset = nullptr;
-
-   if (!bSelectFeMale)
-   {
-       HairStaticMeshAsset = *CostumeMap[FileLoadPathHair];
-       SetClothingMeshs(PantsMeshAsset.Object, ShirtMeshAsset.Object, nullptr, HairStaticMeshAsset.Object);
-   }
-   else
-   {
-       HairMeshAsset = *CostumeMap[FileLoadPathHair];
-       SetClothingMeshs(PantsMeshAsset.Object, ShirtMeshAsset.Object, HairMeshAsset.Object, nullptr);
-   }*/
-#pragma endregion
 }
 #pragma endregion
-#pragma region //ApplyRagdoll
+
+
 void AZombie::ApplyRagdoll(FVector HitDirection)
 {
     Super::ApplyRagdoll(HitDirection);
-    ZombieState = EZONBIE_ST::DIE;
+
+    AMonsterAIController* MAIController = Cast<AMonsterAIController>(GetController());//StopMovement();
+    UBehaviorTreeComponent* BT = nullptr;
+    if (MAIController)
+    {
+        BT = Cast<UBehaviorTreeComponent>(MAIController->GetBrainComponent());
+      //BT->StopLogic(TEXT("Die"));
+        BT->Deactivate();
+        MAIController->StopMovement();
+    }
 
     //  캡슐 콜리전 비활성화 (레그돌이 제대로 작동하도록 설정)
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    GetCapsuleComponent()->SetSimulatePhysics(true);
+    //GetCapsuleComponent()->SetSimulatePhysics(true);
 
     //  이동 불가능하도록 설정 
     GetCharacterMovement()->StopMovementImmediately();
@@ -435,10 +551,7 @@ void AZombie::ApplyRagdoll(FVector HitDirection)
     // GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &AMonster::Destroy, 3.0f, false);
 }
 
-#pragma endregion
-#pragma region //EndPlay
 void AZombie::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     Super::EndPlay(EndPlayReason);
 }
-#pragma endregion

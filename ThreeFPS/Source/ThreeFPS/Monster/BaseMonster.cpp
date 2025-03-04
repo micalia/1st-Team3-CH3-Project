@@ -2,6 +2,7 @@
 
 
 #include "BaseMonster.h"
+#include "APatrolPath.h"
 
 // Sets default values
 ABaseMonster::ABaseMonster()
