@@ -81,7 +81,8 @@ class AThreeFPSCharacter : public ACharacter
 	float AimedSpringArmLength;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
 	bool bIsFiring;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
+	float CurrentRecoil;
 	
 	//재장전
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Fire", meta = (AllowPrivateAccess = "true"))
@@ -107,7 +108,6 @@ class AThreeFPSCharacter : public ACharacter
 	// 아이템 베이스
 	UPROPERTY(EditDefaultsOnly)
 	UItemDatabase* ItemDatabase;
-
 	
 	//타이머 핸들 변수
 	FTimerHandle UpdateStaminaTimer;
@@ -127,7 +127,6 @@ protected:
 	UWeaponInventoryComponent* WeaponInventory;
 	UPROPERTY(EditDefaultsOnly, Category="Weapon")
 	TSubclassOf<AGunBase> RifleClass;
-
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	virtual void BeginPlay() override;

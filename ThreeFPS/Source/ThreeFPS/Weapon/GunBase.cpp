@@ -18,24 +18,23 @@ AGunBase::AGunBase(): Damage(10.f), FireRate(0.1f), ReloadTime(2.25f), MaxAmmo(3
 	RootComponent = Root;
 	MeshComp =CreateDefaultSubobject<USkeletalMeshComponent>("MeshComp");
 	MeshComp->SetupAttachment(Root);
-	
 }
 
 void AGunBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FOnTimelineFloat XRecoilCurve;
-	FOnTimelineFloat YRecoilCurve;
+	// FOnTimelineFloat XRecoilCurve;
+	// FOnTimelineFloat YRecoilCurve;
+	//
+	// XRecoilCurve.BindUFunction(this, FName("StartHorizontalRecoil"));
+	// YRecoilCurve.BindUFunction(this, FName("StartVerticalRecoil"));
 
-	XRecoilCurve.BindUFunction(this, FName("StartHorizontalRecoil"));
-	YRecoilCurve.BindUFunction(this, FName("StartVerticalRecoil"));
-
-	if (HorizontalCurve && VerticalCurve)
-	{
-		RecoilTimeLine.AddInterpFloat(HorizontalCurve, XRecoilCurve);
-		RecoilTimeLine.AddInterpFloat(VerticalCurve, YRecoilCurve);
-	}
+	// if (HorizontalCurve && VerticalCurve)
+	// {
+	// 	RecoilTimeLine.AddInterpFloat(HorizontalCurve, XRecoilCurve);
+	// 	RecoilTimeLine.AddInterpFloat(VerticalCurve, YRecoilCurve);
+	// }
 }
 
 void AGunBase::Tick(float DeltaTime)
@@ -51,33 +50,6 @@ void AGunBase::Tick(float DeltaTime)
 	}
 }
 
-void AGunBase::StartHorizontalRecoil(float Value)
-{
-	if (AThreeFPSCharacter* Player =  Cast<AThreeFPSCharacter>(GetWorld()->GetFirstPlayerController()))
-	{
-		Player->AddControllerYawInput(Value);
-	}
-}
-
-void AGunBase::StartVerticalRecoil(float Value)
-{
-	if (AThreeFPSCharacter* Player =  Cast<AThreeFPSCharacter>(GetWorld()->GetFirstPlayerController()))
-	{
-		Player->AddControllerPitchInput(Value);
-	}
-}
-
-void AGunBase::StartRecoil()
-{
-	RecoilTimeLine.PlayFromStart();
-}
-
-void AGunBase::ReverseRecoil()
-{
-	RecoilTimeLine.Reverse();
-}
-
-
 void AGunBase::Fire()
 {
 	if (CurrentAmmo <= 0 || bIsReloading)
@@ -86,9 +58,18 @@ void AGunBase::Fire()
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, ClickSound, GetActorLocation());
 		}
+		// AThreeFPSCharacter* Character = Cast<AThreeFPSCharacter>(GetOwner());
+		// if (Character)
+		// {
+		// 	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+		// 	if (AnimInstance)
+		// 	{
+		// 		AnimInstance->Montage_Stop(0.1f);
+		// 	}
+		// 	return;
+		// }
 		return;
 	}
-	StartRecoil();
 	FVector MuzzleLocation = MeshComp->GetSocketLocation(FName("Muzzle"));
 	FRotator MuzzleRotation = MeshComp->GetSocketRotation(FName("Muzzle"));
 	FVector TraceEnd;
@@ -126,6 +107,7 @@ void AGunBase::Fire()
 	FHitResult HitResult;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
+	QueryParams.AddIgnoredActor(GetOwner());
 
 	if (bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult,MuzzleLocation,TraceEnd,ECC_Pawn, QueryParams))
 	{
@@ -147,8 +129,9 @@ void AGunBase::Fire()
 		}
 	}
 	DrawDebugLine(GetWorld(), MuzzleLocation, TraceEnd, FColor::Red, false, 1.f,0,2.f);
-	StartRecoil();
 	CurrentAmmo--;
+	// PlayFireAnimation(bIsAiming);
+	ApplyRecoil();
 }
 
 void AGunBase::StartFire()
@@ -156,7 +139,6 @@ void AGunBase::StartFire()
 	if (bIsReloading) return;
 	if (bIsAuto)
 	{
-		StartRecoil();
 		GetWorldTimerManager().SetTimer(AutoFireTimer, this, &AGunBase::Fire, FireRate, true);
 	}
 	Fire();
@@ -168,7 +150,26 @@ void AGunBase::StopFire()
 	{
 		GetWorldTimerManager().ClearTimer(AutoFireTimer);
 	}
-	ReverseRecoil();
+}
+
+void AGunBase::PlayFireAnimation(bool bIsAiming)
+{
+	// 총을 장착한 캐릭터 가져오기
+	AThreeFPSCharacter* Character = Cast<AThreeFPSCharacter>(GetOwner());
+	if (!Character) return;
+
+	// 캐릭터의 애니메이션 인스턴스 가져오기
+	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+	if (!AnimInstance) return;
+
+	// 사용할 몽타주 선택
+	UAnimMontage* FireMontageToPlay = bIsAiming ? AimFireMontage : HipFireMontage;
+
+	// 몽타주가 유효하면 실행
+	if (FireMontageToPlay)
+	{
+		AnimInstance->Montage_Play(FireMontageToPlay, FireRate, EMontagePlayReturnType::MontageLength,0.f,true);
+	}
 }
 
 void AGunBase::StartReload()
@@ -199,6 +200,40 @@ void AGunBase::OnReloaded()
 {
 	bIsReloading = false;
 	
+}
+
+void AGunBase::ApplyRecoil()
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
+	if (PlayerController)
+	{
+		AThreeFPSCharacter* Character = Cast<AThreeFPSCharacter>(PlayerController->GetPawn());
+		if (Character)
+		{
+			
+			float FinalRecoilAmount = RecoilAmount;
+			float FinalRecoilRandomness = RecoilRandomness;
+			
+			// 조준 반동 
+			if (Character->GetIsAiming())
+			{
+				FinalRecoilAmount *= AimRecoilMultiplier;
+				FinalRecoilRandomness *= AimRecoilMultiplier;
+			}
+			
+			float PitchRecoil = FMath::RandRange(FinalRecoilAmount * 0.8f, FinalRecoilAmount * 1.2f);
+			float YawRecoil = FMath::RandRange(-FinalRecoilRandomness, FinalRecoilRandomness);
+
+			PlayerController->AddPitchInput(-PitchRecoil);
+			PlayerController->AddYawInput(YawRecoil);
+		}
+	}
+}
+
+bool AGunBase::CanFire() const
+{
+	if (CurrentAmmo <= 0 || bIsReloading) return false;
+	return true;
 }
 
 bool AGunBase::CanReloading() const

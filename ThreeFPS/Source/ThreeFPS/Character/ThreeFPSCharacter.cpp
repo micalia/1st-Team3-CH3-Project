@@ -175,13 +175,14 @@ void AThreeFPSCharacter::GameStart()
 		}
 	}
 	EquipRifle();
+	
 	//스프링암 타임라인
-	if (AimCurve)
-	{
-		FOnTimelineFloat TimeLineProgress;
-		TimeLineProgress.BindUFunction(this, FName("UpdateAimProgress"));
-		AimTimeLine.AddInterpFloat(AimCurve, TimeLineProgress);
-	}
+	// if (AimCurve)
+	// {
+	// 	FOnTimelineFloat TimeLineProgress;
+	// 	TimeLineProgress.BindUFunction(this, FName("UpdateAimProgress"));
+	// 	AimTimeLine.AddInterpFloat(AimCurve, TimeLineProgress);
+	// }
 	//체력 UI업데이트
 	UpdateHP();
 	
@@ -200,7 +201,7 @@ void AThreeFPSCharacter::BeginPlay()
 	InteractWidget->AddToViewport(5);
 	InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
 	InteractWidget->SetVisibility(ESlateVisibility::Collapsed);
-	// GameStart();
+	GameStart();
 }
 
 //틱 함수
@@ -356,11 +357,11 @@ void AThreeFPSCharacter::StartAim()
 	{
 		GetCharacterMovement()->MaxWalkSpeed = OriginSpeed / 2;
 		bIsAiming = true;
-		if (AimCurve)
-		{
-			AimTimeLine.Play();
-			UE_LOG(LogTemp, Display, TEXT("Aim Start"));
-		}
+		// if (AimCurve)
+		// {
+		// 	AimTimeLine.Play();
+		// 	UE_LOG(LogTemp, Display, TEXT("Aim Start"));
+		// }
 	}
 }
 void AThreeFPSCharacter::StopAim()
@@ -376,18 +377,18 @@ void AThreeFPSCharacter::StopAim()
 void AThreeFPSCharacter::UpdateAimProgress(float Value)
 {
 	if (InventoryWidget && InventoryWidget->IsVisible()) return;
-	if (SpringArm)
-	{
-		UE_LOG(LogTemp, Log, TEXT("UpdateAimProgress: %f"), Value);
-		SpringArm->TargetArmLength = FMath::Lerp(OriginSpringArmLength, AimedSpringArmLength, Value);
-	}
+	// if (SpringArm)
+	// {
+	// 	UE_LOG(LogTemp, Log, TEXT("UpdateAimProgress: %f"), Value);
+	// 	SpringArm->TargetArmLength = FMath::Lerp(OriginSpringArmLength, AimedSpringArmLength, Value);
+	// }
 }
 
 void AThreeFPSCharacter::StartFiring()
 {
 	if (!bIsSprinting && !GetCharacterMovement()->IsFalling() && !bIsReloading)
 	{
-		if (WeaponInventory && WeaponInventory->GetCurrentWeapon())
+		if (WeaponInventory && WeaponInventory->GetCurrentWeapon()->CanFire())
 		{
 			WeaponInventory->GetCurrentWeapon()->StartFire();
 			bIsFiring = true;

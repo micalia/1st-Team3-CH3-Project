@@ -16,31 +16,16 @@ ARifle::ARifle()
 	bIsAuto = true;
 	ReloadTime= 2.25f;
 	FireRate = 0.117f;
+	MeshComp->SetRelativeScale3D(FVector(0.9f, 0.9f, 0.9f));
+
+	RecoilAmount = 0.3f;
+	RecoilRandomness = 0.5f;
+	AimRecoilMultiplier =0.3f;
 }
 
 void ARifle::BeginPlay()
 {
 	Super::BeginPlay();
-}
-
-void ARifle::StartHorizontalRecoil(float Value)
-{
-	Super::StartHorizontalRecoil(Value);
-}
-
-void ARifle::StartVerticalRecoil(float Value)
-{
-	Super::StartVerticalRecoil(Value);
-}
-
-void ARifle::StartRecoil()
-{
-	Super::StartRecoil();
-}
-
-void ARifle::ReverseRecoil()
-{
-	Super::ReverseRecoil();
 }
 
 void ARifle::Fire()
@@ -66,6 +51,21 @@ void ARifle::StartReload()
 void ARifle::OnReloaded()
 {
 	Super::OnReloaded();
+}
+
+void ARifle::PlayFireAnimation(bool bIsAiming)
+{
+	Super::PlayFireAnimation(bIsAiming);
+}
+
+void ARifle::ApplyRecoil()
+{
+	Super::ApplyRecoil();
+}
+
+bool ARifle::CanFire() const
+{
+	return Super::CanFire();
 }
 
 bool ARifle::CanReloading() const

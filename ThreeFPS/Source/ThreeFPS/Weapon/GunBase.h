@@ -74,19 +74,17 @@ protected:
 	UAnimMontage* ReloadMontage;
 
 	/* 반동 변수 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Recoil")
-	UCurveFloat* VerticalCurve;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Recoil")
-	UCurveFloat* HorizontalCurve;
+	float RecoilAmount;
+	float RecoilRandomness;
+	float AimRecoilMultiplier;
+
+	//발사 몽타주
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire")
+	UAnimMontage* HipFireMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire")
+	UAnimMontage* AimFireMontage;
 	
 public:
-	UFUNCTION()
-	virtual void StartHorizontalRecoil(float Value);
-	UFUNCTION()
-	virtual void StartVerticalRecoil(float Value);
-
-	virtual void StartRecoil();
-	virtual void ReverseRecoil();
 	
 	virtual void Fire();
 	UFUNCTION(BlueprintCallable,Category="Fire")
@@ -94,11 +92,14 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Fire")
 	virtual void StopFire();
 	
+	virtual void PlayFireAnimation(bool bIsAiming);
 	virtual void StartReload();
 	virtual void OnReloaded();
-
+	virtual void ApplyRecoil();
 	
+	virtual bool CanFire() const;
 	virtual bool CanReloading() const;
+	FORCEINLINE virtual float GetRecoil() const {return RecoilAmount;}
 	FORCEINLINE virtual bool IsReloading() const { return bIsReloading; }
 	FORCEINLINE virtual bool IsAuto() const { return bIsAuto; }
 	FORCEINLINE virtual bool IsFiring() const { return bIsFiring; }
