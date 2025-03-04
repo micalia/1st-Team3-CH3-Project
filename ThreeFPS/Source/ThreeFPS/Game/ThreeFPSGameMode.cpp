@@ -43,7 +43,7 @@ void AThreeFPSGameMode::BeginPlay()
 		LevelManager->LoadingWidget = Cast<ULoadingUIUserWidget>(CreateWidget(GetWorld(), LoadingWidgetClass));
 		FOnLevelLoadedDelegate OnDelegate;
 		OnDelegate.BindDynamic(this, &AThreeFPSGameMode::SwitchToCineCamera);
-		LevelManager->LoadLevel(ELevelType::Intro, OnDelegate);
+		LevelManager->LoadLevel(ELevelType::Tutorial, OnDelegate);
 	}
 }
 
@@ -71,7 +71,7 @@ void AThreeFPSGameMode::SwitchToCineCamera()
 
 void AThreeFPSGameMode::SetIntroUI()
 {
-	if (IsValid(IntroHUDWidgetClass))
+	/*if (IsValid(IntroHUDWidgetClass))
 	{
 		IntroHUDWidget = Cast<UIntroHUD>(CreateWidget(GetWorld(), IntroHUDWidgetClass));
 		if (IntroHUDWidget)
@@ -85,5 +85,5 @@ void AThreeFPSGameMode::SetIntroUI()
 				PlayerController->SetInputMode(FInputModeUIOnly());
 			}
 		}
-	}
+	}*/
 }
