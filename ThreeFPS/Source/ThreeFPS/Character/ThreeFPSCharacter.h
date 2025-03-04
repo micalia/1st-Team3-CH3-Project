@@ -98,6 +98,7 @@ class AThreeFPSCharacter : public ACharacter
 	TSubclassOf<UUserWidget> InteractWidgetClass;
 	UPROPERTY()
 	UUserWidget* InteractWidget;
+	UUserWidget* MissionWidget;
 
 	// 아이템 베이스
 	UPROPERTY(EditDefaultsOnly)
