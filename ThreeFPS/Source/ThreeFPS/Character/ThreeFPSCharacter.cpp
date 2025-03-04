@@ -90,6 +90,10 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 
 	//발사 변수
 	bIsFiring=false;
+
+	/* 장애물 회피를 위한 중력 조정 - 설빈 추가*/
+	GetCharacterMovement()->JumpZVelocity = 1350.f;
+	GetCharacterMovement()->GravityScale = 4.f;
 }
 
 // Input
