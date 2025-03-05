@@ -18,7 +18,6 @@
 #include "MovieSceneTracksComponentTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "Engine/LocalPlayer.h"
-#include "ViewportToolbar/UnrealEdViewportToolbar.h"
 #include "Weapon/EGunType.h"
 #include "Weapon/Rifle.h"
 #include <Item/ItemBase.h>
