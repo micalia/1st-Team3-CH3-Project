@@ -57,6 +57,7 @@ void UThreeFPSUIComponent::UpdateCrossHair(float DeltaTime)
 		FVector Velocity = PlayerCharacter->GetVelocity();
 		float Speed = Velocity.Size();
 		bool IsJumping = CharacterMovement->IsFalling();
+		bool bIsFiring = PlayerCharacter->GetIsFiring();
 		
 		if (Speed == 0 && AimSize == 0)return; 
     
@@ -65,7 +66,11 @@ void UThreeFPSUIComponent::UpdateCrossHair(float DeltaTime)
 		}
 		else if (PlayerCharacter->GetIsAiming())
 		{
-			AimSize -= 2000.f * DeltaTime;
+			AimSize -= 200.f * DeltaTime;
+			if (bIsFiring)
+			{
+				AimSize += 400.f * DeltaTime;
+			}
 		}
 		else {
 			if (Speed > 100)
@@ -75,6 +80,10 @@ void UThreeFPSUIComponent::UpdateCrossHair(float DeltaTime)
 			else if (Speed > 0)
 			{
 				AimSize -= FMath::Clamp(Speed * DeltaTime * 50, 0.0f, AimSize);
+			}
+			else if (bIsFiring)
+			{
+				AimSize += 100.f * DeltaTime;
 			}
 			else
 			{

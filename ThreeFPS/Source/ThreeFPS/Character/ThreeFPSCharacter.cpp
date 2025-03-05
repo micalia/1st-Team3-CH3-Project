@@ -81,6 +81,7 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	bIsStaminaEmpty = false;
 	StaminaConsumeRate = 0.5f;
 	StaminaRegenRate = 0.3f;
+	
 	// 돌연변이
 	MaxMutation = 200.f;
 	MutationRate = 1.f;
@@ -124,8 +125,8 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			if (PlayerController->LookAction){EnhancedInputComponent->BindAction(PlayerController->LookAction,ETriggerEvent::Triggered,this, &AThreeFPSCharacter::Look);}
 			if (PlayerController->JumpAction)
 			{
-				EnhancedInputComponent->BindAction(PlayerController->JumpAction,ETriggerEvent::Started,this, &ACharacter::Jump);
-				EnhancedInputComponent->BindAction(PlayerController->JumpAction,ETriggerEvent::Completed,this, &ACharacter::StopJumping);
+				EnhancedInputComponent->BindAction(PlayerController->JumpAction,ETriggerEvent::Triggered,this, &AThreeFPSCharacter::Jump);
+				EnhancedInputComponent->BindAction(PlayerController->JumpAction,ETriggerEvent::Completed,this, &AThreeFPSCharacter::StopJumping);
 			}
 			if (PlayerController->CrouchAction)
 			{
@@ -134,12 +135,12 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			}
 			if (PlayerController->SprintAction)
 			{
-				EnhancedInputComponent->BindAction(PlayerController->SprintAction,ETriggerEvent::Started,this, &AThreeFPSCharacter::StartSprint);
+				EnhancedInputComponent->BindAction(PlayerController->SprintAction,ETriggerEvent::Triggered,this, &AThreeFPSCharacter::StartSprint);
 				EnhancedInputComponent->BindAction(PlayerController->SprintAction,ETriggerEvent::Completed,this, &AThreeFPSCharacter::StopSprint);
 			}
 			if (PlayerController->AimAction)
 			{
-				EnhancedInputComponent->BindAction(PlayerController->AimAction,ETriggerEvent::Started, this, &AThreeFPSCharacter::StartAim);
+				EnhancedInputComponent->BindAction(PlayerController->AimAction,ETriggerEvent::Triggered, this, &AThreeFPSCharacter::StartAim);
 				EnhancedInputComponent->BindAction(PlayerController->AimAction,ETriggerEvent::Completed, this, &AThreeFPSCharacter::StopAim);
 			}
 			if (PlayerController->FireAction)
@@ -181,6 +182,7 @@ void AThreeFPSCharacter::GameStart()
 	}
 	
 	UIComponent->GameStart();
+	bIsDead = false;
 	
 	//무기 인벤에 추가
 	if (RifleClass)
@@ -190,6 +192,8 @@ void AThreeFPSCharacter::GameStart()
 			WeaponInventory->AddWeapon(EGunType::Rifle, Rifle);
 		}
 	}
+	
+	//라이플 장착
 	EquipRifle();
 	
 	//스프링암 타임라인
@@ -203,7 +207,7 @@ void AThreeFPSCharacter::GameStart()
 	//체력 UI업데이트
 	UpdateHP();
 	//스테미너 업데이트 타이머
-	GetWorldTimerManager().SetTimer(UpdateStaminaTimer, this, &AThreeFPSCharacter::UpdateStamina, 0.01f, true);
+	GetWorldTimerManager().SetTimer(UpdateStaminaTimer, this, &AThreeFPSCharacter::UpdateStamina, 0.1f, true);
 	GetWorldTimerManager().SetTimer(UpdateMutationTimer, this, &AThreeFPSCharacter::UpdateMutation, 1.f, true);
 	//탄약 Text블록
 	UpdateAmmo();
@@ -252,17 +256,15 @@ float AThreeFPSCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 	}
 	if (CurrentHealth <= 0.f)
 	{
-		if (DieMontage)
-		{
-			PlayAnimMontage(DieMontage);
-		}
-		GetWorldTimerManager().SetTimer(DiedTimer, this, &AThreeFPSCharacter::Die, 2.0f, false);
+		Die();
 	}
 	return ActualDamage;
 }
-//사망 시 UI
+
+//사망 시 플레이 몽타주 함수
 void AThreeFPSCharacter::Die()
 {
+	bIsDead = true;
 	if (HUDInstance)
 	{
 		HUDInstance->SetVisibility(ESlateVisibility::Collapsed);
@@ -271,16 +273,23 @@ void AThreeFPSCharacter::Die()
 	{
 		UIComponent->GameOver();
 	}
+	if (AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetController()))
+	{
+		PlayerController->bShowMouseCursor = true;
+		PlayerController->SetInputMode(FInputModeUIOnly());
+	}
+	GetWorldTimerManager().SetTimer(DiedTimer, this, &AThreeFPSCharacter::GameOver, 2.0f, false);
+}
+
+void AThreeFPSCharacter::GameOver()
+{
 	if (GameOverHUDClass)
 	{
 		if (AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetController()))
-		{	
+		{
 			GameOverHUDInstance = CreateWidget<UOnDiedWidget>(PlayerController,GameOverHUDClass);
 			GameOverHUDInstance->AddToViewport(6);
 			GameOverHUDInstance->SetVisibility(ESlateVisibility::Visible);
-			PlayerController->bShowMouseCursor = true;
-			PlayerController->SetInputMode(FInputModeUIOnly());
-			PlayerController->Pause();
 		}
 	}
 }
@@ -337,11 +346,7 @@ void AThreeFPSCharacter::UpdateMutation()
 	if (CurrentMutation >= MaxMutation)
 	{
 		StopMutation();
-		if (DieMontage)
-		{
-			PlayAnimMontage(DieMontage);
-		}
-		GetWorldTimerManager().SetTimer(DiedTimer, this, &AThreeFPSCharacter::Die, 3.0f, false);
+		Die();
 	}
 }
 
@@ -376,6 +381,7 @@ void AThreeFPSCharacter::Look(const FInputActionValue& Value)
 
 void AThreeFPSCharacter::StartSprint()
 {
+	if (bIsStaminaEmpty) return;
 	if (bShouldMove && !GetCharacterMovement()->IsFalling() && !bIsFiring && !bIsAiming)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
@@ -410,6 +416,18 @@ void AThreeFPSCharacter::StopAim()
 {
 	bIsAiming = false;
 	GetCharacterMovement()->MaxWalkSpeed = OriginSpeed;
+}
+
+void AThreeFPSCharacter::Jump()
+{
+	Super::Jump();
+	bIsJumping = true;
+}
+
+void AThreeFPSCharacter::StopJumping()
+{
+	Super::StopJumping();
+	bIsJumping = false;
 }
 
 // void AThreeFPSCharacter::UpdateAimProgress(float Value)

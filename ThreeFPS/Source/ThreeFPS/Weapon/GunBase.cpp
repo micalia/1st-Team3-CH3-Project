@@ -108,9 +108,13 @@ void AGunBase::Fire()
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 	QueryParams.AddIgnoredActor(GetOwner());
-
-	if (bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult,MuzzleLocation,TraceEnd,ECC_Pawn, QueryParams))
+	
+	if (bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult,MuzzleLocation, TraceEnd,ECC_Pawn, QueryParams))
 	{
+		FVector SurfaceNormal = HitResult.Normal;
+		FRotator Rotator = SurfaceNormal.Rotation();
+		FVector EffectScale = FVector(1.2f, 1.2f, 1.2f);
+		
 		TraceEnd = HitResult.ImpactPoint;
 		AActor* HitActor = HitResult.GetActor();
 		if (HitActor->ActorHasTag("Zombie"))
@@ -124,13 +128,22 @@ void AGunBase::Fire()
 		/*튜토리얼 과녁 쓰러지는 이벤트 - 설빈 추가*/
 		else if (auto Target = Cast<ATutorialTarget>(HitActor)) {
 			Target->OnHitTarget();
+			if (WallParticle)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WallParticle, TraceEnd, Rotator, EffectScale);
+			}
 		}
 		else if (HitActor)
 		{
 			UGameplayStatics::ApplyDamage(HitResult.GetActor(),Damage, PlayerController, GetOwner(),  UDamageType::StaticClass());
 			//디버깅용 메세지
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("액터 : %s"), *HitActor->GetName()));
+			if (WallParticle)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WallParticle, TraceEnd, Rotator, EffectScale);
+			}
 		}
+			
 	}
 	DrawDebugLine(GetWorld(), MuzzleLocation, TraceEnd, FColor::Red, false, 1.f,0,2.f);
 	CurrentAmmo--;

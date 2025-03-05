@@ -150,6 +150,9 @@ protected:
 	
 	//사망
 	void Die();
+	void GameOver();
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsDead;
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
@@ -162,7 +165,8 @@ protected:
 	//조준 함수
 	void StartAim();
 	void StopAim();
-	
+	virtual void Jump() override;
+	virtual void StopJumping() override;
 	// void UpdateAimProgress(float Value);
 	
 	//발사 함수
@@ -202,10 +206,12 @@ public:
 	// 아이템 사용 함수
 	void IncreaseHealth(int32 Amount);
 	void DecreaseMutation(int32 Amount);
-
+	
 	//Getter 함수
 	FORCEINLINE EPlayerMovementState GetCurrentMovementState() const {return CurrentMovementState;}
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
+	FORCEINLINE bool GetIsFiring() const { return bIsFiring; }
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
@@ -223,9 +229,9 @@ public:
 	//몽타주
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Animation")
 	UAnimMontage* HitMontage;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Animation")
-	UAnimMontage* DieMontage;
-	
+
+	bool bIsJumping;
+
 };
 
 

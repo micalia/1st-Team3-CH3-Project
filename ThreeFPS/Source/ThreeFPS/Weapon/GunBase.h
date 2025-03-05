@@ -69,6 +69,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "GunEffect")
 	UParticleSystem* FireParticle;
 	UPROPERTY(EditAnywhere, Category = "GunEffect")
+	UParticleSystem* WallParticle;
+	UPROPERTY(EditAnywhere, Category = "GunEffect")
 	UAnimMontage* FireMontage;
 	UPROPERTY(EditAnywhere, Category = "GunEffect")
 	UAnimMontage* ReloadMontage;
