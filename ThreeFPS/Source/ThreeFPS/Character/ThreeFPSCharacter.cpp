@@ -99,6 +99,18 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	GetCharacterMovement()->GravityScale = 4.f;
 }
 
+void AThreeFPSCharacter::IncreaseHealth(int32 Amount)
+{ 
+	CurrentHealth = FMath::Clamp(CurrentHealth + Amount, 0.f, MaxHealth);
+	UpdateHP();
+}
+
+void AThreeFPSCharacter::DecreaseMutation(int32 Amount)
+{
+	CurrentMutation = FMath::Clamp(CurrentMutation - Amount, 0.f, MaxMutation);
+	UpdateMutation();
+}
+
 // Input
 void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {

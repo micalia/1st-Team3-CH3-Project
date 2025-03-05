@@ -1,12 +1,10 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿#include "Item/PotionItem.h"
+#include "Character/ThreeFPSCharacter.h"
 
-
-#include "Item/PotionItem.h"
-#include "PotionItem.h"
-
-void APotionItem::Use()
+void APotionItem::Use(AThreeFPSCharacter* player)
 {
-	Super::Use();
+	Super::Use(player);
 
-	UE_LOG(LogTemp, Warning, TEXT("포션 아이템 사용!!!"));
+	UE_LOG(LogTemp, Warning, TEXT("포션 사용! 플레이어 체력 30 증가"));
+	player->IncreaseHealth(30);
 }
