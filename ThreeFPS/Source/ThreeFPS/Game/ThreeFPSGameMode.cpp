@@ -117,5 +117,38 @@ void AThreeFPSGameMode::SecondLevelLoaded()
 	{
 		UE_LOG(LogTemp, Error, TEXT("LevelManager nullptr"));
 	}
-	LevelManager->UnLoadLevel(ELevelType::Tutorial, false);
+	LevelManager->UnLoadLevel(ELevelType::Tutorial, true);
+}
+
+void AThreeFPSGameMode::LoadingBossChapter()
+{
+	ULevelManager* LevelManager = GetGameInstance()->GetSubsystem<ULevelManager>();
+	if (!IsValid(LevelManager))
+	{
+		UE_LOG(LogTemp, Error, TEXT("LevelManager nullptr"));
+	}
+	if (IsValid(LevelManager->LoadingWidget))
+	{
+		LevelManager->LoadingWidget->RemoveFromParent();
+		LevelManager->LoadingWidget = nullptr;
+	}
+
+	if (IsValid(LoadingWidgetClass))
+	{
+		LevelManager->LoadingWidget = Cast<ULoadingUIUserWidget>(CreateWidget(GetWorld(), LoadingWidgetClass));
+		FOnLevelLoadedDelegate OnBossLevelLoadedDelegate;
+		OnBossLevelLoadedDelegate.BindDynamic(this, &AThreeFPSGameMode::BossLevelLoaded);
+		LevelManager->LoadLevel(ELevelType::BossBattle, OnBossLevelLoadedDelegate);
+	}
+}
+
+void AThreeFPSGameMode::BossLevelLoaded()
+{
+	ULevelManager* LevelManager = GetGameInstance()->GetSubsystem<ULevelManager>();
+	if (!IsValid(LevelManager))
+	{
+		UE_LOG(LogTemp, Error, TEXT("LevelManager nullptr"));
+	}
+	LevelManager->UnLoadLevel(ELevelType::FirstChapter, false);
+	LevelManager->UnLoadLevel(ELevelType::SecondChapter, true);
 }

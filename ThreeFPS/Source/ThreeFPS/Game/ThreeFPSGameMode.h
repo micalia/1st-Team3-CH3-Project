@@ -18,6 +18,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void LoadingSecondChapter();
+	UFUNCTION(BlueprintCallable)
+	void LoadingBossChapter();
 
 private:
 	UPROPERTY(EditDefaultsOnly)
@@ -33,6 +35,8 @@ private:
 	void SetIntroUI();
 	UFUNCTION()
 	void SecondLevelLoaded();
+	UFUNCTION()
+	void BossLevelLoaded();
 };
 
 
