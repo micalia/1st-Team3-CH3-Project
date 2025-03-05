@@ -22,7 +22,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spawning")
 	TSubclassOf<ABaseMonster> MonsterClass;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spawning")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
 	TArray<ABaseMonster*> MonsterArr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
@@ -43,7 +43,7 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 private:
 	AMonsterTriggerBox* CurLevelTrigger;
-	
+	int TempCurlevel;
 public:	
 	//virtual void Tick(float DeltaTime) override;
 
