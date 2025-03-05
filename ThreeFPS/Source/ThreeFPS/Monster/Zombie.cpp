@@ -70,6 +70,9 @@ AZombie::AZombie()
     HairStaticMeshComp->SetRelativeLocation(FVector(-164.7f, 0.f, 0.f));
     HairStaticMeshComp->SetRelativeScale3D(FVector(1.f, 1.f, -1.f));
 
+    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+    AIControllerClass = AMonsterAIController::StaticClass();
+
     FullHp =100;
     CurrHp = FullHp;
     ImpulseStrength = 1.f;
@@ -85,7 +88,7 @@ void AZombie::BeginPlay()
 
     VariousJombie();//Random Custom 
 
-    GetCharacterMovement()->MaxWalkSpeed = FMath::RandRange(50.f,200.f);
+   // GetCharacterMovement()->MaxWalkSpeed = FMath::RandRange(50.f,200.f);
 
 
    // DecalMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("MaterialInstanceConstant'/Game/KSW/Resouces/Decals/Splashers/Decal_BB_Inst.Decal_BB_Inst'"));
@@ -364,8 +367,6 @@ void AZombie::PauseMoveForDamage(float PauseTime,FHitResult HitResult)
                 {
                     BT->ResumeLogic(TEXT("TakeDamage"));
                     MAIController->ChaseAfterDamage();
-                  //  float ChaseSpeed = FMath::RandRange(220.f, 320.f);
-                  //  GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed < GetCharacterMovement()->MaxWalkSpeed ? GetCharacterMovement()->MaxWalkSpeed+20.f : ChaseSpeed;
                 }
                 }), PauseTime + 0.f, false
         );
