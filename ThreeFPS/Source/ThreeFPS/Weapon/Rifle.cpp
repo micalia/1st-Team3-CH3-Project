@@ -3,7 +3,6 @@
 
 #include "Weapon/Rifle.h"
 #include "EGunType.h"
-#include "SkeletonTreeBuilder.h"
 
 ARifle::ARifle()
 {

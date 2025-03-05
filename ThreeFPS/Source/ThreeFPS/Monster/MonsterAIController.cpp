@@ -44,7 +44,11 @@ void AMonsterAIController::RandomSelectPatrolState()
         }
         else 
         {
-            PatrolType = (EPATROLTYPE)FMath::RandRange(1,3);
+            if (0 < FMath::RandRange(0, 2)) // 돌격형 몬스터 생성확률을 높임.
+                PatrolType = EPATROLTYPE::Chase;
+            else
+                PatrolType = (EPATROLTYPE)FMath::RandRange(1, 3);
+
             if (EPATROLTYPE::Chase == PatrolType)
                 ChargingState();
         }
@@ -64,41 +68,45 @@ void AMonsterAIController::ChaseAfterDamage()
 }
 void AMonsterAIController::ChargingState(float SightRadius, float LoseSightRadius, float PeripheralVisionAngleDegrees)
 {
-    bool bMoveSpeed = false;
+    bool bFastMoveSpeed = false;
 
     //돌격상태는 시아센서의 값을 최대치로 올려서 플레이어를 무조건 찾아가게 만들기.
     ABaseMonster* Zombie = Cast<ABaseMonster>(GetPawn());
-    UAIPerceptionComponent* PerceptionComp = Zombie->FindComponentByClass<UAIPerceptionComponent>();
-    if (PerceptionComp)
-    {
-        UAISenseConfig_Sight* SightConfig = PerceptionComp->GetSenseConfig<UAISenseConfig_Sight>();
-        if (SightConfig)
-        {
-            if (SightConfig->SightRadius < SightRadius)
-                bMoveSpeed = true;
-
-            SightConfig->SightRadius = SightRadius;
-            SightConfig->LoseSightRadius = LoseSightRadius;
-            SightConfig->PeripheralVisionAngleDegrees = PeripheralVisionAngleDegrees;
-
-            // 설정이 바뀌었으므로 적용
-            PerceptionComp->RequestStimuliListenerUpdate();
-            UE_LOG(LogTemp, Warning, TEXT("Success Find! UAIPerceptionComponent!"));
-        }
-    }
-    else
-        UE_LOG(LogTemp, Warning, TEXT("Not Find ! UAIPerceptionComponent!"));
-
-    float ChaseSpeed = 0.f;
     if (Zombie)
     {
-        ChaseSpeed = FMath::RandRange(220.f, 320.f);
-        Zombie->GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed < Zombie->GetCharacterMovement()->MaxWalkSpeed ? Zombie->GetCharacterMovement()->MaxWalkSpeed + 20.f : ChaseSpeed;
-    }
-    else
-    {
-        ChaseSpeed = FMath::RandRange(90.f, 170.f);
-        Zombie->GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed;
+        UAIPerceptionComponent* PerceptionComp = Zombie->FindComponentByClass<UAIPerceptionComponent>();
+        if (PerceptionComp)
+        {
+            UAISenseConfig_Sight* SightConfig = PerceptionComp->GetSenseConfig<UAISenseConfig_Sight>();
+            if (SightConfig)
+            {
+                if (SightConfig->SightRadius < SightRadius)//시야값이 높은값이 들어오는건 돌격형 몬스터.
+                    bFastMoveSpeed = true;
+
+                SightConfig->SightRadius = SightRadius;
+                SightConfig->LoseSightRadius = LoseSightRadius;
+                SightConfig->PeripheralVisionAngleDegrees = PeripheralVisionAngleDegrees;
+
+                // 설정이 바뀌었으므로 적용
+                PerceptionComp->RequestStimuliListenerUpdate();
+                UE_LOG(LogTemp, Warning, TEXT("Success Find! UAIPerceptionComponent!"));
+            }
+        }
+        else
+            UE_LOG(LogTemp, Warning, TEXT("Not Find ! UAIPerceptionComponent!"));
+
+        float ChaseSpeed = 0.f;
+        if (bFastMoveSpeed)
+        {
+            ChaseSpeed = FMath::RandRange(250.f, 350.f);
+            UE_LOG(LogTemp, Warning, TEXT("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!ChaseSpeed  800.f!"));
+            Zombie->GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed;
+        }
+        else
+        {
+            ChaseSpeed = FMath::RandRange(100.f, 170.f);
+            Zombie->GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed;
+        }
     }
 }
 
@@ -126,7 +134,11 @@ void AMonsterAIController::UpdatePatrolState2(EPATROLTYPE type)
             }
             else 
             {
-                PatrolType = (EPATROLTYPE)FMath::RandRange(1, 3);
+                if (0 < FMath::RandRange(0, 2)) // 돌격형 몬스터 생성확률을 높임.
+                    PatrolType = EPATROLTYPE::Chase;
+                else 
+                    PatrolType = (EPATROLTYPE)FMath::RandRange(1, 3);
+
                 if (EPATROLTYPE::Chase == PatrolType)
                     ChargingState();
             }
