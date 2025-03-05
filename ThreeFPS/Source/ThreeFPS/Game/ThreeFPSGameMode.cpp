@@ -149,6 +149,4 @@ void AThreeFPSGameMode::BossLevelLoaded()
 	{
 		UE_LOG(LogTemp, Error, TEXT("LevelManager nullptr"));
 	}
-	LevelManager->UnLoadLevel(ELevelType::FirstChapter, false);
-	LevelManager->UnLoadLevel(ELevelType::SecondChapter, true);
 }
