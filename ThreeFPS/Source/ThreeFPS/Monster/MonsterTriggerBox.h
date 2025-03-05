@@ -4,8 +4,10 @@
 
 #include "Engine/TriggerBox.h"
 #include "Components/BoxComponent.h"
+#include "APatrolPath.h"
 #include "MonsterTriggerBox.generated.h"
 
+class ABaseMonster;
 UCLASS()
 class THREEFPS_API AMonsterTriggerBox : public ATriggerBox
 {
@@ -21,6 +23,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Trigger")
 	void SetIdx(int idx);
 
+	UFUNCTION(BlueprintCallable, Category = "Trigger")
+	ABaseMonster* CreateMonster(TSubclassOf<ABaseMonster> MonsterClassType);
+
 	UFUNCTION()
 	void OnOverlapBegin(AActor* OverlappedActor, AActor* OtherActor);
 
@@ -29,10 +34,19 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
+	AAPatrolPath* PatrolPath;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Trigger")
 	int32 Index = 0;
 
-	// Called when the game starts or when spawned
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Trigger||Spawning")
+	TArray<ABaseMonster*> MonsterArr;
+
+	
 	virtual void BeginPlay() override;
+
+
+
 private:	
 	
 	bool bSpawned = false;

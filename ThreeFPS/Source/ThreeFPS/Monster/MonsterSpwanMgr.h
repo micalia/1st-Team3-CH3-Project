@@ -22,15 +22,29 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spawning")
 	TSubclassOf<ABaseMonster> MonsterClass;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spawning")
+	TArray<ABaseMonster*> MonsterArr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
+	int32 CreateMonsterCountMax;
+
+	FTimerHandle SpawnMonsterTimerHandle;
+
 	UFUNCTION()
 	void OnOverlapBeginTriggerBox(AActor* OverlappedActor, AActor* OtherActor);
 	UFUNCTION()
 	void OnOverlapEndTriggerBox(AActor* OerlappedActor, AActor* OtherActor);
 
+	void SpawnMonsterTimmer();
+
 	void SpawnMonster(int32 idx);
+	void DetroryMonster();
 protected:
 	virtual void BeginPlay() override;
-
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+private:
+	AMonsterTriggerBox* CurLevelTrigger;
+	
 public:	
 	//virtual void Tick(float DeltaTime) override;
 

@@ -88,7 +88,7 @@ void AZombie::BeginPlay()
 
     VariousJombie();//Random Custom 
 
-    GetCharacterMovement()->MaxWalkSpeed = FMath::RandRange(50.f,200.f);
+   // GetCharacterMovement()->MaxWalkSpeed = FMath::RandRange(50.f,200.f);
 
 
    // DecalMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("MaterialInstanceConstant'/Game/KSW/Resouces/Decals/Splashers/Decal_BB_Inst.Decal_BB_Inst'"));
@@ -367,8 +367,6 @@ void AZombie::PauseMoveForDamage(float PauseTime,FHitResult HitResult)
                 {
                     BT->ResumeLogic(TEXT("TakeDamage"));
                     MAIController->ChaseAfterDamage();
-                  //  float ChaseSpeed = FMath::RandRange(220.f, 320.f);
-                  //  GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed < GetCharacterMovement()->MaxWalkSpeed ? GetCharacterMovement()->MaxWalkSpeed+20.f : ChaseSpeed;
                 }
                 }), PauseTime + 0.f, false
         );
