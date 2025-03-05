@@ -1,7 +1,5 @@
 ﻿#include "Item/PotionItem.h"
-#include "Game/ThreeFPSPlayerController.h"
 #include "Character/ThreeFPSCharacter.h"
-#include "Kismet/GameplayStatics.h"
 
 void APotionItem::Use(AThreeFPSCharacter* player)
 {
