@@ -24,6 +24,12 @@ UZombieAnimInstance::UZombieAnimInstance()
 
 float UZombieAnimInstance::AnimationPlay(EANIM_MONTAGE Ani)
 {
+	if (IsAnyMontagePlaying())
+	{
+		StopAllMontages(0.0f);
+		//UE_LOG(LogTemp, Warning, TEXT("모든 몽타주강제 중단"));
+	}
+
 	float AniLength = 0.f;
 	if (EANIM_MONTAGE::ATTACK == Ani)
 	{

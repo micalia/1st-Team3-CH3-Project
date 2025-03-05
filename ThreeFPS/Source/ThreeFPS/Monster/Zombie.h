@@ -60,8 +60,8 @@ protected:
 	UMaterialInterface* DecalMaterial;
 
 
-	FTimerHandle GameStateHandle;
 	FTimerHandle DamageTimerHandler;
+	
 
 	bool bDetectionOverlapping = false;
 	bool bEnableDetection = false;

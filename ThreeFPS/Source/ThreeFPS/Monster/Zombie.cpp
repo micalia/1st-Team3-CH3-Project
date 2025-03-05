@@ -73,7 +73,7 @@ AZombie::AZombie()
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
     AIControllerClass = AMonsterAIController::StaticClass();
 
-    FullHp =100;
+    FullHp =60;
     CurrHp = FullHp;
     ImpulseStrength = 1.f;
 }
@@ -160,12 +160,12 @@ void AZombie::EnableDetection()
     Super::EnableDetection(); // Show Debug Line Sphere
    // UE_LOG(LogTemp, Warning, TEXT("EnableDetection()!!!"));
 
-    //if (DetectionSphere && bDebugDetectionSphere)
-    //{
-    //    DetectionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-    //    DrawDebugSphere(GetWorld(), DetectionSphere->GetComponentLocation(),
-    //    DetectionSphere->GetScaledSphereRadius(), 12, FColor::Red, false, 3.f, 0, 2.f);
-    //}
+    if (DetectionSphere && bDebugDetectionSphere)
+    {
+        DetectionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+       // DrawDebugSphere(GetWorld(), DetectionSphere->GetComponentLocation(),
+      //  DetectionSphere->GetScaledSphereRadius(), 12, FColor::Red, false, 3.f, 0, 2.f);
+    }
 }
 
 void AZombie::DisableDetection()
@@ -213,7 +213,7 @@ void AZombie::Tick(float DeltaTime)
 
                 float  ReceiveApplyDamage = UGameplayStatics::ApplyDamage(TargetActor, Power,GetController(), this, UDamageType::StaticClass());
                   
-                UE_LOG(LogTemp, Warning, TEXT("ATT:%f"),Power);
+               // UE_LOG(LogTemp, Warning, TEXT("ATT:%f"),Power);
 
                 
                 /* FPointDamageEvent PointDamageEvent;
@@ -300,9 +300,9 @@ void AZombie::Die()
     FTimerHandle TimerHandle;
     GetWorld()->GetTimerManager().SetTimer(
         TimerHandle, ([this, animInst, aniLength]() {
-            animInst->Montage_Pause(animInst->DieMontage);
-
-            UE_LOG(LogTemp, Warning, TEXT("Montage_Pause! : %f"), aniLength);
+            if (IsValid(animInst))
+                 animInst->Montage_Pause(animInst->DieMontage);
+           // UE_LOG(LogTemp, Warning, TEXT("Montage_Pause! : %f"), aniLength);
             // animInst->Montage_SetPlayRate(animInst->DieMontage, 0.0f);
             }), aniLength, false);
 
@@ -310,7 +310,8 @@ void AZombie::Die()
     GetWorld()->GetTimerManager().SetTimer(
         TimerHandle2, ([this]() {
             UE_LOG(LogTemp, Warning, TEXT("Destroy !!!"));
-            Destroy();
+            if(!IsPendingKillPending())
+                 Destroy();
             }), 10.f, false);
   
 }
@@ -324,7 +325,8 @@ void AZombie::PauseMoveForDamage(float PauseTime,FHitResult HitResult)
         if (IsValid(BT))
         {
             BT->PauseLogic(TEXT("TakeDamage"));
-            MAIController->StopMovement();
+            if (IsValid(MAIController))
+                 MAIController->StopMovement();
         }
     }
 
@@ -332,7 +334,7 @@ void AZombie::PauseMoveForDamage(float PauseTime,FHitResult HitResult)
     FName HitBoneName = HitResult.BoneName;
     if ("pelvis" == HitBoneName  || "None" == HitBoneName )//
         HitBoneName = FName("spine_02");
-   
+    UE_LOG(LogTemp, Log, TEXT("HitBoneName : %s"), *HitBoneName.ToString());
     //FVector ImpulseDirection = HitResult.ImpactNormal * -1.0f;
     //FVector Impulse = ImpulseDirection * 5000.f;//ImpulseStrength;
     //UE_LOG(LogTemp, Log, TEXT("Impulse: %f / %f / %f"), Impulse.X, Impulse.Y, Impulse.Z);
@@ -365,8 +367,12 @@ void AZombie::PauseMoveForDamage(float PauseTime,FHitResult HitResult)
                 //GetMesh()->ResetAllBodiesSimulatePhysics();
                 if (CurrHp > 0)
                 {
-                    BT->ResumeLogic(TEXT("TakeDamage"));
-                    MAIController->ChaseAfterDamage();
+                    if (IsValid(BT))
+                    {
+                        BT->ResumeLogic(TEXT("TakeDamage"));
+                        if(IsValid(MAIController))
+                                MAIController->ChaseAfterDamage();
+                    }
                 }
                 }), PauseTime + 0.f, false
         );
@@ -555,4 +561,5 @@ void AZombie::ApplyRagdoll(FVector HitDirection)
 void AZombie::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     Super::EndPlay(EndPlayReason);
+    GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 }
