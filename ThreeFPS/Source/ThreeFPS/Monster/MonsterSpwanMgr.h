@@ -25,8 +25,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
 	TArray<ABaseMonster*> MonsterArr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
-	int32 CreateMonsterCountMax;
+
 
 	FTimerHandle SpawnMonsterTimerHandle;
 
