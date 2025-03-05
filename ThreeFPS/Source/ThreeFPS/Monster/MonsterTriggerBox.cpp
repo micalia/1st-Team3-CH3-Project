@@ -69,6 +69,7 @@ ABaseMonster* AMonsterTriggerBox::CreateMonsterOfTargetPos(TSubclassOf<ABaseMons
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	ABaseMonster* SpawnedMonster = GetWorld()->SpawnActor<ABaseMonster>(MonsterClassType, SpwanPos, SpawnRotation, SpawnParams);
+	Cast<AZombie>(SpawnedMonster)->SetPatrolType(EPATROLTYPE::Random);
 	return SpawnedMonster;
 }
 int32 AMonsterTriggerBox::Num()
