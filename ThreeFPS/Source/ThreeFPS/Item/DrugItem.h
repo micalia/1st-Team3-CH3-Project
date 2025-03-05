@@ -2,12 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "Item/ItemBase.h"
-#include "PotionItem.generated.h"
+#include "DrugItem.generated.h"
 
 class AThreeFPSCharacter;
 
 UCLASS()
-class THREEFPS_API APotionItem : public AItemBase
+class THREEFPS_API ADrugItem : public AItemBase
 {
 	GENERATED_BODY()
 	

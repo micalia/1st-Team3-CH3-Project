@@ -56,7 +56,7 @@ void ULevelManager::LoadLevel(ELevelType LevelType, FOnLevelLoadedDelegate& OnLo
 	LatentInfo.ExecutionFunction = "OnLevelLoadCompleted"; // 콜백 메서드 이름
 	LatentInfo.Linkage = 0;
 	LatentInfo.UUID = FMath::Rand();
-
+	CurrentLevel = LevelType;
 	UGameplayStatics::LoadStreamLevel(World, FName(*LevelName), true, true, LatentInfo);
 }
 
@@ -111,4 +111,9 @@ void ULevelManager::PlayFadeOut()
 	{
 		OnLevelLoaded.Execute();
 	}
+}
+
+ELevelType ULevelManager::GetCurrentLevelType()
+{
+	return CurrentLevel;
 }

@@ -35,6 +35,8 @@ public:
 	UFUNCTION()
 	void PlayFadeOut();
 
+	ELevelType GetCurrentLevelType();
+
 	UPROPERTY()
 	UUserWidget* LoadingWidget;
 private:
@@ -46,4 +48,6 @@ private:
 
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	class UWidgetAnimation* FadeIn;
+
+	ELevelType CurrentLevel;
 };
