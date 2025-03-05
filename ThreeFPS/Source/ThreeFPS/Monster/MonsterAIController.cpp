@@ -53,7 +53,7 @@ void AMonsterAIController::RandomSelectPatrolState()
                 ChargingState();
         }
         BlackBoard->SetValueAsEnum(TEXT("PatrolState"), static_cast<uint8>(PatrolType));
-        UE_LOG(LogTemp, Warning, TEXT("PatrolState :%s"), *(StaticEnum<EPATROLTYPE>()->GetNameStringByIndex(static_cast<int32>(PatrolType))));
+       // UE_LOG(LogTemp, Warning, TEXT("PatrolState :%s"), *(StaticEnum<EPATROLTYPE>()->GetNameStringByIndex(static_cast<int32>(PatrolType))));
     }
 }
 void AMonsterAIController::ChaseAfterDamage()
@@ -89,7 +89,7 @@ void AMonsterAIController::ChargingState(float SightRadius, float LoseSightRadiu
 
                 // 설정이 바뀌었으므로 적용
                 PerceptionComp->RequestStimuliListenerUpdate();
-                UE_LOG(LogTemp, Warning, TEXT("Success Find! UAIPerceptionComponent!"));
+                //UE_LOG(LogTemp, Warning, TEXT("Success Find! UAIPerceptionComponent!"));
             }
         }
         else
@@ -99,7 +99,7 @@ void AMonsterAIController::ChargingState(float SightRadius, float LoseSightRadiu
         if (bFastMoveSpeed)
         {
             ChaseSpeed = FMath::RandRange(250.f, 350.f);
-            UE_LOG(LogTemp, Warning, TEXT("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!ChaseSpeed  800.f!"));
+            //UE_LOG(LogTemp, Warning, TEXT("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!ChaseSpeed  800.f!"));
             Zombie->GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed;
         }
         else
@@ -134,7 +134,7 @@ void AMonsterAIController::UpdatePatrolState2(EPATROLTYPE type)
             }
             else 
             {
-                if (0 < FMath::RandRange(0, 2)) // 돌격형 몬스터 생성확률을 높임.
+                if (0 < FMath::RandRange(1, 2)) // 돌격형 몬스터 생성확률을 높임.
                     PatrolType = EPATROLTYPE::Chase;
                 else 
                     PatrolType = (EPATROLTYPE)FMath::RandRange(1, 3);
@@ -147,7 +147,7 @@ void AMonsterAIController::UpdatePatrolState2(EPATROLTYPE type)
             ChargingState();
 
         BlackBoard->SetValueAsEnum(TEXT("PatrolState"), static_cast<uint8>(PatrolType));
-        UE_LOG(LogTemp, Warning, TEXT("PatrolState :%s"), *(StaticEnum<EPATROLTYPE>()->GetNameStringByIndex(static_cast<int32>(PatrolType))));
+        //UE_LOG(LogTemp, Warning, TEXT("PatrolState :%s"), *(StaticEnum<EPATROLTYPE>()->GetNameStringByIndex(static_cast<int32>(PatrolType))));
     }
 }
 

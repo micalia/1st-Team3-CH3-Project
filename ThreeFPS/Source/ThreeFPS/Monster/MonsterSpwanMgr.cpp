@@ -11,20 +11,27 @@ AMonsterSpwanMgr::AMonsterSpwanMgr()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	CreateMonsterCountMax = 20;
+	TempCurlevel = 0;
 }
 
 void AMonsterSpwanMgr::OnOverlapBeginTriggerBox(AActor* OverlappedActor, AActor* OtherActor)
 {
 	if(Cast<AThreeFPSCharacter>(OtherActor)) //if (OtherActor->ActorHasTag("Player"))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("OtherActor : %s"), *OtherActor->GetName());
 		AMonsterTriggerBox* Trigger = Cast<AMonsterTriggerBox>(OverlappedActor);
 		if (Trigger != CurLevelTrigger)
 		{
 			CurLevelTrigger = Trigger;
+			UE_LOG(LogTemp, Warning, TEXT("TempCurlevel = %d"), TempCurlevel);
 			
-			GetWorld()->GetTimerManager().ClearTimer(SpawnMonsterTimerHandle);
-			GetWorld()->GetTimerManager().SetTimer(SpawnMonsterTimerHandle, this, &AMonsterSpwanMgr::SpawnMonsterTimmer,3.f,true);
+			//CreateMonsterCountMax = 20;
+			
+			DetroryMonster();
 
+			GetWorld()->GetTimerManager().ClearTimer(SpawnMonsterTimerHandle);
+			GetWorld()->GetTimerManager().SetTimer(SpawnMonsterTimerHandle, this, &AMonsterSpwanMgr::SpawnMonsterTimmer, 3.f, true);
+			TempCurlevel++;
 		}
 		//UE_LOG(LogTemp, Warning, TEXT("OtherActor : %s"), *OtherActor->GetName());
 	}
@@ -35,9 +42,9 @@ void AMonsterSpwanMgr::SpawnMonsterTimmer()
 	if (Monster)
 		MonsterArr.Add(Monster);
 
-	CreateMonsterCountMax--;
-	if (0 >= CreateMonsterCountMax)
-		GetWorld()->GetTimerManager().ClearTimer(SpawnMonsterTimerHandle);
+	//CreateMonsterCountMax--;
+	//if (0 >= CreateMonsterCountMax)
+	//	GetWorld()->GetTimerManager().ClearTimer(SpawnMonsterTimerHandle);
 
 	//GetWorld()->GetTimerManager().SetTimer(
 	//	SpawnMonsterTimerHandle, ([this]() {
@@ -76,14 +83,14 @@ void AMonsterSpwanMgr::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 
 	if (SpawnMonsterTimerHandle.IsValid())
-	{
 		GetWorld()->GetTimerManager().ClearTimer(SpawnMonsterTimerHandle);
-	}
 	DetroryMonster();
 }
 
 void AMonsterSpwanMgr::DetroryMonster()
 {
+	if (TempCurlevel == 0)
+		return; //처음 시작할때(TempCurlevel== 0) 화면의 풍성함을 위해 배치된 수동으로 배치한 몬스터들이 MonsterArr에 들어있다. 두번째 Trigger에 도착했을때 지워버리자.
 	for (int32 i = MonsterArr.Num() - 1; i >= 0; --i)
 	{
 		ABaseMonster* Monster = MonsterArr[i];
