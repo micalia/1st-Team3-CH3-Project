@@ -105,9 +105,9 @@ void AThreeFPSCharacter::IncreaseHealth(int32 Amount)
 	UpdateHP();
 }
 
-void AThreeFPSCharacter::DecreaseMutationGauge(int32 Amount)
+void AThreeFPSCharacter::DecreaseMutation(int32 Amount)
 {
-	CurrentMutation = FMath::Clamp(CurrentMutation - Amount, 0.f, CurrentMutation);
+	CurrentMutation = FMath::Clamp(CurrentMutation - Amount, 0.f, MaxMutation);
 	UpdateMutation();
 }
 
