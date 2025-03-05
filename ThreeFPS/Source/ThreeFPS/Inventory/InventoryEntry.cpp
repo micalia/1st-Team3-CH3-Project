@@ -34,7 +34,7 @@ void UInventoryEntry::UseItem()
 	if (!ItemData.IsUsable) return;
 	if (AItemBase* ItemBase = Cast<AItemBase>(ItemData.Class->ClassDefaultObject))
 	{
-		ItemBase->Use();
+		ItemBase->Use(PlayerCharacter);
 	}
 	PlayerCharacter->Inventory.RemoveSingle(ItemData);
 	PlayerCharacter->InventoryWidget->RefreshInventory(PlayerCharacter->Inventory);

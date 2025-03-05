@@ -128,6 +128,8 @@ class AThreeFPSCharacter : public ACharacter
 	FVector InteractVectorEnd;
 	FHitResult InteractHitResult;
 	FTimerHandle ReloadTimer;
+
+	
 	
 protected:
 
@@ -195,6 +197,11 @@ public:
 	void UpdateAmmo();
 
 	void StopMutation();
+
+	// 아이템 사용 함수
+	void IncreaseHealth(int32 Amount);
+	void DecreaseMutationGauge(int32 Amount);
+
 	//Getter 함수
 	FORCEINLINE EPlayerMovementState GetCurrentMovementState() const {return CurrentMovementState;}
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
