@@ -37,7 +37,6 @@ public:
 
 	void SpawnMonsterTimmer();
 
-	void SpawnMonster(int32 idx);
 	void DetroryMonster();
 protected:
 	virtual void BeginPlay() override;

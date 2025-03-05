@@ -5,7 +5,7 @@
 #include "GameFramework/Character.h"
 #include "BaseMonster.h"
 #include "Zombie.h"
-//#include "ThreeFPSCharacter.h"
+#include "Character/ThreeFPSCharacter.h"
 
 AMonsterSpwanMgr::AMonsterSpwanMgr()
 {
@@ -15,7 +15,7 @@ AMonsterSpwanMgr::AMonsterSpwanMgr()
 
 void AMonsterSpwanMgr::OnOverlapBeginTriggerBox(AActor* OverlappedActor, AActor* OtherActor)
 {
-	if (OtherActor->ActorHasTag("Player"))
+	if(Cast<AThreeFPSCharacter>(OtherActor)) //if (OtherActor->ActorHasTag("Player"))
 	{
 		AMonsterTriggerBox* Trigger = Cast<AMonsterTriggerBox>(OverlappedActor);
 		if (Trigger != CurLevelTrigger)
@@ -25,9 +25,6 @@ void AMonsterSpwanMgr::OnOverlapBeginTriggerBox(AActor* OverlappedActor, AActor*
 			GetWorld()->GetTimerManager().ClearTimer(SpawnMonsterTimerHandle);
 			GetWorld()->GetTimerManager().SetTimer(SpawnMonsterTimerHandle, this, &AMonsterSpwanMgr::SpawnMonsterTimmer,3.f,true);
 
-			/*int32 idx = Trigger->GetIdx();
-			int32 SpwanPosIdx = idx >= MonsterTriggerBoxArr.Num() - 1 ? MonsterTriggerBoxArr.Num() - 1 : idx + 1;
-			SpawnMonster(Trigger->GetIdx());*/
 		}
 		//UE_LOG(LogTemp, Warning, TEXT("OtherActor : %s"), *OtherActor->GetName());
 	}
@@ -51,11 +48,7 @@ void AMonsterSpwanMgr::SpawnMonsterTimmer()
 }
 void AMonsterSpwanMgr::OnOverlapEndTriggerBox(AActor* OerlappedActor, AActor* OtherActor)
 {
-	ACharacter* Character = Cast<ACharacter>(OtherActor);
-	if (Character)
-	{
-	//	UE_LOG(LogTemp, Warning, TEXT("OtherActor : %s"), *Character->GetName());
-	}
+
 }
 
 void AMonsterSpwanMgr::BeginPlay()
@@ -88,30 +81,7 @@ void AMonsterSpwanMgr::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 	DetroryMonster();
 }
-void AMonsterSpwanMgr::SpawnMonster(int32 idx)
-{
-	if (MonsterClass)
-	{
-		FVector SpwanPos = MonsterTriggerBoxArr[idx]->GetActorLocation();
-		FRotator SpawnRotation = FRotator::ZeroRotator;
 
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-		ABaseMonster* SpawnedMonster = GetWorld()->SpawnActor<ABaseMonster>(MonsterClass,SpwanPos,SpawnRotation, SpawnParams);
-
-		if (SpawnedMonster)
-		{
-			MonsterArr.Add(SpawnedMonster);
-			//UE_LOG(LogTemp, Warning, TEXT("Monster spawned: %s"), *SpawnedMonster->GetName());
-		}
-		else
-		{
-			//UE_LOG(LogTemp, Error, TEXT("Failed  monster."));
-		}
-
-	}
-}
 void AMonsterSpwanMgr::DetroryMonster()
 {
 	for (int32 i = MonsterArr.Num() - 1; i >= 0; --i)
@@ -121,8 +91,5 @@ void AMonsterSpwanMgr::DetroryMonster()
 			Monster->Destroy();
 	}
 }
-//void AMonsterSpwanMgr::Tick(float DeltaTime)
-//{
-//	Super::Tick(DeltaTime);
-//}
+
 
