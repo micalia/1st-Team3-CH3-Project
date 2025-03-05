@@ -116,6 +116,11 @@ EPATROLTYPE AZombie::GetterPatrolType() const
     return PatrolType;
 }
 
+void AZombie::SetPatrolType(EPATROLTYPE Type)
+{
+    PatrolType = Type;
+}
+
 void AZombie::OnCapsuleOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
     Super::OnCapsuleOverlap(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
