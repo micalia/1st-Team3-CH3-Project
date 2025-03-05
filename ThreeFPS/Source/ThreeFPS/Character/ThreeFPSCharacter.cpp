@@ -12,6 +12,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "HUDWidget.h"
+#include "OnDiedWidget.h"
 #include "ThreeFPSUIComponent.h"
 #include "InputActionValue.h"
 #include "Inventory/InventoryWidget.h"
@@ -21,7 +22,6 @@
 #include "Weapon/EGunType.h"
 #include "Weapon/Rifle.h"
 #include <Item/ItemBase.h>
-
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -89,6 +89,7 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	//HUD
 	HUDClass =nullptr;
 	HUDInstance = nullptr;
+	GameOverHUDClass = nullptr;
 
 	//발사 변수
 	bIsFiring=false;
@@ -245,15 +246,43 @@ float AThreeFPSCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 	float ActualDamage = DamageAmount;
 	CurrentHealth = FMath::Clamp(CurrentHealth - ActualDamage, 0.f, MaxHealth);
 	UpdateHP();
+	if (HitMontage)
+	{
+		PlayAnimMontage(HitMontage);
+	}
 	if (CurrentHealth <= 0.f)
 	{
-		Die();
+		if (DieMontage)
+		{
+			PlayAnimMontage(DieMontage);
+		}
+		GetWorldTimerManager().SetTimer(DiedTimer, this, &AThreeFPSCharacter::Die, 2.0f, false);
 	}
 	return ActualDamage;
 }
-
+//사망 시 UI
 void AThreeFPSCharacter::Die()
 {
+	if (HUDInstance)
+	{
+		HUDInstance->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (UIComponent)
+	{
+		UIComponent->GameOver();
+	}
+	if (GameOverHUDClass)
+	{
+		if (AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetController()))
+		{	
+			GameOverHUDInstance = CreateWidget<UOnDiedWidget>(PlayerController,GameOverHUDClass);
+			GameOverHUDInstance->AddToViewport(6);
+			GameOverHUDInstance->SetVisibility(ESlateVisibility::Visible);
+			PlayerController->bShowMouseCursor = true;
+			PlayerController->SetInputMode(FInputModeUIOnly());
+			PlayerController->Pause();
+		}
+	}
 }
 
 /* 장착 함수 */
@@ -271,26 +300,6 @@ void AThreeFPSCharacter::EquipPistol()
 //------------------------//
 //        업데이트 함수     //
 //-----------------------//
-
-// void AThreeFPSCharacter::UpdateMovementState()
-// {
-// 	if (bShouldMove)
-// 	{
-// 		if (bIsAiming)
-// 		{
-// 			CurrentMovementState = AIMING;
-// 		}
-// 		else CurrentMovementState = MOVING;
-// 	}
-// 	else
-// 	{
-// 		if (bIsAiming)
-// 		{
-// 			CurrentMovementState = AIMING;
-// 		}
-// 		else CurrentMovementState = IDLE;
-// 	}
-// }
 
 void AThreeFPSCharacter::UpdateStamina()
 {
@@ -327,7 +336,12 @@ void AThreeFPSCharacter::UpdateMutation()
 	}
 	if (CurrentMutation >= MaxMutation)
 	{
-		Die();
+		StopMutation();
+		if (DieMontage)
+		{
+			PlayAnimMontage(DieMontage);
+		}
+		GetWorldTimerManager().SetTimer(DiedTimer, this, &AThreeFPSCharacter::Die, 3.0f, false);
 	}
 }
 
@@ -386,25 +400,16 @@ void AThreeFPSCharacter::StopCrouch()
 void AThreeFPSCharacter::StartAim()
 {
 	if (InventoryWidget && InventoryWidget->IsVisible()) return;
-	if (!bIsReloading)
+	if (!bIsReloading && !bIsSprinting)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = OriginSpeed / 2;
 		bIsAiming = true;
-		// if (AimCurve)
-		// {
-		// 	AimTimeLine.Play();
-		// 	UE_LOG(LogTemp, Display, TEXT("Aim Start"));
-		// }
 	}
 }
 void AThreeFPSCharacter::StopAim()
 {
 	bIsAiming = false;
 	GetCharacterMovement()->MaxWalkSpeed = OriginSpeed;
-	if (AimCurve)
-	{
-		AimTimeLine.Reverse();
-	}
 }
 
 // void AThreeFPSCharacter::UpdateAimProgress(float Value)

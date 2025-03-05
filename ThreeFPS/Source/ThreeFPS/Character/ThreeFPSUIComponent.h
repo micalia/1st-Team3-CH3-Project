@@ -34,4 +34,5 @@ public:
 	UCrosshairWidget* CrosshairWidget;
 
 	void GameStart();
+	void GameOver();
 };

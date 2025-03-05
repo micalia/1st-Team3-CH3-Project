@@ -38,6 +38,14 @@ void UThreeFPSUIComponent::GameStart()
 	}
 }
 
+void UThreeFPSUIComponent::GameOver()
+{
+	if (WidgetClass)
+	{
+		CrosshairWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
 void UThreeFPSUIComponent::UpdateCrossHair(float DeltaTime)
 {
 	if (!CrosshairWidget) return;

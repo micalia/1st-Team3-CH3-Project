@@ -11,6 +11,7 @@
 #include "Weapon/EPlayerMovementState.h"
 #include "ThreeFPSCharacter.generated.h"
 
+class UOnDiedWidget;
 class UWeaponInventoryComponent;
 enum class EGunType : uint8;
 class UThreeFPSUIComponent;
@@ -102,6 +103,10 @@ class AThreeFPSCharacter : public ACharacter
 	TSubclassOf<UHUDWidget> HUDClass;
 	UPROPERTY()
 	UHUDWidget* HUDInstance;
+	UPROPERTY(EditAnywhere,Category = "HUD")
+	TSubclassOf<UOnDiedWidget> GameOverHUDClass;
+	UPROPERTY()
+	UOnDiedWidget* GameOverHUDInstance;
 	
 	//크로스헤어용 UI컴포넌트.
 	UPROPERTY(visibleAnywhere, Category = "Movement")
@@ -121,6 +126,7 @@ class AThreeFPSCharacter : public ACharacter
 	//타이머 핸들 변수
 	FTimerHandle UpdateStaminaTimer;
 	FTimerHandle FireTimer;
+	FTimerHandle DiedTimer;
 
 	// 인터렉션 관련 변수
 	FVector ViewVector;
@@ -128,8 +134,6 @@ class AThreeFPSCharacter : public ACharacter
 	FVector InteractVectorEnd;
 	FHitResult InteractHitResult;
 	FTimerHandle ReloadTimer;
-
-	
 	
 protected:
 
@@ -143,7 +147,7 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
-
+	
 	//사망
 	void Die();
 
@@ -184,9 +188,6 @@ protected:
 public:
 	FTimeline AimTimeLine;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Aim")
-	UCurveFloat* AimCurve;
-	
 	AThreeFPSCharacter();
 	
 	void GameStart();
@@ -219,6 +220,12 @@ public:
 	//무기에 따른 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Animation")
 	TMap<EGunType, TSubclassOf<UAnimInstance>> Animations;
+	//몽타주
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Animation")
+	UAnimMontage* HitMontage;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Animation")
+	UAnimMontage* DieMontage;
+	
 };
 
 
