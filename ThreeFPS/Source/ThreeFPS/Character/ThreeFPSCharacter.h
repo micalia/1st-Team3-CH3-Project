@@ -212,7 +212,8 @@ public:
 	// 아이템 사용 함수
 	void IncreaseHealth(int32 Amount);
 	void DecreaseMutation(int32 Amount);
-	
+	void IncreaseAmmo(int32 Amount);
+
 	//Getter 함수
 	FORCEINLINE EPlayerMovementState GetCurrentMovementState() const {return CurrentMovementState;}
 	UFUNCTION(BlueprintCallable)

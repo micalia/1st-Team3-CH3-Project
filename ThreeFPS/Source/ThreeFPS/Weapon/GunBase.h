@@ -97,6 +97,8 @@ public:
 	virtual void StartReload();
 	virtual void OnReloaded();
 	virtual void ApplyRecoil();
+
+	virtual void AddMaxAmmo(int32 Amount);
 	
 	virtual bool CanFire() const;
 	virtual bool CanReloading() const;

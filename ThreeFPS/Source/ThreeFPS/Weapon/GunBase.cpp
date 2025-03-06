@@ -230,6 +230,11 @@ void AGunBase::ApplyRecoil()
 	}
 }
 
+void AGunBase::AddMaxAmmo(int32 Amount)
+{
+	MaxAmmo += Amount;
+}
+
 bool AGunBase::CanFire() const
 {
 	if (CurrentAmmo <= 0 || bIsReloading) return false;
