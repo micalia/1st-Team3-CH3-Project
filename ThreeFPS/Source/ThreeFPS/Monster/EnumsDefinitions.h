@@ -20,3 +20,12 @@ enum class EPATROLTYPE :uint8
 	Random     UMETA(DisplayName = "Random"),
 	Chase      UMETA(DisplayName = "Chase")
 };
+
+UENUM(BlueprintType)
+enum class ESNDZOMBIE :uint8
+{
+	ATT1,
+	ATT2,
+	DAMAGE,
+	DIE
+};

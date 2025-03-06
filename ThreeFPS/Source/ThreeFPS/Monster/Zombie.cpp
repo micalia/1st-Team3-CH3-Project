@@ -16,6 +16,9 @@
 #include "Components/PrimitiveComponent.h"  // UPrimitiveComponent (충돌체 및 물리 효과)
 #include "Components/DecalComponent.h"
 #include "Materials/MaterialInterface.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundCue.h"
+#include "DistanceSoundMgr.h"
 
 AZombie::AZombie()
 {
@@ -28,6 +31,11 @@ AZombie::AZombie()
     GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
     GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
     GetCapsuleComponent()->SetGenerateOverlapEvents(true);
+
+    AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+    AudioComponent->bAutoActivate = false;
+    AudioComponent->bAutoDestroy = false;
+
 
     DetectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("DetectionSphere"));//DetectionSphere = NewObject<USphereComponent>(this);
     if (DetectionSphere)
@@ -87,10 +95,9 @@ void AZombie::BeginPlay()
     DisableDetection();
 
     VariousJombie();//Random Custom 
-
+    GetWorldTimerManager().SetTimer(SoundDistTimerHandler, this, &AZombie::DistanceSoundVolume, 0.2f, true);
+    
    // GetCharacterMovement()->MaxWalkSpeed = FMath::RandRange(50.f,200.f);
-
-
    // DecalMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("MaterialInstanceConstant'/Game/KSW/Resouces/Decals/Splashers/Decal_BB_Inst.Decal_BB_Inst'"));
 
 }
@@ -220,7 +227,6 @@ void AZombie::Tick(float DeltaTime)
                   
                // UE_LOG(LogTemp, Warning, TEXT("ATT:%f"),Power);
 
-                
                 /* FPointDamageEvent PointDamageEvent;
                 PointDamageEvent.HitInfo = HitResult;
 
@@ -414,6 +420,35 @@ void AZombie::SpawnDecalAtLocation(FVector Location, FRotator Rotation, float Li
     }
     else
         UE_LOG(LogTemp, Error, TEXT("Error Decal Material "));
+}
+void AZombie::PlaySound(ESNDZOMBIE type)
+{
+    if (AudioComponent)
+    {
+        USoundCue* SndQ =  Sounds[(int32)type];
+        AudioComponent->SetSound(SndQ);
+        AudioComponent->Play();
+    }
+}
+void AZombie::DistanceSoundVolume()
+{
+    if (AudioComponent)
+    {
+        if (!IsValid(GetWorld()))
+        {
+            return;
+        }
+        ADistanceSoundMgr* SoundMgr = ADistanceSoundMgr::GetInstance(GetWorld());
+        if (SoundMgr)
+        {
+            FVector PlayerLocation = SoundMgr->GetPlayerLocation();
+
+            float Distance = FVector::Distance(PlayerLocation, GetActorLocation());
+            float Volume = FMath::GetMappedRangeValueClamped(FVector2D(0, 1000), FVector2D(1.0f, 0.0f), Distance);
+            AudioComponent->SetVolumeMultiplier(Volume);
+           // UE_LOG(LogTemp, Warning, TEXT("Volume : %f "), Volume);
+        }
+    }
 }
 #pragma region //VariousJombie
 void AZombie::VariousJombie()
