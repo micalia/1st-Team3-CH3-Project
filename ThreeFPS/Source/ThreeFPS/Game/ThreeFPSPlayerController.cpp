@@ -6,7 +6,7 @@
 
 AThreeFPSPlayerController::AThreeFPSPlayerController() : MappingContext(nullptr), MoveAction(nullptr), LookAction(nullptr), CrouchAction(nullptr),
 														JumpAction(nullptr),FireAction(nullptr),SprintAction(nullptr), AimAction(nullptr),ReloadAction(nullptr),
-														EquipRifleAction(nullptr),EquipPistolAction(nullptr), InteractAction(nullptr), InventoryAction(nullptr)	{}
+														EquipRifleAction(nullptr),EquipPistolAction(nullptr), InteractAction(nullptr), InventoryAction(nullptr), DiveAction(nullptr)	{}
 														
 
 void AThreeFPSPlayerController::BeginPlay()

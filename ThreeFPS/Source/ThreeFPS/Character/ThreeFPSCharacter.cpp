@@ -12,6 +12,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "HUDWidget.h"
+#include "OnDiedWidget.h"
 #include "ThreeFPSUIComponent.h"
 #include "InputActionValue.h"
 #include "Inventory/InventoryWidget.h"
@@ -22,6 +23,7 @@
 #include "Weapon/Rifle.h"
 #include <Item/ItemBase.h>
 
+#include "UniversalObjectLocators/AnimInstanceLocatorFragment.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -81,6 +83,7 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	bIsStaminaEmpty = false;
 	StaminaConsumeRate = 0.5f;
 	StaminaRegenRate = 0.3f;
+	
 	// 돌연변이
 	MaxMutation = 200.f;
 	MutationRate = 1.f;
@@ -89,6 +92,7 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	//HUD
 	HUDClass =nullptr;
 	HUDInstance = nullptr;
+	GameOverHUDClass = nullptr;
 
 	//발사 변수
 	bIsFiring=false;
@@ -96,6 +100,9 @@ AThreeFPSCharacter::AThreeFPSCharacter()
 	/* 장애물 회피를 위한 중력 조정 - 설빈 추가*/
 	GetCharacterMovement()->JumpZVelocity = 1350.f;
 	GetCharacterMovement()->GravityScale = 4.f;
+
+	bCanJump = true;
+	bIsDive = false;
 }
 
 void AThreeFPSCharacter::IncreaseHealth(int32 Amount)
@@ -123,8 +130,7 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			if (PlayerController->LookAction){EnhancedInputComponent->BindAction(PlayerController->LookAction,ETriggerEvent::Triggered,this, &AThreeFPSCharacter::Look);}
 			if (PlayerController->JumpAction)
 			{
-				EnhancedInputComponent->BindAction(PlayerController->JumpAction,ETriggerEvent::Started,this, &ACharacter::Jump);
-				EnhancedInputComponent->BindAction(PlayerController->JumpAction,ETriggerEvent::Completed,this, &ACharacter::StopJumping);
+				EnhancedInputComponent->BindAction(PlayerController->JumpAction,ETriggerEvent::Triggered,this, &AThreeFPSCharacter::Jump);
 			}
 			if (PlayerController->CrouchAction)
 			{
@@ -156,7 +162,7 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			}
 			if (PlayerController->ReloadAction) EnhancedInputComponent->BindAction(PlayerController->ReloadAction, ETriggerEvent::Triggered,this, &AThreeFPSCharacter::StartReload);
 			if (PlayerController->EquipRifleAction) EnhancedInputComponent->BindAction(PlayerController->EquipRifleAction, ETriggerEvent::Triggered, this, &AThreeFPSCharacter::EquipRifle);
-			if (PlayerController->EquipRifleAction) EnhancedInputComponent->BindAction(PlayerController->EquipRifleAction, ETriggerEvent::Triggered, this, &AThreeFPSCharacter::EquipPistol);
+			if (PlayerController->DiveAction) EnhancedInputComponent->BindAction(PlayerController->DiveAction, ETriggerEvent::Triggered, this, &AThreeFPSCharacter::StartDive);
 		}
 	}
 	else
@@ -180,6 +186,7 @@ void AThreeFPSCharacter::GameStart()
 	}
 	
 	UIComponent->GameStart();
+	bIsDead = false;
 	
 	//무기 인벤에 추가
 	if (RifleClass)
@@ -189,6 +196,8 @@ void AThreeFPSCharacter::GameStart()
 			WeaponInventory->AddWeapon(EGunType::Rifle, Rifle);
 		}
 	}
+	
+	//라이플 장착
 	EquipRifle();
 	
 	//스프링암 타임라인
@@ -202,7 +211,7 @@ void AThreeFPSCharacter::GameStart()
 	//체력 UI업데이트
 	UpdateHP();
 	//스테미너 업데이트 타이머
-	GetWorldTimerManager().SetTimer(UpdateStaminaTimer, this, &AThreeFPSCharacter::UpdateStamina, 0.01f, true);
+	GetWorldTimerManager().SetTimer(UpdateStaminaTimer, this, &AThreeFPSCharacter::UpdateStamina, 0.1f, true);
 	GetWorldTimerManager().SetTimer(UpdateMutationTimer, this, &AThreeFPSCharacter::UpdateMutation, 1.f, true);
 	//탄약 Text블록
 	UpdateAmmo();
@@ -227,8 +236,6 @@ void AThreeFPSCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	AimTimeLine.TickTimeline(DeltaTime);
-	
 	FVector Velocity = GetVelocity();
 	if (Velocity.Size() > 0)
 	{
@@ -242,9 +249,14 @@ void AThreeFPSCharacter::Tick(float DeltaTime)
 float AThreeFPSCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
+	if (bIsDive) return 0.f;
 	float ActualDamage = DamageAmount;
 	CurrentHealth = FMath::Clamp(CurrentHealth - ActualDamage, 0.f, MaxHealth);
 	UpdateHP();
+	if (HitMontage)
+	{
+		PlayAnimMontage(HitMontage);
+	}
 	if (CurrentHealth <= 0.f)
 	{
 		Die();
@@ -252,8 +264,37 @@ float AThreeFPSCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 	return ActualDamage;
 }
 
+//사망 시 플레이 몽타주 함수
 void AThreeFPSCharacter::Die()
 {
+	bIsDead = true;
+	if (HUDInstance)
+	{
+		HUDInstance->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (UIComponent)
+	{
+		UIComponent->GameOver();
+	}
+	if (AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetController()))
+	{
+		PlayerController->bShowMouseCursor = true;
+		PlayerController->SetInputMode(FInputModeUIOnly());
+	}
+	GetWorldTimerManager().SetTimer(DiedTimer, this, &AThreeFPSCharacter::GameOver, 2.0f, false);
+}
+
+void AThreeFPSCharacter::GameOver()
+{
+	if (GameOverHUDClass)
+	{
+		if (AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetController()))
+		{
+			GameOverHUDInstance = CreateWidget<UOnDiedWidget>(PlayerController,GameOverHUDClass);
+			GameOverHUDInstance->AddToViewport(6);
+			GameOverHUDInstance->SetVisibility(ESlateVisibility::Visible);
+		}
+	}
 }
 
 /* 장착 함수 */
@@ -262,48 +303,24 @@ void AThreeFPSCharacter::EquipRifle()
 	WeaponInventory->EquipWeapon(EGunType::Rifle, this);
 	UpdateAmmo();
 }
-void AThreeFPSCharacter::EquipPistol()
-{
-	WeaponInventory->EquipWeapon(EGunType::Pistol,this);
-	UpdateAmmo();
-}
 
 //------------------------//
 //        업데이트 함수     //
 //-----------------------//
-
-// void AThreeFPSCharacter::UpdateMovementState()
-// {
-// 	if (bShouldMove)
-// 	{
-// 		if (bIsAiming)
-// 		{
-// 			CurrentMovementState = AIMING;
-// 		}
-// 		else CurrentMovementState = MOVING;
-// 	}
-// 	else
-// 	{
-// 		if (bIsAiming)
-// 		{
-// 			CurrentMovementState = AIMING;
-// 		}
-// 		else CurrentMovementState = IDLE;
-// 	}
-// }
 
 void AThreeFPSCharacter::UpdateStamina()
 {
 	if (bIsSprinting)
 	{
 		CurrentStamina = FMath::Clamp(CurrentStamina - StaminaConsumeRate, 0.0f, MaxStamina);
-		if (CurrentStamina <= 0.0f)
-		{
-			bIsStaminaEmpty = true;
-		}
-		else bIsStaminaEmpty = false;
 	}
 	else CurrentStamina = FMath::Clamp(CurrentStamina + StaminaRegenRate, 0.0f, MaxStamina);
+	
+	if (CurrentStamina <= 0.0f)
+	{
+		bIsStaminaEmpty = true;
+	}
+	else bIsStaminaEmpty = false;
 
 	if (HUDInstance) {
 		HUDInstance->SetStaminaBar(CurrentStamina, MaxStamina);
@@ -327,6 +344,7 @@ void AThreeFPSCharacter::UpdateMutation()
 	}
 	if (CurrentMutation >= MaxMutation)
 	{
+		StopMutation();
 		Die();
 	}
 }
@@ -362,71 +380,77 @@ void AThreeFPSCharacter::Look(const FInputActionValue& Value)
 
 void AThreeFPSCharacter::StartSprint()
 {
-	if (bShouldMove && !GetCharacterMovement()->IsFalling() && !bIsFiring && !bIsAiming)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-		bIsSprinting = true;
-	}
-	else GetCharacterMovement()->MaxWalkSpeed = OriginSpeed;
-	
+	if (bIsStaminaEmpty) GetCharacterMovement()->MaxWalkSpeed = OriginSpeed;
+	if (bIsAiming || bIsCrouched || !bShouldMove || GetCharacterMovement()->IsFalling()) return;
+
+	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+	bIsSprinting = true;
 }
 void AThreeFPSCharacter::StopSprint()
 {
-	GetCharacterMovement()->MaxWalkSpeed = OriginSpeed;
+	if (bIsAiming || bIsCrouched || bIsStaminaEmpty|| !bShouldMove)
+	{
+		bIsSprinting = false;
+		return;
+	}
 	bIsSprinting = false;
+	GetCharacterMovement()->MaxWalkSpeed = OriginSpeed;
+	
 }
 void AThreeFPSCharacter::StartCrouch()
 {
+	if (GetCharacterMovement()->IsFalling() || bIsSprinting) return;
+	bIsCrouched = true;
 	Crouch();
 }
 void AThreeFPSCharacter::StopCrouch()
 {
+	if (GetCharacterMovement()->IsFalling() || bIsSprinting) return;
+	bIsCrouched = false;
 	UnCrouch();
 }
 void AThreeFPSCharacter::StartAim()
 {
 	if (InventoryWidget && InventoryWidget->IsVisible()) return;
-	if (!bIsReloading)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = OriginSpeed / 2;
-		bIsAiming = true;
-		// if (AimCurve)
-		// {
-		// 	AimTimeLine.Play();
-		// 	UE_LOG(LogTemp, Display, TEXT("Aim Start"));
-		// }
-	}
+	if (bIsReloading || bIsSprinting || bIsDive) return;
+	GetCharacterMovement()->MaxWalkSpeed = OriginSpeed / 2;
+	bIsAiming = true;
+	
 }
 void AThreeFPSCharacter::StopAim()
 {
+	if (bIsSprinting)
+	{
+		bIsAiming = false;
+		return;
+	}
 	bIsAiming = false;
 	GetCharacterMovement()->MaxWalkSpeed = OriginSpeed;
-	if (AimCurve)
-	{
-		AimTimeLine.Reverse();
-	}
 }
 
-// void AThreeFPSCharacter::UpdateAimProgress(float Value)
-// {
-// 	if (InventoryWidget && InventoryWidget->IsVisible()) return;
-	// if (SpringArm)
-	// {
-	// 	UE_LOG(LogTemp, Log, TEXT("UpdateAimProgress: %f"), Value);
-	// 	SpringArm->TargetArmLength = FMath::Lerp(OriginSpringArmLength, AimedSpringArmLength, Value);
-	// }
-// }
+void AThreeFPSCharacter::Jump()
+{
+	if (!bCanJump || bIsAiming || bIsDive) return;
+	Super::Jump();
+	bCanJump = false;
+	bIsJumping = true;
+	GetWorldTimerManager().SetTimer(JumpTimer, this, &AThreeFPSCharacter::ResetJumpTimer, .8f);
+}
+
+void AThreeFPSCharacter::ResetJumpTimer()
+{
+	bCanJump = true;;
+	bIsJumping = false;
+}
 
 void AThreeFPSCharacter::StartFiring()
 {
-	if (!bIsSprinting && !GetCharacterMovement()->IsFalling() && !bIsReloading)
+	if (bIsSprinting || GetCharacterMovement()->IsFalling() || bIsSprinting || bIsDive) return;
+	if (WeaponInventory && WeaponInventory->GetCurrentWeapon()->CanFire())
 	{
-		if (WeaponInventory && WeaponInventory->GetCurrentWeapon()->CanFire())
-		{
-			bIsFiring = true;
-			WeaponInventory->GetCurrentWeapon()->StartFire();
-		}
-	}
+		bIsFiring = true;
+		WeaponInventory->GetCurrentWeapon()->StartFire();
+	}	
 	UpdateAmmo();
 }
 
@@ -441,15 +465,15 @@ void AThreeFPSCharacter::StopFiring()
 
 void AThreeFPSCharacter::StartReload()
 {
+	if (bIsDive) return;
 	if (WeaponInventory && WeaponInventory->GetCurrentWeapon())
 	{
 		AGunBase* CurrentWeapon = WeaponInventory->GetCurrentWeapon();
-		if (CurrentWeapon->CanReloading() && !bIsAiming && !bIsFiring)
-		{
-			bIsReloading = true;
-			GetWorldTimerManager().SetTimer(ReloadTimer, this, &AThreeFPSCharacter::OnReloaded, CurrentWeapon->GetReloadTime(), false);
-			CurrentWeapon->StartReload();
-		}
+		if (!CurrentWeapon->CanReloading() || bIsAiming || bIsFiring || bIsDive) return;
+		bIsReloading = true;
+		GetWorldTimerManager().SetTimer(ReloadTimer, this, &AThreeFPSCharacter::OnReloaded, CurrentWeapon->GetReloadTime(), false);
+		CurrentWeapon->StartReload();
+		
 	}
 }
 void AThreeFPSCharacter::OnReloaded()
@@ -458,6 +482,24 @@ void AThreeFPSCharacter::OnReloaded()
 	UpdateAmmo();
 	bIsReloading = false;
 	
+}
+
+void AThreeFPSCharacter::StartDive()
+{
+	if (bIsDive || bIsJumping || bIsAiming || CurrentStamina < 30.f ||!bShouldMove) return;
+	
+	bIsDive = true;
+	GetCharacterMovement()->MaxWalkSpeed = OriginSpeed * 2.f;
+	CurrentStamina -= 30.f;
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("다이브")));
+	GetWorldTimerManager().SetTimer(DiveTimer, this, &AThreeFPSCharacter::ResetDiveTimer, 0.94f, false);
+}
+
+void AThreeFPSCharacter::ResetDiveTimer()
+{
+	bIsDive = false;
+	if (bIsAiming) return;
+	GetCharacterMovement()->MaxWalkSpeed = OriginSpeed;
 }
 
 //장전 했을 때 UI업데이트

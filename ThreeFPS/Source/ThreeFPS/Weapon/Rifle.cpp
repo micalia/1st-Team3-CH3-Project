@@ -13,7 +13,7 @@ ARifle::ARifle()
 	}
 	GunType = EGunType::Rifle;
 	bIsAuto = true;
-	ReloadTime= 2.25f;
+	ReloadTime= 2.5f;
 	FireRate = 0.117f;
 	MeshComp->SetRelativeScale3D(FVector(0.9f, 0.9f, 0.9f));
 
@@ -52,11 +52,6 @@ void ARifle::OnReloaded()
 	Super::OnReloaded();
 }
 
-void ARifle::PlayFireAnimation(bool bIsAiming)
-{
-	Super::PlayFireAnimation(bIsAiming);
-}
-
 void ARifle::ApplyRecoil()
 {
 	Super::ApplyRecoil();
@@ -70,4 +65,9 @@ bool ARifle::CanFire() const
 bool ARifle::CanReloading() const
 {
 	return Super::CanReloading();
+}
+
+void ARifle::PlayFireAnim()
+{
+	Super::PlayFireAnim();
 }

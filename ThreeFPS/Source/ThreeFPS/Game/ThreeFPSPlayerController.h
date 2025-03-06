@@ -50,4 +50,6 @@ public:
 	UInputAction* InteractAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* InventoryAction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* DiveAction;
 };
