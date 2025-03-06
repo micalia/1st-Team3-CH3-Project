@@ -477,12 +477,12 @@ void AThreeFPSCharacter::StopMutation()
 
 void AThreeFPSCharacter::InteractCheck()
 {
-	Cast<APlayerController>(GetController())->GetPlayerViewPoint(ViewVector, ViewRotation);
+	GetController()->GetPlayerViewPoint(ViewVector, ViewRotation);
 	FVector VecDirection = ViewRotation.Vector() * 1000.f;
 	InteractVectorEnd = ViewVector + VecDirection;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
-	GetWorld()->LineTraceSingleByChannel(InteractHitResult, ViewVector, InteractVectorEnd, ECollisionChannel::ECC_GameTraceChannel2, QueryParams);
+	GetWorld()->LineTraceSingleByChannel(InteractHitResult, ViewVector, InteractVectorEnd, ECollisionChannel::ECC_GameTraceChannel2, QueryParams); 
 	if (Cast<AItemBase>(InteractHitResult.GetActor()))
 	{
 		InteractWidget->SetVisibility(ESlateVisibility::Visible);
