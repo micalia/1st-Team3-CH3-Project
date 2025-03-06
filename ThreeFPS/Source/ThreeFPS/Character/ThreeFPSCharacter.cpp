@@ -171,10 +171,6 @@ void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			if (PlayerController->DiveAction) EnhancedInputComponent->BindAction(PlayerController->DiveAction, ETriggerEvent::Triggered, this, &AThreeFPSCharacter::StartDive);
 		}
 	}
-	else
-	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
-	}
 }
 
 void AThreeFPSCharacter::GameStart()
@@ -258,7 +254,6 @@ float AThreeFPSCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 	if (bIsDive || bIsDead) return 0.f;
 	float ActualDamage = DamageAmount;
 	CurrentHealth = FMath::Clamp(CurrentHealth - ActualDamage, 0.f, MaxHealth);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("체력: %f"), CurrentHealth));
 	UpdateHP();
 	if (HitMontage)
 	{
@@ -500,7 +495,6 @@ void AThreeFPSCharacter::StartDive()
 	bIsDive = true;
 	GetCharacterMovement()->MaxWalkSpeed = OriginSpeed * 2.f;
 	CurrentStamina -= 30.f;
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("다이브")));
 	GetWorldTimerManager().SetTimer(DiveTimer, this, &AThreeFPSCharacter::ResetDiveTimer, 0.94f, false);
 }
 

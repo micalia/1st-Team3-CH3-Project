@@ -240,8 +240,6 @@ void AZombie::Tick(float DeltaTime)
 }
 float AZombie::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("액터 : %f"), Hp));
-
     if (CurrHp <= 0)
         return 0.f;
 
