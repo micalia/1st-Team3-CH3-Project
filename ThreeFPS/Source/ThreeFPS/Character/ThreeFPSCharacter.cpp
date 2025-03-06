@@ -284,6 +284,7 @@ void AThreeFPSCharacter::Die()
 	}
 	if (AThreeFPSPlayerController* PlayerController = Cast<AThreeFPSPlayerController>(GetController()))
 	{
+		DisableInput(PlayerController);
 		PlayerController->bShowMouseCursor = true;
 		PlayerController->SetInputMode(FInputModeUIOnly());
 	}
@@ -440,7 +441,7 @@ void AThreeFPSCharacter::Jump()
 	Super::Jump();
 	bCanJump = false;
 	bIsJumping = true;
-	GetWorldTimerManager().SetTimer(JumpTimer, this, &AThreeFPSCharacter::ResetJumpTimer, .8f);
+	GetWorldTimerManager().SetTimer(JumpTimer, this, &AThreeFPSCharacter::ResetJumpTimer, .9f);
 }
 
 void AThreeFPSCharacter::ResetJumpTimer()
