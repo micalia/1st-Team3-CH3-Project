@@ -4,20 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Weapon/GunBase.h"
-#include "Rifle.generated.h"
+#include "Pistol.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class THREEFPS_API ARifle : public AGunBase
+class THREEFPS_API APistol : public AGunBase
 {
 	GENERATED_BODY()
-public:
-	ARifle();
-	virtual void BeginPlay() override;
-	
 
+public:
+	APistol();
+	
 	virtual void Fire() override;
 	virtual void StartFire() override;
 	virtual void StopFire() override;
@@ -26,12 +25,8 @@ public:
 	virtual void OnReloaded() override;
 	virtual void ApplyRecoil() override;
 	
-	
 	virtual bool CanFire() const override;
 	virtual bool CanReloading() const override;
-
-	virtual void PlayFireAnim() override;
-	
 	FORCEINLINE virtual float GetRecoil() const override {return RecoilAmount;}
 	FORCEINLINE virtual bool IsReloading() const override { return bIsReloading; }
 	FORCEINLINE virtual bool IsAuto() const override { return bIsAuto; }

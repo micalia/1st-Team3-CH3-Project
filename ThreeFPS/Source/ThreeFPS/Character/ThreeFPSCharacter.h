@@ -127,6 +127,8 @@ class AThreeFPSCharacter : public ACharacter
 	FTimerHandle UpdateStaminaTimer;
 	FTimerHandle FireTimer;
 	FTimerHandle DiedTimer;
+	FTimerHandle JumpTimer;
+	FTimerHandle DiveTimer;
 
 	// 인터렉션 관련 변수
 	FVector ViewVector;
@@ -142,6 +144,7 @@ protected:
 	UWeaponInventoryComponent* WeaponInventory;
 	UPROPERTY(EditDefaultsOnly, Category="Weapon")
 	TSubclassOf<AGunBase> RifleClass;
+
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	virtual void BeginPlay() override;
@@ -165,8 +168,10 @@ protected:
 	//조준 함수
 	void StartAim();
 	void StopAim();
+
+	//점프 관련 함수
 	virtual void Jump() override;
-	virtual void StopJumping() override;
+	void ResetJumpTimer();
 	// void UpdateAimProgress(float Value);
 	
 	//발사 함수
@@ -184,11 +189,12 @@ protected:
 	void StartReload();
 	void OnReloaded();
 	
-	void EquipRifle();
-	void EquipPistol();
+	//회피
+	void StartDive();
+	void ResetDiveTimer();
 	
-	//상태 변화
-	//void UpdateMovementState();
+	void EquipRifle();
+	
 public:
 	FTimeline AimTimeLine;
 	
@@ -209,8 +215,11 @@ public:
 	
 	//Getter 함수
 	FORCEINLINE EPlayerMovementState GetCurrentMovementState() const {return CurrentMovementState;}
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE bool GetIsFiring() const { return bIsFiring; }
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE bool GetIsDive() const {return bIsDive;}
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
 	UFUNCTION(BlueprintCallable)
@@ -221,17 +230,22 @@ public:
 	TArray<FItemData> Inventory;
 	UPROPERTY()
 	UInventoryWidget* InventoryWidget;
-
 	
-	//무기에 따른 애니메이션
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Animation")
-	TMap<EGunType, TSubclassOf<UAnimInstance>> Animations;
 	//몽타주
 	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Animation")
 	UAnimMontage* HitMontage;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Animation")
+	UAnimMontage* HipShotMontage;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Animation")
+	UAnimMontage* AimShotMontage;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Animation")
+	TMap<EGunType, TSubclassOf<UAnimInstance>> Animations;
 
 	bool bIsJumping;
-
+	bool bCanJump;
+	bool bIsDive;
+	bool bIsCrouched;
 };
 
 

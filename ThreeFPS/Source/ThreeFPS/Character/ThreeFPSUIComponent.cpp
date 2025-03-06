@@ -66,10 +66,10 @@ void UThreeFPSUIComponent::UpdateCrossHair(float DeltaTime)
 		}
 		else if (PlayerCharacter->GetIsAiming())
 		{
-			AimSize -= 200.f * DeltaTime;
+			AimSize -= 800.f * DeltaTime;
 			if (bIsFiring)
 			{
-				AimSize += 400.f * DeltaTime;
+				AimSize += 1200.f * DeltaTime;
 			}
 		}
 		else {

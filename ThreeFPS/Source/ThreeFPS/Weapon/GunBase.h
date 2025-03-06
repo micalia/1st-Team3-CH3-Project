@@ -94,13 +94,13 @@ public:
 	UFUNCTION(BlueprintCallable,Category="Fire")
 	virtual void StopFire();
 	
-	virtual void PlayFireAnimation(bool bIsAiming);
 	virtual void StartReload();
 	virtual void OnReloaded();
 	virtual void ApplyRecoil();
 	
 	virtual bool CanFire() const;
 	virtual bool CanReloading() const;
+	virtual void PlayFireAnim();
 	FORCEINLINE virtual float GetRecoil() const {return RecoilAmount;}
 	FORCEINLINE virtual bool IsReloading() const { return bIsReloading; }
 	FORCEINLINE virtual bool IsAuto() const { return bIsAuto; }
