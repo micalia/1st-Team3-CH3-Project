@@ -10,7 +10,6 @@
 AMonsterSpwanMgr::AMonsterSpwanMgr()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	CreateMonsterCountMax = 20;
 	TempCurlevel = 0;
 }
 
@@ -18,20 +17,25 @@ void AMonsterSpwanMgr::OnOverlapBeginTriggerBox(AActor* OverlappedActor, AActor*
 {
 	if(Cast<AThreeFPSCharacter>(OtherActor)) //if (OtherActor->ActorHasTag("Player"))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OtherActor : %s"), *OtherActor->GetName());
+		//UE_LOG(LogTemp, Warning, TEXT("OtherActor : %s"), *OtherActor->GetName());
 		AMonsterTriggerBox* Trigger = Cast<AMonsterTriggerBox>(OverlappedActor);
 		if (Trigger != CurLevelTrigger)
 		{
 			CurLevelTrigger = Trigger;
-			UE_LOG(LogTemp, Warning, TEXT("TempCurlevel = %d"), TempCurlevel);
-			
-			//CreateMonsterCountMax = 20;
-			
-			DetroryMonster();
+			DetroryMonster();//직전 트리거에서 생성되었던 몬스터들을 모두 삭제 한다.(레벨디자인)
+			//새로운 트리거에 진입하면 새트리거에 종속되있는 CeateTargetPos들 위치에 몬스터들을 전부 생성시켜놓고 wave가 시작된다.
+			int SpawnSizeOfCurTrigger = CurLevelTrigger->Num();
+			for (int32 i = 0; i < SpawnSizeOfCurTrigger;++i)
+			{
+				ABaseMonster*  CreateZombie = CurLevelTrigger->CreateMonsterOfTargetPos(MonsterClass,i);
+				MonsterArr.Add(CreateZombie);
+			}
 
+			//위에 몬스터들을 전체적으로 깔아놨으니 이제 지정된 초수마다 몬스터들을 한마리씩 생성시킨다=> 게임 벨런스를 유지시키기 위함.
 			GetWorld()->GetTimerManager().ClearTimer(SpawnMonsterTimerHandle);
-			GetWorld()->GetTimerManager().SetTimer(SpawnMonsterTimerHandle, this, &AMonsterSpwanMgr::SpawnMonsterTimmer, 3.f, true);
+			GetWorld()->GetTimerManager().SetTimer(SpawnMonsterTimerHandle, this, &AMonsterSpwanMgr::SpawnMonsterTimmer, 3.5f, true);
 			TempCurlevel++;
+			UE_LOG(LogTemp, Warning, TEXT("TempCurlevel = %d"), TempCurlevel);
 		}
 		//UE_LOG(LogTemp, Warning, TEXT("OtherActor : %s"), *OtherActor->GetName());
 	}
@@ -45,13 +49,6 @@ void AMonsterSpwanMgr::SpawnMonsterTimmer()
 	//CreateMonsterCountMax--;
 	//if (0 >= CreateMonsterCountMax)
 	//	GetWorld()->GetTimerManager().ClearTimer(SpawnMonsterTimerHandle);
-
-	//GetWorld()->GetTimerManager().SetTimer(
-	//	SpawnMonsterTimerHandle, ([this]() {
-	//		ABaseMonster* Monster = CurLevelTrigger->CreateMonster();
-	//		if (Monster)
-	//			MonsterArr.Add(Monster);
-	//		}), 5.f, true);
 }
 void AMonsterSpwanMgr::OnOverlapEndTriggerBox(AActor* OerlappedActor, AActor* OtherActor)
 {
@@ -89,8 +86,6 @@ void AMonsterSpwanMgr::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void AMonsterSpwanMgr::DetroryMonster()
 {
-	if (TempCurlevel == 0)
-		return; //처음 시작할때(TempCurlevel== 0) 화면의 풍성함을 위해 배치된 수동으로 배치한 몬스터들이 MonsterArr에 들어있다. 두번째 Trigger에 도착했을때 지워버리자.
 	for (int32 i = MonsterArr.Num() - 1; i >= 0; --i)
 	{
 		ABaseMonster* Monster = MonsterArr[i];

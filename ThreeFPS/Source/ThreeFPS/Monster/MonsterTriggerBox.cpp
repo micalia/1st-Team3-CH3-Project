@@ -54,7 +54,30 @@ ABaseMonster* AMonsterTriggerBox::CreateMonster(TSubclassOf<ABaseMonster> Monste
 	ABaseMonster* SpawnedMonster = GetWorld()->SpawnActor<ABaseMonster>(MonsterClassType,SpwanPos,SpawnRotation, SpawnParams);
 	return SpawnedMonster;
 }
+ABaseMonster* AMonsterTriggerBox::CreateMonsterOfTargetPos(TSubclassOf<ABaseMonster> MonsterClassType,int TargetPosIdx)
+{
+	FVector SpwanPos;
+	if (PatrolPath && 0 < PatrolPath->Num())
+		SpwanPos = PatrolPath->GetWaypoint(TargetPosIdx)->GetActorLocation();
+	else
+		SpwanPos = GetActorLocation();
 
+	float RandomYaw = FMath::RandRange(0.0f, 360.0f);
+	FRotator SpawnRotation = FRotator(0.0f, RandomYaw, 0.0f);
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	ABaseMonster* SpawnedMonster = GetWorld()->SpawnActor<ABaseMonster>(MonsterClassType, SpwanPos, SpawnRotation, SpawnParams);
+	Cast<AZombie>(SpawnedMonster)->SetPatrolType(EPATROLTYPE::Random);
+	return SpawnedMonster;
+}
+int32 AMonsterTriggerBox::Num()
+{
+	if(PatrolPath)
+		return  PatrolPath->Num();
+	return 0;
+}
 void AMonsterTriggerBox::OnOverlapBegin(AActor* OverlappedActor, AActor* OtherActor)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Spawned: %hs"), bSpawned ? "true" : "false");

@@ -16,8 +16,12 @@ public:
 	AZombie();
 
 	void SetClothingMeshs(USkeletalMesh* Pants, USkeletalMesh* Shirt, USkeletalMesh* Hair, UStaticMesh* HairStatic);
-
+	
+	UFUNCTION(BlueprintCallable,Category="Patrol")
 	EPATROLTYPE GetterPatrolType()const;
+
+	UFUNCTION(BlueprintCallable, Category = "Patrol")
+	void SetPatrolType(EPATROLTYPE Type);
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
@@ -106,12 +110,16 @@ protected:
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	
 	virtual float Attack() override;
-
-	void AttackTimming(int AttType);
-
+	
+	virtual void AttackTimming(int AttType) override;
+	
+	UFUNCTION(BlueprintCallable, Category = "Costume")
 	void VariousJombie();
+	
+	UFUNCTION(BlueprintCallable, Category = "State")
 	void PauseMoveForDamage(float PauseTime, FHitResult HitResult);
 
+	UFUNCTION(BlueprintCallable, Category = "Effect")
 	void SpawnDecalAtLocation(FVector Location, FRotator Rotation, float LifeSpan);
 
 

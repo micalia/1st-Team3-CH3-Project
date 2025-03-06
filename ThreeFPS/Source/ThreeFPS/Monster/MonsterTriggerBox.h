@@ -26,6 +26,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Trigger")
 	ABaseMonster* CreateMonster(TSubclassOf<ABaseMonster> MonsterClassType);
 
+	UFUNCTION(BlueprintCallable, Category = "Trigger")
+	ABaseMonster* CreateMonsterOfTargetPos(TSubclassOf<ABaseMonster> MonsterClassType, int TargetPosIdx);
+
+	UFUNCTION(BlueprintPure, Category = "Trigger")
+	int32 Num();
+
 	UFUNCTION()
 	void OnOverlapBegin(AActor* OverlappedActor, AActor* OtherActor);
 
