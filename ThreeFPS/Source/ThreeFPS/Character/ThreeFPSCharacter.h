@@ -207,6 +207,7 @@ public:
 	void UpdateMutation();
 	void UpdateAmmo();
 
+	UFUNCTION(BlueprintCallable)
 	void StopMutation();
 
 	// 아이템 사용 함수
