@@ -255,9 +255,10 @@ void AThreeFPSCharacter::Tick(float DeltaTime)
 float AThreeFPSCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
-	if (bIsDive) return 0.f;
+	if (bIsDive || bIsDead) return 0.f;
 	float ActualDamage = DamageAmount;
 	CurrentHealth = FMath::Clamp(CurrentHealth - ActualDamage, 0.f, MaxHealth);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("체력: %f"), CurrentHealth));
 	UpdateHP();
 	if (HitMontage)
 	{
@@ -265,6 +266,7 @@ float AThreeFPSCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 	}
 	if (CurrentHealth <= 0.f)
 	{
+		bIsDead = true;
 		Die();
 	}
 	return ActualDamage;
