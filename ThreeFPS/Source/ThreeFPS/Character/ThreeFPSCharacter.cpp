@@ -117,6 +117,12 @@ void AThreeFPSCharacter::DecreaseMutation(int32 Amount)
 	UpdateMutation();
 }
 
+void AThreeFPSCharacter::IncreaseAmmo(int32 Amount)
+{
+	WeaponInventory->GetCurrentWeapon()->AddMaxAmmo(Amount);
+	UpdateAmmo();
+}
+
 // Input
 void AThreeFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
