@@ -5,6 +5,9 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/UserDefinedEnum.h" 
 #include "EnumsDefinitions.h"
+#include "Sound/SoundCue.h"
+#include "Components/AudioComponent.h"
+#include "EnumsDefinitions.h"
 #include "Zombie.generated.h"
 
 
@@ -22,7 +25,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Patrol")
 	void SetPatrolType(EPATROLTYPE Type);
+
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Audio")
+	TArray<USoundCue*> Sounds;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Audio")
+	UAudioComponent* AudioComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundCue* AttackSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
 	EPATROLTYPE PatrolType;
@@ -65,7 +76,7 @@ protected:
 
 
 	FTimerHandle DamageTimerHandler;
-	
+	FTimerHandle SoundDistTimerHandler;
 
 	bool bDetectionOverlapping = false;
 	bool bEnableDetection = false;
@@ -121,6 +132,11 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Effect")
 	void SpawnDecalAtLocation(FVector Location, FRotator Rotation, float LifeSpan);
+
+	UFUNCTION(BlueprintCallable, Category = "Audio")
+	void PlaySound(ESNDZOMBIE type);
+
+	void DistanceSoundVolume();
 
 
 };

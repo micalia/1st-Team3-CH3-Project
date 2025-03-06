@@ -37,6 +37,15 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
     UAnimMontage* DieMontage;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
+    TArray<USoundBase*> AttackSounds;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
+    TArray<USoundBase*> DieSounds;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
+    TArray<USoundBase*> DamageSounds;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
+    TArray<USoundBase*> IdleSounds;
+
     UFUNCTION(BlueprintCallable, Category = "Animation")
     float AnimationPlay(EANIM_MONTAGE Ani);
 
