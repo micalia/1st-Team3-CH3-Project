@@ -11,6 +11,7 @@
 #include "Weapon/EPlayerMovementState.h"
 #include "ThreeFPSCharacter.generated.h"
 
+class UOnDiedWidget;
 class UWeaponInventoryComponent;
 enum class EGunType : uint8;
 class UThreeFPSUIComponent;
@@ -102,6 +103,10 @@ class AThreeFPSCharacter : public ACharacter
 	TSubclassOf<UHUDWidget> HUDClass;
 	UPROPERTY()
 	UHUDWidget* HUDInstance;
+	UPROPERTY(EditAnywhere,Category = "HUD")
+	TSubclassOf<UOnDiedWidget> GameOverHUDClass;
+	UPROPERTY()
+	UOnDiedWidget* GameOverHUDInstance;
 	
 	//크로스헤어용 UI컴포넌트.
 	UPROPERTY(visibleAnywhere, Category = "Movement")
@@ -121,6 +126,9 @@ class AThreeFPSCharacter : public ACharacter
 	//타이머 핸들 변수
 	FTimerHandle UpdateStaminaTimer;
 	FTimerHandle FireTimer;
+	FTimerHandle DiedTimer;
+	FTimerHandle JumpTimer;
+	FTimerHandle DiveTimer;
 
 	// 인터렉션 관련 변수
 	FVector ViewVector;
@@ -128,8 +136,6 @@ class AThreeFPSCharacter : public ACharacter
 	FVector InteractVectorEnd;
 	FHitResult InteractHitResult;
 	FTimerHandle ReloadTimer;
-
-	
 	
 protected:
 
@@ -138,14 +144,18 @@ protected:
 	UWeaponInventoryComponent* WeaponInventory;
 	UPROPERTY(EditDefaultsOnly, Category="Weapon")
 	TSubclassOf<AGunBase> RifleClass;
+
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
-
+	
 	//사망
 	void Die();
+	void GameOver();
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsDead;
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
@@ -158,7 +168,10 @@ protected:
 	//조준 함수
 	void StartAim();
 	void StopAim();
-	
+
+	//점프 관련 함수
+	virtual void Jump() override;
+	void ResetJumpTimer();
 	// void UpdateAimProgress(float Value);
 	
 	//발사 함수
@@ -176,16 +189,14 @@ protected:
 	void StartReload();
 	void OnReloaded();
 	
-	void EquipRifle();
-	void EquipPistol();
+	//회피
+	void StartDive();
+	void ResetDiveTimer();
 	
-	//상태 변화
-	//void UpdateMovementState();
+	void EquipRifle();
+	
 public:
 	FTimeline AimTimeLine;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Aim")
-	UCurveFloat* AimCurve;
 	
 	AThreeFPSCharacter();
 	
@@ -201,10 +212,15 @@ public:
 	// 아이템 사용 함수
 	void IncreaseHealth(int32 Amount);
 	void DecreaseMutation(int32 Amount);
-
+	
 	//Getter 함수
 	FORCEINLINE EPlayerMovementState GetCurrentMovementState() const {return CurrentMovementState;}
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
+	FORCEINLINE bool GetIsFiring() const { return bIsFiring; }
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE bool GetIsDive() const {return bIsDive;}
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE bool GetIsSprinting() const { return bIsSprinting; }
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
@@ -214,11 +230,22 @@ public:
 	TArray<FItemData> Inventory;
 	UPROPERTY()
 	UInventoryWidget* InventoryWidget;
-
 	
-	//무기에 따른 애니메이션
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Animation")
+	//몽타주
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Animation")
+	UAnimMontage* HitMontage;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Animation")
+	UAnimMontage* HipShotMontage;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Animation")
+	UAnimMontage* AimShotMontage;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Animation")
 	TMap<EGunType, TSubclassOf<UAnimInstance>> Animations;
+
+	bool bIsJumping;
+	bool bCanJump;
+	bool bIsDive;
+	bool bIsCrouched;
 };
 
 

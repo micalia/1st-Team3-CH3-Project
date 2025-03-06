@@ -72,6 +72,7 @@ void AGunBase::Fire()
 	}
 	FVector MuzzleLocation = MeshComp->GetSocketLocation(FName("Muzzle"));
 	FRotator MuzzleRotation = MeshComp->GetSocketRotation(FName("Muzzle"));
+	FVector TraceStart;
 	FVector TraceEnd;
 	
 	if (FireParticle)
@@ -99,8 +100,9 @@ void AGunBase::Fire()
 			FVector CameraLocation;
 			PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotator);
 
+			TraceStart=CameraLocation;
 			FVector ShotDirection = CameraRotator.Vector();
-			TraceEnd = CameraLocation + (ShotDirection* 5000.f);
+			TraceEnd = CameraLocation + (ShotDirection * 5000.f);
 		}
 	}
 	
@@ -108,9 +110,13 @@ void AGunBase::Fire()
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 	QueryParams.AddIgnoredActor(GetOwner());
-
-	if (bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult,MuzzleLocation,TraceEnd,ECC_Pawn, QueryParams))
+	
+	if (bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult,TraceStart, TraceEnd,ECC_Pawn, QueryParams))
 	{
+		FVector SurfaceNormal = HitResult.Normal;
+		FRotator Rotator = SurfaceNormal.Rotation();
+		FVector EffectScale = FVector(1.7f, 1.7f, 1.7f);
+		
 		TraceEnd = HitResult.ImpactPoint;
 		AActor* HitActor = HitResult.GetActor();
 		if (HitActor->ActorHasTag("Zombie"))
@@ -124,24 +130,27 @@ void AGunBase::Fire()
 		/*튜토리얼 과녁 쓰러지는 이벤트 - 설빈 추가*/
 		else if (auto Target = Cast<ATutorialTarget>(HitActor)) {
 			Target->OnHitTarget();
+			if (WallParticle)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WallParticle, TraceEnd, Rotator, EffectScale);
+			}
 		}
 		else if (HitActor)
 		{
 			UGameplayStatics::ApplyDamage(HitResult.GetActor(),Damage, PlayerController, GetOwner(),  UDamageType::StaticClass());
-			//디버깅용 메세지
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("액터 : %s"), *HitActor->GetName()));
+			if (WallParticle)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WallParticle, TraceEnd, Rotator, EffectScale);
+			}
 		}
+			
 	}
-	DrawDebugLine(GetWorld(), MuzzleLocation, TraceEnd, FColor::Red, false, 1.f,0,2.f);
 	CurrentAmmo--;
-	
 	if (AThreeFPSCharacter* Character = Cast<AThreeFPSCharacter>(GetOwner()))
 	{
 		Character->UpdateAmmo();
 	}
-	
-	UE_LOG(LogTemp, Display, TEXT("Current Ammo : %d"), CurrentAmmo);
-	// PlayFireAnimation(bIsAiming);
+	PlayFireAnim();
 	ApplyRecoil();
 }
 
@@ -160,26 +169,6 @@ void AGunBase::StopFire()
 	if (bIsAuto)
 	{
 		GetWorldTimerManager().ClearTimer(AutoFireTimer);
-	}
-}
-
-void AGunBase::PlayFireAnimation(bool bIsAiming)
-{
-	// 총을 장착한 캐릭터 가져오기
-	AThreeFPSCharacter* Character = Cast<AThreeFPSCharacter>(GetOwner());
-	if (!Character) return;
-
-	// 캐릭터의 애니메이션 인스턴스 가져오기
-	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
-	if (!AnimInstance) return;
-
-	// 사용할 몽타주 선택
-	UAnimMontage* FireMontageToPlay = bIsAiming ? AimFireMontage : HipFireMontage;
-
-	// 몽타주가 유효하면 실행
-	if (FireMontageToPlay)
-	{
-		AnimInstance->Montage_Play(FireMontageToPlay, FireRate, EMontagePlayReturnType::MontageLength,0.f,true);
 	}
 }
 
@@ -251,4 +240,25 @@ bool AGunBase::CanReloading() const
 {
 	if (CurrentAmmo == MagazineSize || MaxAmmo <= 0) return false;
 	return true; 
+}
+
+void AGunBase::PlayFireAnim()
+{
+	AThreeFPSCharacter* Character = Cast<AThreeFPSCharacter>(GetOwner());
+	if (!Character) return;
+
+	if (Character->GetIsAiming())
+	{
+		if (AimFireMontage)
+		{
+			Character->GetMesh()->GetAnimInstance()->Montage_Play(AimFireMontage);
+		}
+	}
+	else
+	{
+		if (HipFireMontage)
+		{
+			Character->GetMesh()->GetAnimInstance()->Montage_Play(HipFireMontage);
+		}
+	}
 }

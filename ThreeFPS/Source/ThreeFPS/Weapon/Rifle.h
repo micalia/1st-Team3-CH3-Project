@@ -24,12 +24,14 @@ public:
 	
 	virtual void StartReload() override;
 	virtual void OnReloaded() override;
-	virtual void PlayFireAnimation(bool bIsAiming) override;
 	virtual void ApplyRecoil() override;
 	
 	
 	virtual bool CanFire() const override;
 	virtual bool CanReloading() const override;
+
+	virtual void PlayFireAnim() override;
+	
 	FORCEINLINE virtual float GetRecoil() const override {return RecoilAmount;}
 	FORCEINLINE virtual bool IsReloading() const override { return bIsReloading; }
 	FORCEINLINE virtual bool IsAuto() const override { return bIsAuto; }
