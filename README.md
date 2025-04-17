@@ -68,8 +68,8 @@
 ---
 
 ## 🎬 **시연 영상**
-🔗 [프로젝트 시연 영상 보기](https://youtu.be/nvhe9CZiGgs)  
-Testtest
+🔗 [프로젝트 시연 영상 보기-신설빈 파트 위주](https://youtu.be/v0JqxhQgNLs)  
+
 ---
 
 ## 📜 **사용 기술 스택**  
