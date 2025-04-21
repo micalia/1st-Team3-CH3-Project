@@ -3,6 +3,7 @@
 ## 🎬 **시연 영상**
 🔗 [프로젝트 시연 영상 보기-신설빈 파트 위주](https://youtu.be/v0JqxhQgNLs)  
 
+[신설빈 Boss AI 작업 경로](https://github.com/micalia/1st-Team3-CH3-Project/tree/main/ThreeFPS/Source/ThreeFPS/AI)
 ---
 ## 📌 프로젝트 개요  
 **OPERATION - LYCAN**은 TPS 기반 생존 슈팅 게임으로,  
